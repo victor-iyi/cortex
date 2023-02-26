@@ -1,6 +1,6 @@
 # Cortex
 
-Cortex is an API for communicating with your emotiv EEG device.
+Cortex is an API for communicating with your emotiv EEG device via websockets.
 
 ## Before you start
 

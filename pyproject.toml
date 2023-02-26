@@ -2,8 +2,34 @@
 name = "cortex"
 version = "0.1.0"
 description = "Cortex is an API for communicating with your emotiv EEG device."
+license = "MIT"
+
 authors = ["Victor I. Afolabi <javafolabi@gmail.com>"]
+maintainers = [
+  "Victor I. Afolabi <javafolabi@gmail.com>",
+]
+
 readme = "README.md"
+repository = "https://github.com/victor-iyi/cortex"
+keywords = ["bci", "emotiv", "eeg", "neuroscience"]
+
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
 packages = [{include = "cortex", from = "src"}]
 
 [tool.poetry.dependencies]
