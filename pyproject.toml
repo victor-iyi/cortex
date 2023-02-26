@@ -1,0 +1,117 @@
+[tool.poetry]
+name = "cortex"
+version = "0.1.0"
+description = "Cortex is an API for communicating with your emotiv EEG device."
+authors = ["Victor I. Afolabi <javafolabi@gmail.com>"]
+readme = "README.md"
+packages = [{include = "cortex", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+# WebSocket client for Python with low level API options.
+websocket-client = "^1.5.1"
+
+# Lightweight Event Handling.
+python-dispatch = "^0.2.1"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+# Automatically format Python code to PEP 8 style guide.
+autopep8 = "^2.0.1"
+# Optional static typing for Python.
+mypy = "^1.0.1"
+# Managing and maintaining pre-commit hooks.
+pre-commit = "^3.1.0"
+# The modular source checker.
+flake8 = "^6.0.0"
+# Generic viirtualenv management and test cli tool.
+tox = "^4.4.6"
+# Formats docstring to follow PEP 257.
+docformatter = {version = "^1.5.1", extras = ["tomli"]}
+# Python style guide checker.
+pydocstyle = {version = "^6.3.0", extras = ["tomli"]}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.autopep8]
+recursive = true
+# in-place = true
+diff = true
+max_line_length = 120
+agressive = 3
+
+# Docformatter.
+[tool.docformatter]
+in-place = true
+recursive = true
+blank = true
+close-quotes-on-newline = true
+
+[tool.pydocstyle]
+convention = "google"
+add_ignore = [
+  # Missing docstring in public module.
+  "D100",
+  # Missing docstring in public class.
+  "D101",
+  # Missing docstring in public package.
+  "D104",
+  # No blank line allowed after function docstring.
+  "D202",
+  # 1 blank line required between summary line and description.
+  "D205",
+  # First line should end with a period, question mark, or exclamation point.
+  "D415",
+]
+
+# Style hinting.
+[tool.mypy]
+files = [
+  "src/",
+  "examples/",
+]
+exclude = [
+  "tests/",
+  "venv/",
+  ".venv/",
+]
+namespace_packages = true
+explicit_package_bases = true
+strict = true
+check_untyped_defs = true
+ignore_missing_imports = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+implicit_reexport = false
+no_implicit_optional = true
+show_error_codes = true
+show_column_numbers = true
+# show_error_content = true
+warn_unused_configs = true
+warn_unused_ignores = true
+# warn_redundant_cast = true
+warn_return_any = true
+warn_unreachable = true
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
+# plugins = [
+#   "numpy.typing.mypy_plugin",
+# ]
+
+# [[tool.mypy.overrides]]
+# module = [
+#   "tests.*",
+#   "examples.*",
+# ]
+# disallow_untyped_defs = true
+
+# Pyright Type Checking.
+[tool.pyright]
+reportOptionalCall = "none"
+reportGeneralTypeIssues = "none"
+reportOptionalMemberAccess = "none"
