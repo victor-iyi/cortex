@@ -1,6 +1,9 @@
 # Cortex
 
-Cortex is an API for communicating with your emotiv EEG device via websockets.
+`cortex` is an API for communicating with your emotiv EEG device via websockets.
+
+[![Emotiv Insight Headset](images/insight-2021.png)][insight]
+*Source: [Emotiv][insight]*
 
 ## Before you start
 
@@ -29,6 +32,7 @@ them in the EMOTIV Launcher.
 [developer]: https://www.emotiv.com/developer/
 [emotiv-account]: https://www.emotiv.com/my-account/cortex-apps/
 [register here]: https://id.emotivcloud.com/eoidc/account/registration/
+[insight]: https://www.emotiv.com/insight/
 
 ## Contribution
 

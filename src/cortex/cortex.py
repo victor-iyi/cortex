@@ -158,7 +158,7 @@ class Cortex(Dispatcher):
         print('on_close')
         print(args[1])
 
-    def handle_result(self, recv_dic: dict[str, Any]) -> None:
+    def handle_result(self, recv_dic: dict[str, Any]) -> None:  # noqa: C901
         if self.debug:
             print(recv_dic)
 
@@ -210,11 +210,6 @@ class Cortex(Dispatcher):
                 self.headset_id = self.headset_list[0]['id']
                 # call query headet again
                 self.query_headset()
-            elif not found_headset:
-                warnings.warn(
-                    'Can not found the headset ' +
-                    self.headset_id + '. Please make sure the id is correct.',
-                )
             elif found_headset:
                 if headset_status == 'connected':
                     # create session with the headset
@@ -229,6 +224,11 @@ class Cortex(Dispatcher):
                     warnings.warn(
                         'query_headset resp: Invalid connection status ' + headset_status,
                     )
+            elif not found_headset:
+                warnings.warn(
+                    'Can not found the headset ' +
+                    self.headset_id + '. Please make sure the id is correct.',
+                )
         elif req_id == CREATE_SESSION_ID:
             self.session_id = result_dic['id']
             print(

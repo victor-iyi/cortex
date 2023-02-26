@@ -14,6 +14,7 @@ repos:
       - id: check-yaml
       - id: check-docstring-first
       - id: check-added-large-files
+        exclude: ^images/
       - id: debug-statements
       - id: double-quote-string-fixer
       - id: end-of-file-fixer
