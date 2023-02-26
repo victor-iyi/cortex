@@ -4,6 +4,7 @@ import threading
 import time
 import warnings
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from typing import Literal
 
@@ -124,10 +125,17 @@ class Cortex(Dispatcher):
 
         # As default, a Emotiv self-signed certificate is required.
         # If you don't want to use the certificate, please replace by the below line  by sslopt={'cert_reqs': ssl.CERT_NONE}
-        sslopt = {
-            'ca_certs': '../certificates/rootCA.pem',
-            'cert_reqs': ssl.CERT_REQUIRED,
-        }
+        ca_certs = Path(__file__).resolve().parent.parent / 'certificates/rootCA.pem'
+        if ca_certs.exists():
+            sslopt = {
+                'ca_certs': ca_certs,
+                'cert_reqs': ssl.CERT_REQUIRED,
+            }
+        else:
+            warnings.warn(
+                'No certificate file found. Please check the certificate folder.',
+            )
+            sslopt = {'cert_reqs': ssl.CERT_NONE}
 
         self.websock_thread = threading.Thread(
             target=self.ws.run_forever,
