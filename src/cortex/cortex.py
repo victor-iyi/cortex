@@ -1,15 +1,14 @@
-import websocket  # 'pip install websocket-client' for install
-from datetime import datetime
 import json
 import ssl
-import time
-import sys
-from pydispatch import Dispatcher
-import warnings
 import threading
-
+import time
+import warnings
+from datetime import datetime
 from typing import Any
 from typing import Literal
+
+import websocket  # 'pip install websocket-client' for install
+from pydispatch import Dispatcher
 
 # define request id
 QUERY_HEADSET_ID = 1
@@ -79,7 +78,7 @@ class Cortex(Dispatcher):
         client_id: str,
         client_secret: str,
         debug_mode: bool = False,
-        **kwargs
+            **kwargs: Any,
     ) -> None:
 
         self.session_id = ''
@@ -90,13 +89,15 @@ class Cortex(Dispatcher):
 
         if client_id == '':
             raise ValueError(
-                'Empty your_app_client_id. Please fill in your_app_client_id before running the example.')
+                'Empty your_app_client_id. Please fill in your_app_client_id before running the example.',
+            )
         else:
             self.client_id = client_id
 
         if client_secret == '':
             raise ValueError(
-                'Empty your_app_client_secret. Please fill in your_app_client_secret before running the example.')
+                'Empty your_app_client_secret. Please fill in your_app_client_secret before running the example.',
+            )
         else:
             self.client_secret = client_secret
 
@@ -105,7 +106,7 @@ class Cortex(Dispatcher):
             if key == 'license':
                 self.license = value
             elif key == 'debit':
-                self.debit == value  # type: ignore
+                self.debit == value
             elif key == 'headset_id':
                 self.headset_id = value
 
@@ -117,7 +118,7 @@ class Cortex(Dispatcher):
             on_message=self.on_message,
             on_open=self.on_open,
             on_error=self.on_error,
-            on_close=self.on_close
+            on_close=self.on_close,
         )
         threadName = f'WebsockThread:-{datetime.utcnow():%Y%m%d%H%M%S}'
 
@@ -131,7 +132,7 @@ class Cortex(Dispatcher):
         self.websock_thread = threading.Thread(
             target=self.ws.run_forever,
             args=(None, sslopt),
-            name=threadName
+            name=threadName,
         )
         self.websock_thread .start()
         self.websock_thread.join()
@@ -145,15 +146,15 @@ class Cortex(Dispatcher):
     def set_wanted_profile(self, profileName: str) -> None:
         self.profile_name = profileName
 
-    def on_open(self, *args, **kwargs) -> None:  # type: ignore
+    def on_open(self, *args: Any, **kwargs: Any) -> None:
         print('websocket opened')
         self.do_prepare_steps()
 
-    def on_error(self, *args) -> None:
+    def on_error(self, *args: Any) -> None:
         if len(args) == 2:
             print(str(args[1]))
 
-    def on_close(self, *args, **kwargs) -> None:
+    def on_close(self, *args: Any, **kwargs: Any) -> None:
         print('on_close')
         print(args[1])
 
@@ -165,8 +166,8 @@ class Cortex(Dispatcher):
         result_dic = recv_dic['result']
 
         if req_id == HAS_ACCESS_RIGHT_ID:
-            access_granted = result_dic['accessGranted']
-            if access_granted == True:
+            access_granted: bool = result_dic['accessGranted']
+            if access_granted:
                 # authorize
                 self.authorize()
             else:
@@ -175,7 +176,7 @@ class Cortex(Dispatcher):
         elif req_id == REQUEST_ACCESS_ID:
             access_granted = result_dic['accessGranted']
 
-            if access_granted == True:
+            if access_granted:
                 # authorize
                 self.authorize()
             else:
@@ -195,24 +196,26 @@ class Cortex(Dispatcher):
                 hs_id = ele['id']
                 status = ele['status']
                 connected_by = ele['connectedBy']
-                print('headsetId: {0}, status: {1}, connected_by: {2}'.format(
-                    hs_id, status, connected_by))
+                print(f'headsetId: {hs_id}, status: {status}, connected_by: {connected_by}')
                 if self.headset_id != '' and self.headset_id == hs_id:
                     found_headset = True
                     headset_status = status
 
             if len(self.headset_list) == 0:
                 warnings.warn(
-                    'No headset available. Please turn on a headset.')
+                    'No headset available. Please turn on a headset.',
+                )
             elif self.headset_id == '':
                 # set first headset is default headset
                 self.headset_id = self.headset_list[0]['id']
                 # call query headet again
                 self.query_headset()
-            elif found_headset == False:
-                warnings.warn('Can not found the headset ' +
-                              self.headset_id + '. Please make sure the id is correct.')
-            elif found_headset == True:
+            elif not found_headset:
+                warnings.warn(
+                    'Can not found the headset ' +
+                    self.headset_id + '. Please make sure the id is correct.',
+                )
+            elif found_headset:
                 if headset_status == 'connected':
                     # create session with the headset
                     self.create_session()
@@ -224,19 +227,24 @@ class Cortex(Dispatcher):
                     self.query_headset()
                 else:
                     warnings.warn(
-                        'query_headset resp: Invalid connection status ' + headset_status)
+                        'query_headset resp: Invalid connection status ' + headset_status,
+                    )
         elif req_id == CREATE_SESSION_ID:
             self.session_id = result_dic['id']
-            print('The session ' + self.session_id +
-                  ' is created successfully.')
+            print(
+                'The session ' + self.session_id +
+                ' is created successfully.',
+            )
             self.emit('create_session_done', data=self.session_id)
         elif req_id == SUB_REQUEST_ID:
             # handle data label
             for stream in result_dic['success']:
                 stream_name = stream['streamName']
                 stream_labels = stream['cols']
-                print('The data stream ' + stream_name +
-                      ' is subscribed successfully.')
+                print(
+                    'The data stream ' + stream_name +
+                    ' is subscribed successfully.',
+                )
                 # ignore com, fac and sys data label because they are handled in on_new_data
                 if stream_name != 'com' and stream_name != 'fac':
                     self.extract_data_labels(stream_name, stream_labels)
@@ -244,19 +252,25 @@ class Cortex(Dispatcher):
             for stream in result_dic['failure']:
                 stream_name = stream['streamName']
                 stream_msg = stream['message']
-                print('The data stream ' + stream_name +
-                      ' is subscribed unsuccessfully. Because: ' + stream_msg)
+                print(
+                    'The data stream ' + stream_name +
+                    ' is subscribed unsuccessfully. Because: ' + stream_msg,
+                )
         elif req_id == UNSUB_REQUEST_ID:
             for stream in result_dic['success']:
                 stream_name = stream['streamName']
-                print('The data stream ' + stream_name +
-                      ' is unsubscribed successfully.')
+                print(
+                    'The data stream ' + stream_name +
+                    ' is unsubscribed successfully.',
+                )
 
             for stream in result_dic['failure']:
                 stream_name = stream['streamName']
                 stream_msg = stream['message']
-                print('The data stream ' + stream_name +
-                      ' is unsubscribed unsuccessfully. Because: ' + stream_msg)
+                print(
+                    'The data stream ' + stream_name +
+                    ' is unsubscribed unsuccessfully. Because: ' + stream_msg,
+                )
 
         elif req_id == QUERY_PROFILE_ID:
             profile_list = []
@@ -284,16 +298,21 @@ class Cortex(Dispatcher):
             if name is None:
                 # no profile loaded with the headset
                 print(
-                    'get_current_profile: no profile loaded with the headset ' + self.headset_id)
+                    'get_current_profile: no profile loaded with the headset ' + self.headset_id,
+                )
                 self.setup_profile(self.profile_name, 'load')
             else:
                 loaded_by_this_app = result_dic['loadedByThisApp']
-                print('get current profile rsp: ' + name +
-                      ', loadedByThisApp: ' + str(loaded_by_this_app))
+                print(
+                    'get current profile rsp: ' + name +
+                    ', loadedByThisApp: ' + str(loaded_by_this_app),
+                )
                 if name != self.profile_name:
-                    warnings.warn('There is profile ' + name +
-                                  ' is loaded for headset ' + self.headset_id)
-                elif loaded_by_this_app == True:
+                    warnings.warn(
+                        'There is profile ' + name +
+                        ' is loaded for headset ' + self.headset_id,
+                    )
+                elif loaded_by_this_app:
                     self.emit('load_unload_profile_done', isLoaded=True)
                 else:
                     self.setup_profile(self.profile_name, 'unload')
@@ -324,8 +343,10 @@ class Cortex(Dispatcher):
             for record in result_dic['failure']:
                 record_id = record['recordId']
                 failure_msg = record['message']
-                print('export_record resp failure cases: ' +
-                      record_id + ':' + failure_msg)
+                print(
+                    'export_record resp failure cases: ' +
+                    record_id + ':' + failure_msg,
+                )
 
             self.emit('export_record_done', data=success_export)
         elif req_id == INJECT_MARKER_REQUEST_ID:
@@ -341,7 +362,6 @@ class Cortex(Dispatcher):
         self.emit('inform_error', error_data=recv_dic['error'])
 
     def handle_warning(self, warning_dic: dict[str, Any]) -> None:
-
         if self.debug:
             print(warning_dic)
         warning_code = warning_dic['code']
@@ -362,13 +382,13 @@ class Cortex(Dispatcher):
                 self.session_id = ''
 
     def handle_stream_data(self, result_dic: dict[str, Any]) -> None:
-        if result_dic.get('com') != None:
+        if result_dic.get('com') is not None:
             com_data = {}
             com_data['action'] = result_dic['com'][0]
             com_data['power'] = result_dic['com'][1]
             com_data['time'] = result_dic['time']
             self.emit('new_com_data', data=com_data)
-        elif result_dic.get('fac') != None:
+        elif result_dic.get('fac') is not None:
             fe_data = {}
             fe_data['eyeAct'] = result_dic['fac'][0]  # eye action
             fe_data['uAct'] = result_dic['fac'][1]  # upper action
@@ -377,41 +397,41 @@ class Cortex(Dispatcher):
             fe_data['lPow'] = result_dic['fac'][4]  # lower action power
             fe_data['time'] = result_dic['time']
             self.emit('new_fe_data', data=fe_data)
-        elif result_dic.get('eeg') != None:
+        elif result_dic.get('eeg') is not None:
             eeg_data = {}
             eeg_data['eeg'] = result_dic['eeg']
             eeg_data['eeg'].pop()  # remove markers
             eeg_data['time'] = result_dic['time']
             self.emit('new_eeg_data', data=eeg_data)
-        elif result_dic.get('mot') != None:
+        elif result_dic.get('mot') is not None:
             mot_data = {}
             mot_data['mot'] = result_dic['mot']
             mot_data['time'] = result_dic['time']
             self.emit('new_mot_data', data=mot_data)
-        elif result_dic.get('dev') != None:
+        elif result_dic.get('dev') is not None:
             dev_data = {}
             dev_data['signal'] = result_dic['dev'][1]
             dev_data['dev'] = result_dic['dev'][2]
             dev_data['batteryPercent'] = result_dic['dev'][3]
             dev_data['time'] = result_dic['time']
             self.emit('new_dev_data', data=dev_data)
-        elif result_dic.get('met') != None:
+        elif result_dic.get('met') is not None:
             met_data = {}
             met_data['met'] = result_dic['met']
             met_data['time'] = result_dic['time']
             self.emit('new_met_data', data=met_data)
-        elif result_dic.get('pow') != None:
+        elif result_dic.get('pow') is not None:
             pow_data = {}
             pow_data['pow'] = result_dic['pow']
             pow_data['time'] = result_dic['time']
             self.emit('new_pow_data', data=pow_data)
-        elif result_dic.get('sys') != None:
+        elif result_dic.get('sys') is not None:
             sys_data = result_dic['sys']
             self.emit('new_sys_data', data=sys_data)
         else:
             print(result_dic)
 
-    def on_message(self, *args) -> None:
+    def on_message(self, *args: Any) -> None:
         recv_dic = json.loads(args[1])
         if 'sid' in recv_dic:
             self.handle_stream_data(recv_dic)
@@ -430,11 +450,13 @@ class Cortex(Dispatcher):
             'jsonrpc': '2.0',
             'id': QUERY_HEADSET_ID,
             'method': 'queryHeadsets',
-            'params': {}
+            'params': {},
         }
         if self.debug:
-            print('queryHeadsets request \n', json.dumps(
-                query_headset_request, indent=4))
+            print(
+                'queryHeadsets request\n',
+                json.dumps(query_headset_request, indent=4),
+            )
 
         self.ws.send(json.dumps(query_headset_request, indent=4))
 
@@ -446,39 +468,41 @@ class Cortex(Dispatcher):
             'method': 'controlDevice',
             'params': {
                 'command': 'connect',
-                'headset': headset_id
-            }
+                'headset': headset_id,
+            },
         }
         if self.debug:
-            print('controlDevice request \n', json.dumps(
-                connect_headset_request, indent=4))
+            print(
+                'controlDevice request\n',
+                json.dumps(connect_headset_request, indent=4),
+            )
 
         self.ws.send(json.dumps(connect_headset_request, indent=4))
 
-    def request_access(self):
+    def request_access(self) -> None:
         print('request access --------------------------------')
         request_access_request = {
             'jsonrpc': '2.0',
             'method': 'requestAccess',
             'params': {
                 'clientId': self.client_id,
-                'clientSecret': self.client_secret
+                'clientSecret': self.client_secret,
             },
-            'id': REQUEST_ACCESS_ID
+            'id': REQUEST_ACCESS_ID,
         }
 
         self.ws.send(json.dumps(request_access_request, indent=4))
 
-    def has_access_right(self):
+    def has_access_right(self) -> None:
         print('check has access right --------------------------------')
         has_access_request = {
             'jsonrpc': '2.0',
             'method': 'hasAccessRight',
             'params': {
                 'clientId': self.client_id,
-                'clientSecret': self.client_secret
+                'clientSecret': self.client_secret,
             },
-            'id': HAS_ACCESS_RIGHT_ID
+            'id': HAS_ACCESS_RIGHT_ID,
         }
         self.ws.send(json.dumps(has_access_request, indent=4))
 
@@ -491,9 +515,9 @@ class Cortex(Dispatcher):
                 'clientId': self.client_id,
                 'clientSecret': self.client_secret,
                 'license': self.license,
-                'debit': self.debit
+                'debit': self.debit,
             },
-            'id': AUTHORIZE_ID
+            'id': AUTHORIZE_ID,
         }
 
         if self.debug:
@@ -501,9 +525,9 @@ class Cortex(Dispatcher):
 
         self.ws.send(json.dumps(authorize_request))
 
-    def create_session(self):
+    def create_session(self) -> None:
         if self.session_id != '':
-            warnings.warn('There is existed session ' + self.session_id)
+            warnings.warn(f'There is existed session {self.session_id}')
             return
 
         print('create session --------------------------------')
@@ -514,13 +538,15 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'headset': self.headset_id,
-                'status': 'active'
-            }
+                'status': 'active',
+            },
         }
 
         if self.debug:
-            print('create session request \n', json.dumps(
-                create_session_request, indent=4))
+            print(
+                'create session request\n',
+                json.dumps(create_session_request, indent=4),
+            )
 
         self.ws.send(json.dumps(create_session_request))
 
@@ -533,8 +559,8 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'session': self.session_id,
-                'status': 'close'
-            }
+                'status': 'close',
+            },
         }
 
         self.ws.send(json.dumps(close_session_request))
@@ -544,12 +570,12 @@ class Cortex(Dispatcher):
         get_cortex_info_request = {
             'jsonrpc': '2.0',
             'method': 'getCortexInfo',
-            'id': GET_CORTEX_INFO_ID
+            'id': GET_CORTEX_INFO_ID,
         }
 
         self.ws.send(json.dumps(get_cortex_info_request))
 
-    def do_prepare_steps(self):
+    def do_prepare_steps(self) -> None:
         """Prepare steps include:
 
         Step 1:
@@ -577,7 +603,7 @@ class Cortex(Dispatcher):
         # check access right
         self.has_access_right()
 
-    def disconnect_headset(self):
+    def disconnect_headset(self) -> None:
         print('disconnect headset --------------------------------')
         disconnect_headset_request = {
             'jsonrpc': '2.0',
@@ -585,8 +611,8 @@ class Cortex(Dispatcher):
             'method': 'controlDevice',
             'params': {
                 'command': 'disconnect',
-                'headset': self.headset_id
-            }
+                'headset': self.headset_id,
+            },
         }
 
         self.ws.send(json.dumps(disconnect_headset_request))
@@ -599,13 +625,15 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'session': self.session_id,
-                'streams': stream
+                'streams': stream,
             },
-            'id': SUB_REQUEST_ID
+            'id': SUB_REQUEST_ID,
         }
         if self.debug:
-            print('subscribe request \n', json.dumps(
-                sub_request_json, indent=4))
+            print(
+                'subscribe request\n',
+                json.dumps(sub_request_json, indent=4),
+            )
 
         self.ws.send(json.dumps(sub_request_json))
 
@@ -617,13 +645,15 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'session': self.session_id,
-                'streams': stream
+                'streams': stream,
             },
-            'id': UNSUB_REQUEST_ID
+            'id': UNSUB_REQUEST_ID,
         }
         if self.debug:
-            print('unsubscribe request \n', json.dumps(
-                unsub_request_json, indent=4))
+            print(
+                'unsubscribe request\n',
+                json.dumps(unsub_request_json, indent=4),
+            )
 
         self.ws.send(json.dumps(unsub_request_json))
 
@@ -637,11 +667,11 @@ class Cortex(Dispatcher):
             data_labels = stream_cols[:-1]
         elif stream_name == 'dev':
             # get cq header column except battery, signal and battery percent
-            data_labels = stream_cols[2]
+            data_labels = stream_cols[2]  # type: ignore[assignment]
         else:
             data_labels = stream_cols
 
-        labels['labels'] = data_labels
+        labels['labels'] = data_labels  # type: ignore[assignment]
         print(labels)
         self.emit('new_data_labels', data=labels)
 
@@ -653,12 +683,14 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
             },
-            'id': QUERY_PROFILE_ID
+            'id': QUERY_PROFILE_ID,
         }
 
         if self.debug:
-            print('query profile request \n', json.dumps(
-                query_profile_json, indent=4))
+            print(
+                'query profile request\n',
+                json.dumps(query_profile_json, indent=4),
+            )
             print('\n')
 
         self.ws.send(json.dumps(query_profile_json))
@@ -672,12 +704,14 @@ class Cortex(Dispatcher):
                 'cortexToken': self.auth,
                 'headset': self.headset_id,
             },
-            'id': GET_CURRENT_PROFILE_ID
+            'id': GET_CURRENT_PROFILE_ID,
         }
 
         if self.debug:
-            print('get current profile json:\n',
-                  json.dumps(get_profile_json, indent=4))
+            print(
+                'get current profile json:\n',
+                json.dumps(get_profile_json, indent=4),
+            )
             print('\n')
 
         self.ws.send(json.dumps(get_profile_json))
@@ -685,7 +719,7 @@ class Cortex(Dispatcher):
     def setup_profile(
         self,
         profile_name: str,
-        status: Literal['create', 'load', 'unload', 'save', 'rename', 'delete']
+        status: Literal['create', 'load', 'unload', 'save', 'rename', 'delete'],
     ) -> None:
         print('setup profile: ' + status + ' -------------------------------- ')
         setup_profile_json = {
@@ -695,14 +729,16 @@ class Cortex(Dispatcher):
                 'cortexToken': self.auth,
                 'headset': self.headset_id,
                 'profile': profile_name,
-                'status': status
+                'status': status,
             },
-            'id': SETUP_PROFILE_ID
+            'id': SETUP_PROFILE_ID,
         }
 
         if self.debug:
-            print('setup profile json:\n', json.dumps(
-                setup_profile_json, indent=4))
+            print(
+                'setup profile json:\n',
+                json.dumps(setup_profile_json, indent=4),
+            )
             print('\n')
 
         self.ws.send(json.dumps(setup_profile_json))
@@ -722,23 +758,26 @@ class Cortex(Dispatcher):
                 'detection': detection,
                 'session': self.session_id,
                 'action': action,
-                'status': status
+                'status': status,
             },
-            'id': TRAINING_ID
+            'id': TRAINING_ID,
         }
         if self.debug:
-            print('training request:\n', json.dumps(
-                train_request_json, indent=4))
+            print(
+                'training request:\n',
+                json.dumps(train_request_json, indent=4),
+            )
             print('\n')
 
         self.ws.send(json.dumps(train_request_json))
 
-    def create_record(self, title: str, **kwargs) -> None:
+    def create_record(self, title: str, **kwargs: Any) -> None:
         print('create record --------------------------------')
 
         if (len(title) == 0):
             warnings.warn(
-                'Empty record_title. Please fill the record_title before running script.')
+                'Empty record_title. Please fill the record_title before running script.',
+            )
             # close socket
             self.close()
             return
@@ -756,11 +795,13 @@ class Cortex(Dispatcher):
             'jsonrpc': '2.0',
             'method': 'createRecord',
             'params': params_val,
-            'id': CREATE_RECORD_REQUEST_ID
+            'id': CREATE_RECORD_REQUEST_ID,
         }
         if self.debug:
-            print('create record request:\n', json.dumps(
-                create_record_request, indent=4))
+            print(
+                'create record request:\n',
+                json.dumps(create_record_request, indent=4),
+            )
 
         self.ws.send(json.dumps(create_record_request))
 
@@ -771,14 +812,16 @@ class Cortex(Dispatcher):
             'method': 'stopRecord',
             'params': {
                 'cortexToken': self.auth,
-                'session': self.session_id
+                'session': self.session_id,
             },
 
-            'id': STOP_RECORD_REQUEST_ID
+            'id': STOP_RECORD_REQUEST_ID,
         }
         if self.debug:
-            print('stop record request:\n', json.dumps(
-                stop_record_request, indent=4))
+            print(
+                'stop record request:\n',
+                json.dumps(stop_record_request, indent=4),
+            )
         self.ws.send(json.dumps(stop_record_request))
 
     def export_record(
@@ -788,13 +831,14 @@ class Cortex(Dispatcher):
         export_format: Literal['EDF', 'CSV'],
         record_ids: list[str],
         version: Literal['v2', 'v1'],
-        **kwargs,
+            **kwargs: Any,
     ) -> None:
         print('export record --------------------------------: ')
         # validate destination folder
         if (len(folder) == 0):
             warnings.warn(
-                'Invalid folder parameter. Please set a writable destination folder for exporting data.')
+                'Invalid folder parameter. Please set a writable destination folder for exporting data.',
+            )
             # close socket
             self.close()
             return
@@ -804,7 +848,7 @@ class Cortex(Dispatcher):
             'folder': folder,
             'format': export_format,
             'streamTypes': stream_types,
-            'recordIds': record_ids
+            'recordIds': record_ids,
         }
 
         if export_format == 'CSV':
@@ -817,12 +861,14 @@ class Cortex(Dispatcher):
             'jsonrpc': '2.0',
             'id': EXPORT_RECORD_ID,
             'method': 'exportRecord',
-            'params': params_val
+            'params': params_val,
         }
 
         if self.debug:
-            print('export record request \n',
-                  json.dumps(export_record_request, indent=4))
+            print(
+                'export record request \n',
+                json.dumps(export_record_request, indent=4),
+            )
 
         self.ws.send(json.dumps(export_record_request))
 
@@ -831,7 +877,7 @@ class Cortex(Dispatcher):
         time: int,
         value: str | int,
         label: str,
-        **kwargs
+        **kwargs: Any,
     ) -> None:
         print('inject marker --------------------------------')
         params_val = {
@@ -839,7 +885,7 @@ class Cortex(Dispatcher):
             'session': self.session_id,
             'time': time,
             'value': value,
-            'label': label
+            'label': label,
         }
 
         for key, value in kwargs.items():
@@ -849,24 +895,28 @@ class Cortex(Dispatcher):
             'jsonrpc': '2.0',
             'id': INJECT_MARKER_REQUEST_ID,
             'method': 'injectMarker',
-            'params': params_val
+            'params': params_val,
         }
         if self.debug:
-            print('inject marker request \n', json.dumps(
-                inject_marker_request, indent=4))
+            print(
+                'inject marker request\n',
+                json.dumps(inject_marker_request, indent=4),
+            )
         self.ws.send(json.dumps(inject_marker_request))
 
     def update_marker_request(
         self,
         markerId: str,
         time: int,
-        **kwargs
+        **kwargs: Any,
     ) -> None:
         print('update marker --------------------------------')
-        params_val = {'cortexToken': self.auth,
-                      'session': self.session_id,
-                      'markerId': markerId,
-                      'time': time}
+        params_val = {
+            'cortexToken': self.auth,
+            'session': self.session_id,
+            'markerId': markerId,
+            'time': time,
+        }
 
         for key, value in kwargs.items():
             params_val.update({key: value})
@@ -875,14 +925,16 @@ class Cortex(Dispatcher):
             'jsonrpc': '2.0',
             'id': UPDATE_MARKER_REQUEST_ID,
             'method': 'updateMarker',
-            'params': params_val
+            'params': params_val,
         }
         if self.debug:
-            print('update marker request \n', json.dumps(
-                update_marker_request, indent=4))
+            print(
+                'update marker request\n',
+                json.dumps(update_marker_request, indent=4),
+            )
         self.ws.send(json.dumps(update_marker_request))
 
-    def get_mental_command_action_sensitivity(self, profile_name):
+    def get_mental_command_action_sensitivity(self, profile_name: str) -> None:
         print('get mental command sensitivity ------------------')
         sensitivity_request = {
             'id': SENSITIVITY_REQUEST_ID,
@@ -891,12 +943,14 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'profile': profile_name,
-                'status': 'get'
-            }
+                'status': 'get',
+            },
         }
         if self.debug:
-            print('get mental command sensitivity \n',
-                  json.dumps(sensitivity_request, indent=4))
+            print(
+                'get mental command sensitivity \n',
+                json.dumps(sensitivity_request, indent=4),
+            )
 
         self.ws.send(json.dumps(sensitivity_request))
 
@@ -915,16 +969,18 @@ class Cortex(Dispatcher):
                 'profile': profile_name,
                 'session': self.session_id,
                 'status': 'set',
-                'values': values
-            }
+                'values': values,
+            },
         }
         if self.debug:
-            print('set mental command sensitivity \n',
-                  json.dumps(sensitivity_request, indent=4))
+            print(
+                'set mental command sensitivity \n',
+                json.dumps(sensitivity_request, indent=4),
+            )
 
         self.ws.send(json.dumps(sensitivity_request))
 
-    def get_mental_command_active_action(self, profile_name):
+    def get_mental_command_active_action(self, profile_name: str) -> None:
         print('get mental command active action ------------------')
         command_active_request = {
             'id': MENTAL_COMMAND_ACTIVE_ACTION_ID,
@@ -933,12 +989,14 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'profile': profile_name,
-                'status': 'get'
-            }
+                'status': 'get',
+            },
         }
         if self.debug:
-            print('get mental command active action \n',
-                  json.dumps(command_active_request, indent=4))
+            print(
+                'get mental command active action \n',
+                json.dumps(command_active_request, indent=4),
+            )
 
         self.ws.send(json.dumps(command_active_request))
 
@@ -952,17 +1010,19 @@ class Cortex(Dispatcher):
                 'cortexToken': self.auth,
                 'session': self.session_id,
                 'status': 'set',
-                'actions': actions
-            }
+                'actions': actions,
+            },
         }
 
         if self.debug:
-            print('set mental command active action \n',
-                  json.dumps(command_active_request, indent=4))
+            print(
+                'set mental command active action \n',
+                json.dumps(command_active_request, indent=4),
+            )
 
         self.ws.send(json.dumps(command_active_request))
 
-    def get_mental_command_brain_map(self, profile_name: str):
+    def get_mental_command_brain_map(self, profile_name: str) -> None:
         print('get mental command brain map ------------------')
         brain_map_request = {
             'id': MENTAL_COMMAND_BRAIN_MAP_ID,
@@ -971,12 +1031,14 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'profile': profile_name,
-                'session': self.session_id
-            }
+                'session': self.session_id,
+            },
         }
         if self.debug:
-            print('get mental command brain map \n',
-                  json.dumps(brain_map_request, indent=4))
+            print(
+                'get mental command brain map \n',
+                json.dumps(brain_map_request, indent=4),
+            )
         self.ws.send(json.dumps(brain_map_request))
 
     def get_mental_command_training_threshold(self, profile_name: str) -> None:
@@ -988,10 +1050,12 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'profile': profile_name,
-                'session': self.session_id
-            }
+                'session': self.session_id,
+            },
         }
         if self.debug:
-            print('get mental command training threshold \n',
-                  json.dumps(training_threshold_request, indent=4))
+            print(
+                'get mental command training threshold \n',
+                json.dumps(training_threshold_request, indent=4),
+            )
         self.ws.send(json.dumps(training_threshold_request))

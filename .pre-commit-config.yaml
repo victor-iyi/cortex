@@ -55,7 +55,7 @@ repos:
     rev: 6.0.0
     hooks:
       - id: flake8
-        args: [--extend-ignore, "E501,W503,W504"]
+        args: [--extend-ignore, "E501,W503,W504,C901"]
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.3.1

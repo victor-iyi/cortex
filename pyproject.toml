@@ -85,8 +85,12 @@ add_ignore = [
   "D100",
   # Missing docstring in public class.
   "D101",
+  # FIXME: Missing docstring in public method.
+  "D102",
   # Missing docstring in public package.
   "D104",
+  # FIXME: Missing docstring in __init__
+  "D107",
   # No blank line allowed after function docstring.
   "D202",
   # 1 blank line required between summary line and description.
