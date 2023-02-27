@@ -40,7 +40,7 @@ repos:
         args: [--diff, --max-line-length=120, --aggressive]
 
   - repo: https://github.com/PyCQA/docformatter
-    rev: v1.6.0.rc1
+    rev: v1.6.0-rc1
     hooks:
       - id: docformatter
         additional_dependencies: [tomli]
