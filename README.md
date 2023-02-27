@@ -1,5 +1,10 @@
 # Cortex
 
+[![CI](https://github.com/victor-iyi/cortex/actions/workflows/ci.yaml/badge.svg)](https://github.com/victor-iyi/cortex/actions/workflows/ci.yaml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/victor-iyi/cortex/main.svg)](https://results.pre-commit.ci/latest/github/victor-iyi/cortex/main)
+[![formatter | docformatter](https://img.shields.io/badge/%20formatter-docformatter-fedcba.svg)](https://github.com/PyCQA/docformatter)
+[![style | google](https://img.shields.io/badge/%20style-google-3666d6.svg)](https://google.github.io/styleguide/pyguide.html#s3.8-comments-and-docstrings)
+
 `cortex` is an API for communicating with your emotiv EEG device via websockets.
 
 [![Emotiv Insight Headset](images/insight-2021.png)][insight]
