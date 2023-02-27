@@ -1,4 +1,5 @@
 import json
+import os
 import ssl
 import threading
 import time
@@ -8,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from typing import Literal
 
-import websocket  # 'pip install websocket-client' for install
+import websocket
 from pydispatch import Dispatcher
 
 # define request id
@@ -76,40 +77,31 @@ class Cortex(Dispatcher):
 
     def __init__(
         self,
-        client_id: str,
-        client_secret: str,
+        client_id: str = '',
+        client_secret: str = '',
         debug_mode: bool = False,
-            **kwargs: Any,
+        **kwargs: Any,
     ) -> None:
 
-        self.session_id = ''
-        self.headset_id = ''
+        self.client_id = os.environ.get('CLIENT_ID', client_id)
+        self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
+
+        if not self.client_id:
+            raise ValueError(
+                'Empty CLIENT_ID. Make sure to add CLIENT_ID to your environment variables.',
+            )
+
+        if not self.client_secret:
+            raise ValueError(
+                'Empty CLIENT_SECRET. Make sure to add CLIENT_SECRET to your environment variables.',
+            )
+
         self.debug = debug_mode
-        self.debit = 10
-        self.license = ''
 
-        if client_id == '':
-            raise ValueError(
-                'Empty your_app_client_id. Please fill in your_app_client_id before running the example.',
-            )
-        else:
-            self.client_id = client_id
-
-        if client_secret == '':
-            raise ValueError(
-                'Empty your_app_client_secret. Please fill in your_app_client_secret before running the example.',
-            )
-        else:
-            self.client_secret = client_secret
-
-        for key, value in kwargs.items():
-            print(f'init {key} - {value}')
-            if key == 'license':
-                self.license = value
-            elif key == 'debit':
-                self.debit == value
-            elif key == 'headset_id':
-                self.headset_id = value
+        self.session_id: str = kwargs.get('session_id', '')
+        self.headset_id: str = kwargs.get('headset_id', '')
+        self.debit: int = kwargs.get('debit', 10)
+        self.license: str = kwargs.get('license', '')
 
     def open(self) -> None:
         url = 'wss://localhost:6868'
@@ -121,7 +113,7 @@ class Cortex(Dispatcher):
             on_error=self.on_error,
             on_close=self.on_close,
         )
-        threadName = f'WebsockThread:-{datetime.utcnow():%Y%m%d%H%M%S}'
+        thread_name = f'WebsockThread:-{datetime.utcnow():%Y%m%d%H%M%S}'
 
         # As default, a Emotiv self-signed certificate is required.
         # If you don't want to use the certificate, please replace by the below line  by sslopt={'cert_reqs': ssl.CERT_NONE}
@@ -140,7 +132,7 @@ class Cortex(Dispatcher):
         self.websock_thread = threading.Thread(
             target=self.ws.run_forever,
             args=(None, sslopt),
-            name=threadName,
+            name=thread_name,
         )
         self.websock_thread .start()
         self.websock_thread.join()
@@ -148,11 +140,11 @@ class Cortex(Dispatcher):
     def close(self) -> None:
         self.ws.close()
 
-    def set_wanted_headset(self, headsetId: str) -> None:
-        self.headset_id = headsetId
+    def set_wanted_headset(self, headset_id: str) -> None:
+        self.headset_id = headset_id
 
-    def set_wanted_profile(self, profileName: str) -> None:
-        self.profile_name = profileName
+    def set_wanted_profile(self, profile_name: str) -> None:
+        self.profile_name = profile_name
 
     def on_open(self, *args: Any, **kwargs: Any) -> None:
         print('websocket opened')
@@ -166,13 +158,14 @@ class Cortex(Dispatcher):
         print('on_close')
         print(args[1])
 
-    def handle_result(self, recv_dic: dict[str, Any]) -> None:  # noqa: C901
+    def handle_result(self, response: dict[str, Any]) -> None:  # noqa: C901
         if self.debug:
-            print(recv_dic)
+            print(response)
 
-        req_id = recv_dic['id']
-        result_dic = recv_dic['result']
+        req_id = response['id']
+        result_dic = response['result']
 
+        # already has access.
         if req_id == HAS_ACCESS_RIGHT_ID:
             access_granted: bool = result_dic['accessGranted']
             if access_granted:
@@ -181,6 +174,7 @@ class Cortex(Dispatcher):
             else:
                 # request access
                 self.request_access()
+        # request access.
         elif req_id == REQUEST_ACCESS_ID:
             access_granted = result_dic['accessGranted']
 
@@ -191,33 +185,36 @@ class Cortex(Dispatcher):
                 # wait approve from Emotiv Launcher
                 msg = result_dic['message']
                 warnings.warn(msg)
+        # authorize.
         elif req_id == AUTHORIZE_ID:
             print('Authorize successfully.')
             self.auth = result_dic['cortexToken']
             # query headsets
             self.query_headset()
+        # query headset.
         elif req_id == QUERY_HEADSET_ID:
             self.headset_list = result_dic
             found_headset = False
             headset_status = ''
-            for ele in self.headset_list:
-                hs_id = ele['id']
-                status = ele['status']
-                connected_by = ele['connectedBy']
+            for headset in self.headset_list:
+                hs_id = headset['id']
+                status = headset['status']
+                connected_by = headset['connectedBy']
                 print(f'headsetId: {hs_id}, status: {status}, connected_by: {connected_by}')
-                if self.headset_id != '' and self.headset_id == hs_id:
+                if not self.headset_id and self.headset_id == hs_id:
                     found_headset = True
                     headset_status = status
 
+            # no headset available.
             if len(self.headset_list) == 0:
-                warnings.warn(
-                    'No headset available. Please turn on a headset.',
-                )
-            elif self.headset_id == '':
+                warnings.warn('No headset available. Please turn on a headset.')
+            # no headset found.
+            elif not self.headset_id:
                 # set first headset is default headset
                 self.headset_id = self.headset_list[0]['id']
                 # call query headet again
                 self.query_headset()
+            # headset found.
             elif found_headset:
                 if headset_status == 'connected':
                     # create session with the headset
@@ -230,28 +227,27 @@ class Cortex(Dispatcher):
                     self.query_headset()
                 else:
                     warnings.warn(
-                        'query_headset resp: Invalid connection status ' + headset_status,
+                        f'query_headset resp: Invalid connection status {headset_status}',
                     )
             elif not found_headset:
                 warnings.warn(
-                    'Can not found the headset ' +
-                    self.headset_id + '. Please make sure the id is correct.',
+                    f'Can not found the headset {self.headset_id}. Please make sure the id is correct.',
                 )
+
+        # create session.
         elif req_id == CREATE_SESSION_ID:
             self.session_id = result_dic['id']
-            print(
-                'The session ' + self.session_id +
-                ' is created successfully.',
-            )
+            print(f'The session {self.session_id} is created successfully.')
             self.emit('create_session_done', data=self.session_id)
+
+        # subscribe to data stream.
         elif req_id == SUB_REQUEST_ID:
             # handle data label
             for stream in result_dic['success']:
                 stream_name = stream['streamName']
                 stream_labels = stream['cols']
                 print(
-                    'The data stream ' + stream_name +
-                    ' is subscribed successfully.',
+                    f'The data stream {stream_name} is subscribed successfully.',
                 )
                 # ignore com, fac and sys data label because they are handled in on_new_data
                 if stream_name != 'com' and stream_name != 'fac':
@@ -261,31 +257,33 @@ class Cortex(Dispatcher):
                 stream_name = stream['streamName']
                 stream_msg = stream['message']
                 print(
-                    'The data stream ' + stream_name +
-                    ' is subscribed unsuccessfully. Because: ' + stream_msg,
+                    f'The data stream {stream_name} is subscribed unsuccessfully. Because: {stream_msg}',
                 )
+
+        # unsubscribe to data stream.
         elif req_id == UNSUB_REQUEST_ID:
             for stream in result_dic['success']:
                 stream_name = stream['streamName']
                 print(
-                    'The data stream ' + stream_name +
-                    ' is unsubscribed successfully.',
+                    f'The data stream {stream_name} is unsubscribed successfully.',
                 )
 
             for stream in result_dic['failure']:
                 stream_name = stream['streamName']
                 stream_msg = stream['message']
                 print(
-                    'The data stream ' + stream_name +
-                    ' is unsubscribed unsuccessfully. Because: ' + stream_msg,
+                    f'The data stream {stream_name} is unsubscribed unsuccessfully. Because: {stream_msg}',
                 )
 
+        # Query profile.
         elif req_id == QUERY_PROFILE_ID:
             profile_list = []
-            for ele in result_dic:
-                name = ele['name']
+            for headset in result_dic:
+                name = headset['name']
                 profile_list.append(name)
             self.emit('query_profile_done', data=profile_list)
+
+        # Setup profile.
         elif req_id == SETUP_PROFILE_ID:
             action = result_dic['action']
             if action == 'create':
@@ -300,33 +298,34 @@ class Cortex(Dispatcher):
                 self.emit('load_unload_profile_done', isLoaded=False)
             elif action == 'save':
                 self.emit('save_profile_done')
+
+        # Get current profile.
         elif req_id == GET_CURRENT_PROFILE_ID:
             print(result_dic)
             name = result_dic['name']
             if name is None:
                 # no profile loaded with the headset
                 print(
-                    'get_current_profile: no profile loaded with the headset ' + self.headset_id,
+                    f'get_current_profile: no profile loaded with the headset {self.headset_id}',
                 )
                 self.setup_profile(self.profile_name, 'load')
             else:
                 loaded_by_this_app = result_dic['loadedByThisApp']
                 print(
-                    'get current profile rsp: ' + name +
-                    ', loadedByThisApp: ' + str(loaded_by_this_app),
+                    f'get current profile response: {name}, loadedByThisApp: {loaded_by_this_app}',
                 )
                 if name != self.profile_name:
                     warnings.warn(
-                        'There is profile ' + name +
-                        ' is loaded for headset ' + self.headset_id,
+                        f'There is profile {name} is loaded for headset {self.headset_id}',
                     )
                 elif loaded_by_this_app:
                     self.emit('load_unload_profile_done', isLoaded=True)
                 else:
                     self.setup_profile(self.profile_name, 'unload')
                     # warnings.warn('The profile ' + name + ' is loaded by other applications')
+
         elif req_id == DISCONNECT_HEADSET_ID:
-            print('Disconnect headset ' + self.headset_id)
+            print(f'Disconnect headset {self.headset_id}')
             self.headset_id = ''
         elif req_id == MENTAL_COMMAND_ACTIVE_ACTION_ID:
             self.emit('get_mc_active_action_done', data=result_dic)
@@ -352,8 +351,7 @@ class Cortex(Dispatcher):
                 record_id = record['recordId']
                 failure_msg = record['message']
                 print(
-                    'export_record resp failure cases: ' +
-                    record_id + ':' + failure_msg,
+                    f'export_record resp failure cases: {record_id }: {failure_msg}',
                 )
 
             self.emit('export_record_done', data=success_export)
@@ -362,18 +360,18 @@ class Cortex(Dispatcher):
         elif req_id == INJECT_MARKER_REQUEST_ID:
             self.emit('update_marker_done', data=result_dic['marker'])
         else:
-            print('No handling for response of request ' + str(req_id))
+            print(f'No handling for response of request {req_id}')
 
     def handle_error(self, recv_dic: dict[str, Any]) -> None:
         req_id = recv_dic['id']
-        print('handle_error: request Id ' + str(req_id))
+        print(f'handle_error: request Id {req_id}')
         self.emit('inform_error', error_data=recv_dic['error'])
 
-    def handle_warning(self, warning_dic: dict[str, Any]) -> None:
+    def handle_warning(self, warning_resp: dict[str, Any]) -> None:
         if self.debug:
-            print(warning_dic)
-        warning_code = warning_dic['code']
-        warning_msg = warning_dic['message']
+            print(warning_resp)
+        warning_code = warning_resp['code']
+        warning_msg = warning_resp['message']
         if warning_code == ACCESS_RIGHT_GRANTED:
             # call authorize again
             self.authorize()
@@ -396,6 +394,7 @@ class Cortex(Dispatcher):
             com_data['power'] = result_dic['com'][1]
             com_data['time'] = result_dic['time']
             self.emit('new_com_data', data=com_data)
+
         elif result_dic.get('fac') is not None:
             fe_data = {}
             fe_data['eyeAct'] = result_dic['fac'][0]  # eye action
@@ -405,17 +404,20 @@ class Cortex(Dispatcher):
             fe_data['lPow'] = result_dic['fac'][4]  # lower action power
             fe_data['time'] = result_dic['time']
             self.emit('new_fe_data', data=fe_data)
+
         elif result_dic.get('eeg') is not None:
             eeg_data = {}
             eeg_data['eeg'] = result_dic['eeg']
             eeg_data['eeg'].pop()  # remove markers
             eeg_data['time'] = result_dic['time']
             self.emit('new_eeg_data', data=eeg_data)
+
         elif result_dic.get('mot') is not None:
             mot_data = {}
             mot_data['mot'] = result_dic['mot']
             mot_data['time'] = result_dic['time']
             self.emit('new_mot_data', data=mot_data)
+
         elif result_dic.get('dev') is not None:
             dev_data = {}
             dev_data['signal'] = result_dic['dev'][1]
@@ -423,19 +425,23 @@ class Cortex(Dispatcher):
             dev_data['batteryPercent'] = result_dic['dev'][3]
             dev_data['time'] = result_dic['time']
             self.emit('new_dev_data', data=dev_data)
+
         elif result_dic.get('met') is not None:
             met_data = {}
             met_data['met'] = result_dic['met']
             met_data['time'] = result_dic['time']
             self.emit('new_met_data', data=met_data)
+
         elif result_dic.get('pow') is not None:
             pow_data = {}
             pow_data['pow'] = result_dic['pow']
             pow_data['time'] = result_dic['time']
             self.emit('new_pow_data', data=pow_data)
+
         elif result_dic.get('sys') is not None:
             sys_data = result_dic['sys']
             self.emit('new_sys_data', data=sys_data)
+
         else:
             print(result_dic)
 
@@ -453,6 +459,16 @@ class Cortex(Dispatcher):
             raise KeyError
 
     def query_headset(self) -> None:
+        """Shows details of any headsets connected to the device via USB
+        dongle, USB cable, or Bluetooth.
+
+        You can query a specific headset by its id, or you can specify a wildcard
+        for partial matching.
+
+        Read More:
+            [queryHeadsets](https://emotiv.gitbook.io/cortex-api/headset/queryheadsets)
+
+        """
         print('query headset --------------------------------')
         query_headset_request = {
             'jsonrpc': '2.0',
@@ -469,6 +485,25 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(query_headset_request, indent=4))
 
     def connect_headset(self, headset_id: str) -> None:
+        """Connect to a headset.
+
+        It can also refresh the list of available Bluetooth headsets returned by
+        `queryHeadsets`. Please note that connecting and disconnecting a headset
+        can take a few seconds. Before you call `createSession` on a headset,
+        make sure that Cortex is connected to this headset. You can use
+        `queryHeadsets` to check the connection status of the headset.
+
+        Args:
+            headset_id (str): The id of the headset to connect to.
+
+        See Also:
+            `query_headset`
+            `create_session`
+
+        Read More:
+            [controlDevice](https://emotiv.gitbook.io/cortex-api/headset/controldevice)
+
+        """
         print('connect headset --------------------------------')
         connect_headset_request = {
             'jsonrpc': '2.0',
@@ -488,6 +523,18 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(connect_headset_request, indent=4))
 
     def request_access(self) -> None:
+        """Request user approval for the current application through [EMOTIV
+        Launcher].
+
+        When your application calls this method for the first time, [EMOTIV Launcher]
+        displays a message to approve your application.
+
+        [Emotiv Launcher]: https://emotiv.gitbook.io/emotiv-launcher/
+
+        Read More:
+            [requestAccess](https://emotiv.gitbook.io/cortex-api/authentication/requestaccess)
+
+        """
         print('request access --------------------------------')
         request_access_request = {
             'jsonrpc': '2.0',
@@ -502,6 +549,18 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(request_access_request, indent=4))
 
     def has_access_right(self) -> None:
+        """Check if your application has been granted access rights in [EMOTIV
+        Launcher].
+
+        [Emotiv Launcher]: https://emotiv.gitbook.io/emotiv-launcher/
+
+        See Also:
+            `request_access`
+
+        Read More:
+            [hasAccessRight](https://emotiv.gitbook.io/cortex-api/authentication/hasaccessright)
+
+        """
         print('check has access right --------------------------------')
         has_access_request = {
             'jsonrpc': '2.0',
@@ -515,6 +574,16 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(has_access_request, indent=4))
 
     def authorize(self) -> None:
+        """This method is to generate a Cortex access token.
+
+        Most of the methods of the Cortex API require this token as a parameter.
+        Application can specify the license key and the amount of sessions to be
+        debited from the license and use them locally.
+
+        Read More:
+            [authorize](https://emotiv.gitbook.io/cortex-api/authentication/authorize)
+
+        """
         print('authorize --------------------------------')
         authorize_request = {
             'jsonrpc': '2.0',
@@ -534,6 +603,18 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(authorize_request))
 
     def create_session(self) -> None:
+        """Open a session with an EMOTIV headset.
+
+        To open a session with a headset, the status of the headset must be
+        "connected". If the status is "discovered", then you must call `controlDevice`
+        to connect the headset.
+        You cannot open a session with a headset connected by a USB cable.
+        You can use `queryHeadsets` to check the status and connection type of the headset.
+
+        Read More:
+            [createSession](https://emotiv.gitbook.io/cortex-api/session/createsession)
+
+        """
         if self.session_id != '':
             warnings.warn(f'There is existed session {self.session_id}')
             return
@@ -559,6 +640,12 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(create_session_request))
 
     def close_session(self) -> None:
+        """Close a session with an EMOTIV headset.
+
+        Read More:
+            [updateSession](https://emotiv.gitbook.io/cortex-api/session/updatesession)
+
+        """
         print('close session --------------------------------')
         close_session_request = {
             'jsonrpc': '2.0',
@@ -574,6 +661,13 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(close_session_request))
 
     def get_cortex_info(self) -> None:
+        """Return information about the Cortex service, like its version and
+        build number.
+
+        Read More:
+            [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)
+
+        """
         print('get cortex version --------------------------------')
         get_cortex_info_request = {
             'jsonrpc': '2.0',
@@ -612,6 +706,12 @@ class Cortex(Dispatcher):
         self.has_access_right()
 
     def disconnect_headset(self) -> None:
+        """Disconnect a headset.
+
+        Read More:
+            [controlDevice](https://emotiv.gitbook.io/cortex-api/headset/controldevice)
+
+        """
         print('disconnect headset --------------------------------')
         disconnect_headset_request = {
             'jsonrpc': '2.0',
@@ -625,7 +725,16 @@ class Cortex(Dispatcher):
 
         self.ws.send(json.dumps(disconnect_headset_request))
 
-    def sub_request(self, stream: list[str]) -> None:
+    def sub_request(self, streams: list[str]) -> None:
+        """Subscribe to one or more data stream.
+
+        Args:
+            streams (list[str]): list of data stream you wan to subscribe to.
+
+        Read More:
+            [subscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/subscribe)
+
+        """
         print('subscribe request --------------------------------')
         sub_request_json = {
             'jsonrpc': '2.0',
@@ -633,7 +742,7 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'session': self.session_id,
-                'streams': stream,
+                'streams': streams,
             },
             'id': SUB_REQUEST_ID,
         }
@@ -645,7 +754,16 @@ class Cortex(Dispatcher):
 
         self.ws.send(json.dumps(sub_request_json))
 
-    def unsub_request(self, stream: list[str]) -> None:
+    def unsub_request(self, streams: list[str]) -> None:
+        """Unsubscribe to one or more data stream.
+
+        Args:
+            streams (list[str]): list of data stream you wan to unsubscribe to.
+
+        Read More:
+            [unsubscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/unsubscribe)
+
+        """
         print('unsubscribe request --------------------------------')
         unsub_request_json = {
             'jsonrpc': '2.0',
@@ -653,7 +771,7 @@ class Cortex(Dispatcher):
             'params': {
                 'cortexToken': self.auth,
                 'session': self.session_id,
-                'streams': stream,
+                'streams': streams,
             },
             'id': UNSUB_REQUEST_ID,
         }
@@ -666,6 +784,16 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(unsub_request_json))
 
     def extract_data_labels(self, stream_name: str, stream_cols: list[str]) -> None:
+        """Extract data labels from a data stream.
+
+        Args:
+            stream_name (str): The name of the stream.
+            stream_cols (list[str]): The list of columns that are part of this stream.
+
+        Read More:
+            [subscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/subscribe)
+
+        """
         labels = {}
         labels['streamName'] = stream_name
 
