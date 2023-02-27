@@ -62,7 +62,6 @@ HEADSET_CANNOT_CONNECT_DISABLE_MOTION = 113
 
 
 class Cortex(Dispatcher):
-
     _events_ = [
         'inform_error', 'create_session_done', 'query_profile_done',
         'load_unload_profile_done', 'save_profile_done',
