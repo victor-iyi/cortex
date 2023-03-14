@@ -27,14 +27,14 @@ repos:
       - id: python-use-type-annotations
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.0.1
+    rev: v1.1.1
     hooks:
       - id: mypy
         exclude: ^(example*|test*)
         additional_dependencies: [types-all, typing_extensions]
 
   - repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v2.0.1
+    rev: v2.0.2
     hooks:
       - id: autopep8
         args: [--diff, --max-line-length=120, --aggressive]
