@@ -949,7 +949,6 @@ class Cortex(Dispatcher):
                 'cortexToken': self.auth,
                 'session': self.session_id,
             },
-
             'id': STOP_RECORD_REQUEST_ID,
         }
         if self.debug:
