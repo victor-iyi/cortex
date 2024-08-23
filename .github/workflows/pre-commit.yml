@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v3
-      - uses: pre-commit/action@v3
+      - uses: pre-commit/action@v3.0.1
         with:
           pre-commit_version: 'latest'
           args: install -c .pre-commit-config.yaml
