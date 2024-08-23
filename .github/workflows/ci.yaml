@@ -72,7 +72,7 @@ jobs:
       #   run: ruff check --output-format=github .
 
   ruff:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ "ubuntu-latest", "macos-latest" ]

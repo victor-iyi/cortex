@@ -18,21 +18,21 @@ repos:
       - id: python-use-type-annotations
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+    rev: v1.11.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-all, typing_extensions]
+        additional_dependencies: [typing_extensions]
         args: [--config-file, ./pyproject.toml]
 
   - repo: https://github.com/PyCQA/docformatter
-    rev: v1.7.1
+    rev: v1.7.5
     hooks:
       - id: docformatter
         additional_dependencies: [tomli]
         args: ["--in-place", "--config", "./pyproject.toml"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.4
+    rev: v0.6.2
     hooks:
       # Run the linter
       - id: ruff
@@ -40,7 +40,7 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/python-poetry/poetry
-    rev: 1.4.0
+    rev: 1.8.0
     hooks:
       - id: poetry-check
       # - id: poetry-lock
