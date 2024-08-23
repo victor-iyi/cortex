@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -12,48 +12,100 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.11"]
+        os: [ "ubuntu-latest", "macos-latest" ]
+        python-version: ["3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v3
+      #----------------------------------------------
+      #       check-out repo and set-up python
+      #----------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
-        uses: actions/setup-python@v4
+        id: setup-python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: Gr1N/setup-poetry@v7
-      - uses: actions/cache@v2
+      #----------------------------------------------
+      #        load pip cache if cache exists
+      #----------------------------------------------
+      - uses: actions/cache@v4
         with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
 
+      #----------------------------------------------
+      #         install & configure poetry
+      #----------------------------------------------
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
       - name: Install dependencies with poetry
-        run: poetry install --with dev
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --with dev
 
-      - name: Python Code Style, Quality and Lint
-        uses: weibullguy/python-lint-plus@master
+      #----------------------------------------------
+      # install your root project, if required
+      #----------------------------------------------
+      - name: Install library
+        run: poetry install --no-interaction --with dev
+
+      # - name: Run Ruff
+      #   run: ruff check --output-format=github .
+
+  ruff:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ "ubuntu-latest", "macos-latest" ]
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chartboost/ruff-action@v1
         with:
-          python-root-list: "src"
-          use-docformatter: true
-          use-autopep8: true
-          use-pydocstyle: true
-          use-mypy: true
-          use-flake8: true
-          # Unused linters.
-          use-black: false
-          use-yapf: false
-          use-isort: false
-          use-pycodestyle: false
-          use-pylint: false
-          use-mccabe: false
-          use-radon: false
-          use-rstcheck: false
-          use-check-manifest: false
-          use-pyroma: false
-          # extra-autopep8-options: "--diff --recursive --aggressive"
-          # extra-docformatter-options: "--check"
+          args: check --output-format=github .
+          src:  ./src
+
+      # - name: Python Code Style, Quality and Lint
+      #   uses: weibullguy/python-lint-plus@master
+      #   with:
+      #     python-root-list: "src"
+      #     use-docformatter: true
+      #     use-autopep8: true
+      #     use-pydocstyle: true
+      #     use-mypy: true
+      #     use-flake8: true
+      #     # Unused linters.
+      #     use-black: false
+      #     use-yapf: false
+      #     use-isort: false
+      #     use-pycodestyle: false
+      #     use-pylint: false
+      #     use-mccabe: false
+      #     use-radon: false
+      #     use-rstcheck: false
+      #     use-check-manifest: false
+      #     use-pyroma: false
+      #     # extra-autopep8-options: "--diff --recursive --aggressive"
+      #     # extra-docformatter-options: "--check"
 
       # - name: Lint with flake8
       #   run: |

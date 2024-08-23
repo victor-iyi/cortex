@@ -5,9 +5,7 @@ description = "Cortex is an API for communicating with your emotiv EEG device."
 license = "MIT"
 
 authors = ["Victor I. Afolabi <javafolabi@gmail.com>"]
-maintainers = [
-  "Victor I. Afolabi <javafolabi@gmail.com>",
-]
+maintainers = ["Victor I. Afolabi <javafolabi@gmail.com>"]
 
 readme = "README.md"
 repository = "https://github.com/victor-iyi/cortex"
@@ -30,7 +28,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-packages = [{include = "cortex", from = "src"}]
+packages = [{ include = "cortex", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -51,14 +49,16 @@ autopep8 = "^2.0.1"
 mypy = "^1.0.1"
 # Managing and maintaining pre-commit hooks.
 pre-commit = "^3.1.0"
-# The modular source checker.
-flake8 = "^6.0.0"
+# # The modular source checker.
+# flake8 = "^6.0.0"
 # Generic viirtualenv management and test cli tool.
 tox = "^4.4.6"
 # Formats docstring to follow PEP 257.
-docformatter = {version = "^1.5.1", extras = ["tomli"]}
+docformatter = { version = "^1.5.1", extras = ["tomli"] }
 # Python style guide checker.
-pydocstyle = {version = "^6.3.0", extras = ["tomli"]}
+pydocstyle = { version = "^6.3.0", extras = ["tomli"] }
+# Fast Python linter and code formatter.
+ruff = "^0.6.2"
 
 [build-system]
 requires = ["poetry-core"]
@@ -101,15 +101,8 @@ add_ignore = [
 
 # Style hinting.
 [tool.mypy]
-files = [
-  "src/",
-  "examples/",
-]
-exclude = [
-  "tests/",
-  "venv/",
-  ".venv/",
-]
+files = ["src/", "examples/"]
+exclude = ["tests/", "venv/", ".venv/"]
 namespace_packages = true
 explicit_package_bases = true
 strict = true
@@ -145,3 +138,18 @@ disallow_untyped_decorators = false
 reportOptionalCall = "none"
 reportGeneralTypeIssues = "none"
 reportOptionalMemberAccess = "none"
+
+[tool.ruff]
+line-length = 120
+
+
+[tool.ruff.lint]
+select = [
+  # pycodestyle
+  "E",
+  # pyupgrade
+  "UP",
+]
+
+[tool.ruff.format]
+quote-style = "single"

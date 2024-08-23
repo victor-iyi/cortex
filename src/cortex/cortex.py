@@ -6,8 +6,7 @@ import time
 import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import Any
-from typing import Literal
+from typing import Any, Literal
 
 import websocket
 from pydispatch import Dispatcher
@@ -63,14 +62,29 @@ HEADSET_CANNOT_CONNECT_DISABLE_MOTION = 113
 
 class Cortex(Dispatcher):
     _events_ = [
-        'inform_error', 'create_session_done', 'query_profile_done',
-        'load_unload_profile_done', 'save_profile_done',
-        'get_mc_active_action_done', 'mc_brainmap_done',
-        'mc_action_sensitivity_done', 'mc_training_threshold_done',
-        'create_record_done', 'stop_record_done', 'warn_cortex_stop_all_sub',
-        'inject_marker_done', 'update_marker_done', 'export_record_done',
-        'new_data_labels', 'new_com_data', 'new_fe_data', 'new_eeg_data',
-        'new_mot_data', 'new_dev_data', 'new_met_data', 'new_pow_data',
+        'inform_error',
+        'create_session_done',
+        'query_profile_done',
+        'load_unload_profile_done',
+        'save_profile_done',
+        'get_mc_active_action_done',
+        'mc_brainmap_done',
+        'mc_action_sensitivity_done',
+        'mc_training_threshold_done',
+        'create_record_done',
+        'stop_record_done',
+        'warn_cortex_stop_all_sub',
+        'inject_marker_done',
+        'update_marker_done',
+        'export_record_done',
+        'new_data_labels',
+        'new_com_data',
+        'new_fe_data',
+        'new_eeg_data',
+        'new_mot_data',
+        'new_dev_data',
+        'new_met_data',
+        'new_pow_data',
         'new_sys_data',
     ]
 
@@ -81,7 +95,6 @@ class Cortex(Dispatcher):
         debug_mode: bool = False,
         **kwargs: Any,
     ) -> None:
-
         self.client_id = os.environ.get('CLIENT_ID', client_id)
         self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
 
@@ -115,7 +128,8 @@ class Cortex(Dispatcher):
         thread_name = f'WebsockThread:-{datetime.utcnow():%Y%m%d%H%M%S}'
 
         # As default, a Emotiv self-signed certificate is required.
-        # If you don't want to use the certificate, please replace by the below line  by sslopt={'cert_reqs': ssl.CERT_NONE}
+        # If you don't want to use the certificate,
+        # please replace by the below line  by sslopt={'cert_reqs': ssl.CERT_NONE}
         ca_certs = Path(__file__).resolve().parent.parent / 'certificates/rootCA.pem'
         if ca_certs.exists():
             sslopt = {
@@ -133,7 +147,7 @@ class Cortex(Dispatcher):
             args=(None, sslopt),
             name=thread_name,
         )
-        self.websock_thread .start()
+        self.websock_thread.start()
         self.websock_thread.join()
 
     def close(self) -> None:
@@ -350,7 +364,7 @@ class Cortex(Dispatcher):
                 record_id = record['recordId']
                 failure_msg = record['message']
                 print(
-                    f'export_record resp failure cases: {record_id }: {failure_msg}',
+                    f'export_record resp failure cases: {record_id}: {failure_msg}',
                 )
 
             self.emit('export_record_done', data=success_export)
@@ -909,7 +923,7 @@ class Cortex(Dispatcher):
     def create_record(self, title: str, **kwargs: Any) -> None:
         print('create record --------------------------------')
 
-        if (len(title) == 0):
+        if len(title) == 0:
             warnings.warn(
                 'Empty record_title. Please fill the record_title before running script.',
             )
@@ -949,7 +963,6 @@ class Cortex(Dispatcher):
                 'cortexToken': self.auth,
                 'session': self.session_id,
             },
-
             'id': STOP_RECORD_REQUEST_ID,
         }
         if self.debug:
@@ -966,11 +979,11 @@ class Cortex(Dispatcher):
         export_format: Literal['EDF', 'CSV'],
         record_ids: list[str],
         version: Literal['v2', 'v1'],
-            **kwargs: Any,
+        **kwargs: Any,
     ) -> None:
         print('export record --------------------------------: ')
         # validate destination folder
-        if (len(folder) == 0):
+        if len(folder) == 0:
             warnings.warn(
                 'Invalid folder parameter. Please set a writable destination folder for exporting data.',
             )
