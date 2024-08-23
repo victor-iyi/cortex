@@ -39,6 +39,9 @@ websocket-client = "^1.5.1"
 # Lightweight Event Handling.
 python-dispatch = "^0.2.1"
 
+# Render rich text, progress bars, syntax highlighting and more to the terminal
+rich = "^13.7.1"
+
 [tool.poetry.group.dev]
 optional = true
 
@@ -49,10 +52,7 @@ autopep8 = "^2.0.1"
 mypy = "^1.0.1"
 # Managing and maintaining pre-commit hooks.
 pre-commit = "^3.1.0"
-# # The modular source checker.
-# flake8 = "^6.0.0"
 # Generic viirtualenv management and test cli tool.
-tox = "^4.4.6"
 # Formats docstring to follow PEP 257.
 docformatter = { version = "^1.5.1", extras = ["tomli"] }
 # Python style guide checker.

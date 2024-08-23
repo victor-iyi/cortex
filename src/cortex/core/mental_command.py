@@ -1,15 +1,18 @@
 """Mental command request functions.
 
-This module provides functions to set or get the mental command action sensitivity,
-get the active mental command action, map the profile name to the corresponding mental
-command brain, and get the training threshold for mental commands.
+This module provides functions to set or get the mental command action
+sensitivity, get the active mental command action, map the profile name
+to the corresponding mental command brain, and get the training
+threshold for mental commands.
 
 """
+
 from enum import IntEnum
 
 
 class MentalCommand(IntEnum):
     """Mental command request IDs."""
+
     SENSITIVITY_REQUEST = 15
     GET_ACTIVE_ACTION = 16
     BRAIN_MAP = 17
@@ -22,7 +25,7 @@ def action_sensitivity(
     profile_name: str,
     session_id: str | None = None,
     values: list[int] | None = None,
-) -> dict[str, str | dict]:
+) -> dict[str, str | int | dict[str, str | list[int]]]:
     """Set or get the mental command action sensitivity.
 
     Notes:
@@ -36,10 +39,11 @@ def action_sensitivity(
         values (list[int], optional): The sensitivity values.
 
     Returns:
-        dict[str, str | dict]: The mental command action sensitivity.
+        dict[str, str | int | dict[str, str | list[int]]]: The mental command
+            action sensitivity.
 
     """
-    _params = {
+    _params: dict[str, str | list[int]] = {
         'cortexToken': auth,
         'profile': profile_name,
     }
@@ -50,7 +54,7 @@ def action_sensitivity(
     else:
         _params['status'] = 'get'
 
-    sensitivity = {
+    sensitivity: dict[str, str | int | dict[str, str | list[int]]] = {
         'id': MentalCommand.SENSITIVITY_REQUEST,
         'jsonrpc': '2.0',
         'method': 'mentalCommandActionSensitivity',
@@ -65,12 +69,12 @@ def active_action(
     profile_name: str | None = None,
     session_id: str | None = None,
     actions: list[str] | None = None,
-) -> dict[str, str | dict]:
+) -> dict[str, str | int | dict[str, str | list[str]]]:
     """Set or get the active mental command action.
 
     Notes:
-        If `profile_name`, `session_id`, and `actions` are provided, the status is 'set'.
-        Otherwise, the status is 'get'.
+        If `profile_name`, `session_id`, and `actions` are provided,
+        the status is 'set'.  Otherwise, the status is 'get'.
 
     Args:
         auth (str): The Cortex authentication token.
@@ -79,10 +83,11 @@ def active_action(
         actions (list[str], optional): The active mental command actions.
 
     Returns:
-        dict[str, str | dict]: The active mental command action.
+        dict[str, str | int | dict[str, str | list[str]]]:
+            The active mental command action.
 
     """
-    _params = {
+    _params: dict[str, str | list[str]] = {
         'cortexToken': auth,
     }
     if session_id is not None and actions is not None:
@@ -97,7 +102,7 @@ def active_action(
     else:
         raise ValueError('profile_name or session_id and actions must be provided.')
 
-    action = {
+    action: dict[str, str | int | dict[str, str | list[str]]] = {
         'id': _id,
         'jsonrpc': '2.0',
         'method': 'mentalCommandActiveAction',
@@ -106,11 +111,12 @@ def active_action(
 
     return action
 
+
 def brain_map(
     auth: str,
     session_id: str,
     profile_name: str,
-) -> dict[str, str | dict]:
+) -> dict[str, str | int | dict[str, str]]:
     """Map the profile name to the corresponding mental command brain.
 
     Args:
@@ -119,10 +125,10 @@ def brain_map(
         profile_name (str): The name of the profile.
 
     Returns:
-        dict[str, str | dict]: The mental command brain map.
+        dict[str, str | int | dict[str, str]]: The mental command brain map.
 
     """
-    brain_map = {
+    _brain_map: dict[str, int | str | dict[str, str]] = {
         'id': MentalCommand.BRAIN_MAP,
         'jsonrpc': '2.0',
         'method': 'mentalCommandBrainMap',
@@ -132,14 +138,14 @@ def brain_map(
             'session': session_id,
         },
     }
-    return brain_map
+    return _brain_map
 
 
 def training_threshold(
     auth: str,
     session_id: str,
     profile_name: str,
-) -> dict[str, str | dict]:
+) -> dict[str, int | str | dict[str, str]]:
     """Get the training threshold for mental commands.
 
     Args:
@@ -148,10 +154,11 @@ def training_threshold(
         profile_name (str): The name of the profile.
 
     Returns:
-        dict[str, str | dict]: The training threshold for mental commands.
+        dict[str, str | int | dict[str, str]]:
+            The training threshold for mental commands.
 
     """
-    threshold = {
+    threshold: dict[str, int | str | dict[str, str]] = {
         'id': MentalCommand.TRAINING_THRESHOLD,
         'jsonrpc': '2.0',
         'method': 'mentalCommandTrainingThreshold',
