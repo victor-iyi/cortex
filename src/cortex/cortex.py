@@ -11,14 +11,9 @@ from typing import Any
 
 import websocket
 from pydispatch import Dispatcher
-
-from cortex.core.mental_command import (
-    action_sensitivity,
-    active_action,
-    brain_map,
-    training_threshold,
-)
 from cortex.consts import CA_CERTS
+from cortex.core.auth import access, authorize, get_info, session
+from cortex.core.handler import stream_data
 from cortex.logging import logger
 
 
@@ -27,9 +22,11 @@ class Cortex(Dispatcher):
         self,
         client_id: str | None = None,
         client_secret: str | None = None,
+        *,
         debug_mode: bool = False,
         session_id: str | None = None,
         headset_id: str | None = None,
+        debit: int | None = None,
         license: str | None = None,
     ) -> None:
         self.client_id = os.environ.get('CLIENT_ID', client_id)
@@ -42,9 +39,11 @@ class Cortex(Dispatcher):
 
         if debug_mode:
             logger.setLevel(logging.DEBUG)
+
         self.debug = debug_mode
         self.session_id = session_id
         self.headset_id = headset_id
+        self.debit = debit
         self.license = license
 
         self._ws: websocket.WebSocketApp | None = None
@@ -84,13 +83,13 @@ class Cortex(Dispatcher):
 
     def close(self) -> None:
         self._ws.close()
-        logger.info('Closing connection to Cortex.')
+        logger.info('Closed connection to Cortex.')
 
     def on_message(self, *args: Any, **kwargs: Any) -> None:
         logger.info('Received message: %s', args)
 
     def on_open(self, *args: Any, **kwargs: Any) -> None:
-        logger.info('Connection opened.')
+        logger.info('Websocket opened.')
 
     def on_close(self, *args: Any, **kwargs: Any) -> None:
         logger.info(f'on_close: {args[1]}')
@@ -99,135 +98,169 @@ class Cortex(Dispatcher):
         if len(args) == 2:
             logger.error(f'on_error: {args[1]}')
 
-    def get_mental_command_action_sensitive(self, profile_name: str) -> None:
-        """Get the mental command action sensitivity."""
-        logger.info('--- Getting mental command action sensitivity ---')
+    def handle_stream_data(self, data: dict[str, Any]) -> None:
+        """Handle the stream data."""
+        if data.get('com') is not None:
+            self.emit('new_com_data', stream_data(data, 'com'))
+        elif data.get('fac') is not None:
+            self.emit('new_fe_data', stream_data(data, 'fac'))
+        elif data.get('eeg') is not None:
+            self.emit('new_eeg_data', stream_data(data, 'eeg'))
+        elif data.get('mot') is not None:
+            self.emit('new_mot_data', stream_data(data, 'mot'))
+        elif data.get('dev') is not None:
+            self.emit('new_dev_data', stream_data(data, 'dev'))
+        elif data.get('met') is not None:
+            self.emit('new_met_data', stream_data(data, 'met'))
+        elif data.get('pow') is not None:
+            self.emit('new_pow_data', stream_data(data, 'pow'))
+        elif data.get('sys') is not None:
+            self.emit('new_sys_data', stream_data(data, 'sys'))
+        else:
+            logger.warning('Unknown data: {data}')
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
+    def request_access(self) -> None:
+        """Request user approval for the current application through [EMOTIV
+        Launcher].
 
-        sensitivity = action_sensitivity(
-            auth=self._auth,
-            profile_name=profile_name,
+        Notes:
+            When your application calls this method for the first time,
+            [EMOTIV Launcher] displays a message to approve your application.
+
+        [Emotiv Launcher]: https://emotiv.gitbook.io/emotiv-launcher/
+
+        Read More:
+            [requestAccess](https://emotiv.gitbook.io/cortex-api/authentication/requestaccess)
+
+        """
+        logger.info('--- Requesting access ---')
+
+        _access = access(
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            method='requestAccess',
         )
 
-        # If debug mode is enabled, print the sensitivity.
-        logger.debug('Getting mental command action sensitivity.')
-        logger.debug(sensitivity)
+        logging.debug(_access)
 
-        self._ws.send(json.dumps(sensitivity, indent=4))
+        self._ws.send(json.dumps(_access, indent=4))
 
-    def set_mental_command_action_sensitive(
-        self,
-        profile_name: str,
-        values: list[int],
-    ) -> None:
-        """Set the mental command action sensitivity."""
-        logger.info('--- Setting mental command action sensitivity ---')
+    def has_access_right(self) -> None:
+        """Request user approval for the current application through [EMOTIV
+        Launcher].
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
+        Notes:
+            When your application calls this method for the first time,
+            [EMOTIV Launcher] displays a message to approve your application.
 
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
+        [Emotiv Launcher]: https://emotiv.gitbook.io/emotiv-launcher/
 
-        sensitivity = action_sensitivity(
+        Read More:
+            [requestAccess](https://emotiv.gitbook.io/cortex-api/authentication/requestaccess)
+
+        """
+        logger.info('--- Requesting access right ---')
+
+        _access = access(
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            method='hasAccessRight',
+        )
+
+        logging.debug(_access)
+
+        self._ws.send(json.dumps(_access, indent=4))
+
+    def authorize(self) -> None:
+        """This method is to generate a Cortex access token.
+
+        Notes:
+            Most of the methods of the Cortex API require this token as a
+            parameter. Application can specify the license key and the amount
+            of sessions to be debited from the license and use them locally.
+
+        Read More:
+            [authorize](https://emotiv.gitbook.io/cortex-api/authentication/authorize)
+
+        """
+        logger.info('--- Authorizing application ---')
+
+        _authorize = authorize(
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            license=self.license,
+            debit=self.debit,
+        )
+
+        logging.debug(_authorize)
+
+        self._ws.send(json.dumps(_authorize, indent=4))
+
+    def create_session(self) -> None:
+        """Open a session with an Emotiv headset.
+
+        Notes:
+            To open a session with a headset, the status of the headset must be
+            "connected". If the status is "discovered", then you must call
+            `controlDevice` to connect the headset.
+            You cannot open a session with a headset connected by a USB cable.
+            You can use `queryHeadsets` to check the status and connection type
+            of the headset.
+
+        Read More:
+            [createSession](https://emotiv.gitbook.io/cortex-api/session/createsession)
+
+        """
+        logger.info('--- Creating session ---')
+
+        if self.session_id is not None:
+            logging.warning(f'Session already exists. {self.session_id}')
+            return
+
+        _session = session(
             auth=self._auth,
-            profile_name=profile_name,
+            headset_id=self.headset_id,
+            status='active',
+        )
+
+        logging.debug(_session)
+
+        self._ws.send(json.dumps(_session, indent=4))
+
+    def close_session(self) -> None:
+        """Close a session with an Emotiv headset.
+
+        Read More:
+            [updateSession](https://emotiv.gitbook.io/cortex-api/session/updateSession)
+
+        """
+
+        logger.info('--- Closing session ---')
+        _session = session(
+            auth=self._auth,
             session_id=self.session_id,
-            values=values,
+            status='close',
         )
 
-        # If debug mode is enabled, print the sensitivity.
-        logger.debug('Setting mental command action sensitivity.')
-        logger.debug(sensitivity)
+        logging.debug(_session)
 
-        self._ws.send(json.dumps(sensitivity, indent=4))
+        self._ws.send(json.dumps(_session, indent=4))
 
-    def get_mental_command_active_action(self, profile_name: str) -> None:
-        """Get the active mental command action."""
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
+    def get_cortex_info(self) -> None:
+        """Return info about the Cortex service, like it's version and build
+        number.
 
-        active = active_action(
-            auth=self._auth,
-            profile_name=profile_name,
-        )
+        Read More:
+            [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)
 
-        # If debug mode is enabled, print the active action.
-        logger.debug('Getting mental command active action.')
-        logger.debug(active)
+        """
+        logger.info('--- Getting Cortex info ---')
 
-        self._ws.send(json.dumps(active, indent=4))
+        _info = get_info()
 
-    def set_mental_command_active_action(
-        self,
-        actions: list[str],
-    ) -> None:
-        """Set the active mental command action."""
-        logger.info('--- Setting mental command active action ---')
+        logging.debug(_info)
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
-
-        active = active_action(
-            auth=self._auth,
-            session_id=self.session_id,
-            actions=actions,
-        )
-
-        # If debug mode is enabled, print the active action.
-        logger.debug('Setting mental command active action.')
-        logger.debug(active)
-
-        self._ws.send(json.dumps(active, indent=4))
-
-    def get_mental_command_brain_map(self, profile_name: str) -> None:
-        """Get the mental command brain map."""
-        logger.info('--- Getting mental command brain map ---')
-
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
-
-        brain = brain_map(
-            auth=self._auth,
-            session_id=self._session_id,
-            profile_name=profile_name,
-        )
-
-        # If debug mode is enabled, print the brain map.
-        logger.debug('Getting mental command brain map.')
-        logger.debug(brain)
-
-        self._ws.send(json.dumps(brain, indent=4))
-
-    def get_mental_command_training_threshold(self, profile_name: str) -> None:
-        """Get the mental command training threshold."""
-        logger.info('--- Getting mental command training threshold ---')
-
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
-
-        threshold = training_threshold(
-            auth=self._auth,
-            session_id=self.session_id,
-            profile_name=profile_name,
-        )
-
-        # If debug mode is enabled, print the training threshold.
-        logger.debug('Getting mental command training threshold.')
-        logger.debug(threshold)
-
-        self._ws.send(json.dumps(threshold, indent=4))
+        self._ws.send(json.dumps(_info, indent=4))
 
     @property
     def ws(self) -> websocket.WebSocketApp | None:

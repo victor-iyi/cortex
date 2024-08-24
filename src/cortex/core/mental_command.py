@@ -8,6 +8,7 @@ threshold for mental commands.
 """
 
 from enum import IntEnum
+from typing import Literal
 
 
 class MentalCommand(IntEnum):
@@ -25,6 +26,7 @@ def action_sensitivity(
     profile_name: str,
     session_id: str | None = None,
     values: list[int] | None = None,
+    status: Literal['set', 'get'] = 'get',
 ) -> dict[str, str | int | dict[str, str | list[int]]]:
     """Set or get the mental command action sensitivity.
 
@@ -43,6 +45,8 @@ def action_sensitivity(
             action sensitivity.
 
     """
+    assert status in ['set', 'get'], 'status must be either "set" or "get".'
+
     _params: dict[str, str | list[int]] = {
         'cortexToken': auth,
         'profile': profile_name,
@@ -69,6 +73,7 @@ def active_action(
     profile_name: str | None = None,
     session_id: str | None = None,
     actions: list[str] | None = None,
+    status: Literal['set', 'get'] = 'get',
 ) -> dict[str, str | int | dict[str, str | list[str]]]:
     """Set or get the active mental command action.
 
@@ -87,20 +92,23 @@ def active_action(
             The active mental command action.
 
     """
+    assert status in ['set', 'get'], 'status must be either "set" or "get".'
+
     _params: dict[str, str | list[str]] = {
         'cortexToken': auth,
+        'status': status,
     }
     if session_id is not None and actions is not None:
         _id = MentalCommand.SET_ACTIVE_ACTION
-        _params['status'] = 'set'
         _params['session'] = session_id
         _params['actions'] = actions
     elif profile_name is not None:
         _id = MentalCommand.GET_ACTIVE_ACTION
-        _params['status'] = 'get'
         _params['profile_name'] = profile_name
     else:
-        raise ValueError('profile_name or session_id and actions must be provided.')
+        raise ValueError(
+            'profile_name must be provided for get action, ' 'session_id and actions must be provided for set action.'
+        )
 
     action: dict[str, str | int | dict[str, str | list[str]]] = {
         'id': _id,
