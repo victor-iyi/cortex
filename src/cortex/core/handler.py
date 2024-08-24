@@ -1,7 +1,7 @@
 from typing import Any
 
 
-def stream_data(data: dict[str, Any], key: str) -> dict[str, Any]:
+def stream_data(data: dict[str, Any], key: str) -> Any:
     """Stream the data.
 
     Args:

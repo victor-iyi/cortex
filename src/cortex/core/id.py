@@ -99,4 +99,3 @@ class MentalCommandID(IntEnum):
     SKILL_RATING = 48
     TRAINING_THRESHOLD = 49
     ACTION_SENSITIVITY = 50
-

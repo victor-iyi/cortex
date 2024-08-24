@@ -26,9 +26,27 @@ class Cortex(Dispatcher):
         debug_mode: bool = False,
         session_id: str | None = None,
         headset_id: str | None = None,
+        profile_name: str | None = None,
         debit: int | None = None,
         license: str | None = None,
     ) -> None:
+        """
+
+        Args:
+            client_id (str): The client ID of your Cortex application.
+            client_secret (str): The client secret of your Cortex application.
+            session_id(str, optional):
+            headset_id(str, optional):
+            profile_name(str, optional):
+            license (str, optional): A licnese id. In most cases, you don't need to
+                specify the license id. Cortex will find the appropriate
+                license based on the client id.
+                Default is None.
+            debit (int, optional): The number of sessions to debit from the license,
+                so that it can be spent locally without having to authorize again.
+                You need to debit the license only if you want to *activate a session*.
+                The default is 0.
+        """
         self.client_id = os.environ.get('CLIENT_ID', client_id)
         self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
 
@@ -43,6 +61,7 @@ class Cortex(Dispatcher):
         self.debug = debug_mode
         self.session_id = session_id
         self.headset_id = headset_id
+        self.profile_name: str | None = profile_name
         self.debit = debit
         self.license = license
 

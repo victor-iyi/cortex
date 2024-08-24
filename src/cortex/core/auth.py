@@ -1,39 +1,139 @@
-"""Authentication requests for the Emotiv Cortex API.
+"""## [Authentication]
 
-This module contains functions to request access, authorize, create a
-session, and setup a profile.
+After your application is successfully [connected] to the Cortex
+service, you must go through the authentication procedure.
+
+First, you should call [getUserLogin] to check if the user has already
+logged in though [EMOTIV Launcher]. Then, you must call [requestAccess]
+to ask the user to approve your application.
+
+Finally, call [authorize] to generate a Cortex token or you can reuse a
+token that you previously got from this method, if it is not expired.
+
+[Authentication]:
+https://emotiv.gitbook.io/cortex-api/authentication
+
+[connected]:
+https://emotiv.gitbook.io/cortex-api/connecting-to-the-cortex-api
+
+[getUserLogin]:
+https://emotiv.gitbook.io/cortex-api/authentication/getuserlogin
+
+[EMOTIV Launcher]: https://emotiv.gitbook.io/emotiv-launcher/
+
+[requestAccess]:
+https://emotiv.gitbook.io/cortex-api/authentication/requestaccess
+
+[authorize]:
+https://emotiv.gitbook.io/cortex-api/authentication/authorize
 
 """
 
-from enum import IntEnum
 from typing import Literal
+from cortex.core.id import AuthID
 
 
-class AuthID(IntEnum):
-    """Authentication request IDs."""
+def get_info() -> dict[str, str | int]:
+    """Get the Cortex info.
 
-    REQUEST_ACCESS = 3
-    AUTHORIZE = 4
-    CREATE_SESSION = 5
-    HAS_ACCESS_RIGHT = 20
-    GET_CURRENT_PROFILE = 21
-    CORTEX_INFO = 22
+    Read More:
+        [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)
+
+    Returns:
+        dict[str, str | int]: The Cortex info.
+
+    """
+    _info: dict[str, str | int] = {
+        'id': AuthID.CORTEX_INFO,
+        'jsonrpc': '2.0',
+        'method': 'getCortexInfo',
+    }
+
+    return _info
+
+
+def get_user_login() -> dict[str, str | int]:
+    """Get the current logged in user.
+
+    Read More:
+        [getUserLogin](https://emotiv.gitbook.io/cortex-api/authentication/getuserlogin)
+
+    Returns:
+        dict[str, str | int]: The user login request.
+
+    """
+    _login: dict[str, str | int] = {
+        'id': AuthID.USER_LOGIN,
+        'jsonrpc': '2.0',
+        'method': 'getUserLogin',
+    }
+
+    return _login
+
+
+def access(
+    client_id: str,
+    client_secret: str,
+    *,
+    method: Literal['requestAccess', 'hasAccessRight'],
+) -> dict[str, str | int | dict[str, str]]:
+    """Request access or verify access right.
+
+    Keyword Args:
+        client_id (str): The client ID.
+        client_secret (str): The client secret.
+        method (Literal['requestAccess', 'hasAccessRight']): The method.
+
+    Read More:
+        [requestAccess](https://emotiv.gitbook.io/cortex-api/authentication/requestaccess)
+        [hasAccessRight](https://emotiv.gitbook.io/cortex-api/authentication/hasaccessright)
+
+    Returns:
+        dict[str, str | int | dict[str, str]]: The access status.
+
+    """
+    assert method in ['requestAccess', 'hasAccessRight'], 'method must be either "requestAccess" or "hasAccessRight".'
+
+    if method == 'requestAccess':
+        _id = AuthID.REQUEST_ACCESS
+    else:
+        _id = AuthID.HAS_ACCESS_RIGHT
+
+    _access: dict[str, str | int | dict[str, str]] = {
+        'id': _id,
+        'jsonrpc': '2.0',
+        'method': method,
+        'params': {
+            'clientId': client_id,
+            'clientSecret': client_secret,
+        },
+    }
+
+    return _access
 
 
 def authorize(
-    *,
     client_id: str,
     client_secret: str,
+    *,
     license: str | None = None,
     debit: int | None = None,
 ) -> dict[str, str | int, dict[str, str | int]]:
     """Authorize the client.
 
-    Keyword Args:
+    Args:
         client_id (str): The client ID.
         client_secret (str): The client secret.
+
+    Keyword Args:
         license (str): The license.
-        debit (int): The debit.
+        debit (int): Number of sessions to debit from the license,
+            so it can be spent locally without having to authorize
+            again. You need to debit the license only if you want to
+            *activate a session*. The default is 0.
+
+    Read More:
+        [authorize](https://emotiv.gitbook.io/cortex-api/authentication/authorize)
 
     Returns:
         dict[str, str | int, dict[str, str | int]]: The authorization status.
@@ -60,103 +160,88 @@ def authorize(
     return authorization
 
 
-def session(
+def generate_new_token(
     auth: str,
-    *,
-    headset_id: str | None = None,
-    session_id: str | None = None,
-    status: Literal['active', 'close'] = 'active',
+    client_id: str,
+    client_secret: str,
 ) -> dict[str, str | int, dict[str, str]]:
-    """Create or close a session.
+    """Generate a new token.
+
+    Notes:
+        This function is used to generate a new Cortex token. You can
+        use this method to extend the expiration date of a token.
+
+    Read More:
+        [generateNewToken](https://emotiv.gitbook.io/cortex-api/authentication/generatenewtoken)
 
     Args:
         auth (str): The Cortex authentication token.
-
-    Keyword Args:
-        headset_id (str, optional): The headset ID.
-        session_id (str, optional): The session ID.
-        status (Literal['active', 'close'], optional): The session status.
-
-    Returns:
-        dict[str, str | int, dict[str, str]]: The session status.
-
-    """
-    assert status in ['active', 'close'], 'status must be either "active" or "close".'
-
-    _params: dict[str, str] = {
-        'cortexToken': auth,
-    }
-    if headset_id is not None and status == 'active':
-        _method = 'createSession'
-        _params['headset'] = headset_id
-    elif session_id is not None and status == 'close':
-        _method = 'updateSession'
-        _params['session'] = session_id
-    else:
-        raise ValueError(
-            'headset_id must be provided for active session, session_id must be provided for close session.'
-        )
-
-    _params['status'] = status
-
-    _session: dict[str, str | int, dict[str, str]] = {
-        'id': AuthID.CREATE_SESSION,
-        'jsonrpc': '2.0',
-        'method': _method,
-        'params': _params,
-    }
-
-    return _session
-
-
-def access(
-    *,
-    client_id: str,
-    client_secret: str,
-    method: Literal['requestAccess', 'hasAccessRight'],
-) -> dict[str, str | int | dict[str, str]]:
-    """Request access or verify access right.
-
-    Keyword Args:
         client_id (str): The client ID.
         client_secret (str): The client secret.
-        method (Literal['requestAccess', 'hasAccessRight']): The method.
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The access status.
+        dict[str, str | int, dict[str, str]]: The new token.
 
     """
-    assert method in ['requestAccess', 'hasAccessRight'], 'method must be either "requestAccess" or "hasAccessRight".'
-
-    if method == 'requestAccess':
-        _id = AuthID.REQUEST_ACCESS
-    else:
-        _id = AuthID.HAS_ACCESS_RIGHT
-
-    _access: dict[str, str | int | dict[str, str]] = {
-        'id': _id,
+    _token: dict[str, str | int, dict[str, str]] = {
+        'id': AuthID.GEN_NEW_TOKEN,
         'jsonrpc': '2.0',
-        'method': method,
+        'method': 'generateNewToken',
         'params': {
+            'cortexToken': auth,
             'clientId': client_id,
             'clientSecret': client_secret,
         },
     }
 
-    return _access
+    return _token
 
 
-def get_info() -> dict[str, str | int]:
-    """Get the Cortex info.
+def get_user_info(auth: str) -> dict[str, str | int]:
+    """Get the current user information.
+
+    Args:
+        auth (str): The Cortex authentication token.
+
+    Read More:
+        [getUserInformation](https://emotiv.gitbook.io/cortex-api/authentication/getuserinfo)
 
     Returns:
-        dict[str, str | int]: The Cortex info.
+        dict[str, str | int]: The user information.
 
     """
     _info: dict[str, str | int] = {
-        'id': AuthID.CORTEX_INFO,
+        'id': AuthID.USER_INFO,
         'jsonrpc': '2.0',
-        'method': 'getCortexInfo',
+        'method': 'getUserInformation',
+        'params': {
+            'cortexToken': auth,
+        },
+    }
+
+    return _info
+
+
+def get_license_info(auth: str) -> dict[str, str | int]:
+    """Get the current license information.
+
+    Args:
+        auth (str): The Cortex authentication token.
+
+    Read More:
+        [getLicenseInfo](https://emotiv.gitbook.io/cortex-api/authentication/getlicenseinfo)
+
+    Returns:
+        dict[str, str | int]: The license information.
+
+    """
+    _info: dict[str, str | int] = {
+        'id': AuthID.LICENSE_INFO,
+        'jsonrpc': '2.0',
+        'method': 'getLicenseInfo',
+        'params': {
+            'cortexToken': auth,
+        },
     }
 
     return _info

@@ -1,23 +1,101 @@
-from enum import IntEnum
-from typing import Literal
+"""## [Headsets]
+
+After you finish the [authentication] process, your application should
+start headset scanning to search for EMOTIV headsets, using the method
+[controlDevice] with "refresh" command, then use the method
+[queryHeadsets] to get the discovered headsets.
+
+If the headset is not connected to Cortex yet, then you must call
+[controlDevice] with "connect" command.
+
+[Headsets]:
+https://emotiv.gitbook.io/cortex-api/headset
+
+[authentication]: https://emotiv.gitbook.io/cortex-api/authentication
+
+[controlDevice]:
+https://emotiv.gitbook.io/cortex-api/headset/controldevice
+
+[queryHeadsets]:
+https://emotiv.gitbook.io/cortex-api/headset/queryheadsets
+
+"""
+
+from typing import Literal, TypedDict
+from cortex.core.id import HeadsetID
 
 
-class HeadsetID(IntEnum):
-    """Headset request IDs."""
+class Setting(TypedDict, total=False):
+    """Headset setting."""
 
-    QUERY_HEADSET = 1
-    CONNECT = 2
-    SUBSCRIBE = 6
-    DISCONNECT = 10
-    UNSUBSCRIBE = 24
-    CONNECTION_TIMEOUT = 102
-    DISCONNECTED_TIMEOUT = 103
-    CONNECTED = 104
-    CANNOT_WORK_WITH_BTLE = 112
-    CANNOT_CONNECT_DISABLE_MOTION = 113
+    # In "EPOC" mode, the EEG resolution is 14 bits.
+    # In "EPOCPLUS" mode, the EEG resolutions are 16 bits.
+    mode: Literal['EPOC', 'EPOCPLUS']
+
+    # The EEG sample rate, in hertz.
+    # If the mode is "EPOC", then the EEG rate must be 128.
+    # If the mode is "EPOCPLUS", then the EEG rate can be 128 or 256.
+    eegRate: Literal[128, 256]
+
+    # The motion sample rate, in hertz.
+    # If the mode is "EPOC", then the motion rate must be 0.
+    # If the mode is "EPOCPLUS", then the motion rate can be 0, 32, 64, or 128.
+    memsRate: Literal[0, 32, 64, 128]
 
 
-def query_headset() -> dict[str, str | int | dict[str, str]]:
+def make_connection(
+    command: Literal['connect', 'disconnect', 'refresh'],
+    *,
+    headset_id: str | None = None,
+    mappings: dict[str, str] | None = None,
+    connection_type: str | None = None,
+) -> dict[str, str | int | dict[str, str | dict[str, str]]]:
+    """Connect, refresh, or disconnect from the headset.
+
+    Read More:
+        [controlDevice](https://emotiv.gitbook.io/cortex-api/headset/controldevice)
+
+    Args:
+        command (Literal['connect', 'disconnect', 'refresh']): The command.
+
+    Keyword Args:
+        headset_id (str, optional): The headset ID.
+        mappings (dict[str, str], optional): The mappings.
+        connection_type (str, optional): The connection type.
+
+    Returns:
+        dict[str, str | int, dict[str, str | dict[str, str]]]: The headset connection status.
+
+    """
+    _params = {'command': command}
+
+    if command in ('connect', 'refresh'):
+        _id = HeadsetID.CONNECT
+    elif command == 'disconnect':
+        _id = HeadsetID.DISCONNECT
+    else:
+        raise ValueError('command must be either "connect", "disconnect", or "refresh".')
+
+    if headset_id is not None:
+        _params['headset'] = headset_id
+
+    if mappings is not None:
+        _params['mappings'] = mappings
+
+    if connection_type is not None:
+        _params['connectionType'] = connection_type
+
+    _request: dict[str, str | int | dict[str, str | dict[str, str]]] = {
+        'id': _id,
+        'jsonrpc': '2.0',
+        'method': 'controlDevice',
+        'params': _params,
+    }
+
+    return _request
+
+
+def query_headset(headset_id: str | None = None) -> dict[str, str | int | dict[str, str]]:
     """Query the headset.
 
     Notes:
@@ -31,47 +109,113 @@ def query_headset() -> dict[str, str | int | dict[str, str]]:
         dict[str, str | int]: The headset query status.
 
     """
+    if headset_id is not None:
+        _params = {'id': headset_id}
+    else:
+        _params = {}
     _query: dict[str, str | int | dict[str, str]] = {
         'id': HeadsetID.QUERY_HEADSET,
         'jsonrpc': '2.0',
         'method': 'queryHeadsets',
-        'params': {},
+        'params': _params,
     }
 
     return _query
 
 
-def make_connection(
+def update_headset(
+    auth: str,
     headset_id: str,
-    *,
-    connect: bool = False,
-    disconnect: bool = False,
-) -> dict[str, str | int | dict[str, str]]:
-    """Connect or disconnect from the headset.
+    settings: Setting,
+) -> dict[str, str | int | dict[str, str | int]]:
+    """Update the headset settings.
 
     Read More:
-        [controlDevice](https://emotiv.gitbook.io/cortex-api/headset/controldevice)
+        [updateHeadset](https://emotiv.gitbook.io/cortex-api/headset/updateheadset)
+
+    Args:
+        auth (str): The Cortex authentication token.
+        headset_id (str): The headset ID.
+        settings (dict[str, str | int]): The settings to update.
+
+    Returns:
+        dict[str, str | int | dict[str, str | int]]: The headset update status.
+
+    """
+    _request: dict[str, str | int | dict[str, str | int]] = {
+        'id': HeadsetID.UPDATE_HEADSET,
+        'jsonrpc': '2.0',
+        'method': 'updateHeadset',
+        'params': {
+            'cortexToken': auth,
+            'headsetId': headset_id,
+            'setting': settings,
+        },
+    }
+
+    return _request
+
+
+def update_custom_info(
+    auth: str,
+    headset_id: str,
+    headband_position: Literal['back', 'top'],
+) -> dict[str, str | int | dict[str, str]]:
+    """Update the headset custom information.
+
+    Read More:
+        [updateCustomInfo](https://emotiv.gitbook.io/cortex-api/headset/updatecustominfo)
+
+    Args:
+        auth (str): The Cortex authentication token.
+        headset_id (str): The headset ID.
+        headband_position (Literal['back', 'top']): The headband position.
+
+    Returns:
+        dict[str, str | int | dict[str, str]]: The headset custom information status.
+
+    """
+    _request: dict[str, str | int | dict[str, str]] = {
+        'id': HeadsetID.UPDATE_CUSTOM_INFO,
+        'jsonrpc': '2.0',
+        'method': 'updateHeadsetCustomInfo',
+        'params': {
+            'cortexToken': auth,
+            'headsetId': headset_id,
+            'headbandPosition': headband_position,
+        },
+    }
+
+    return _request
+
+
+def sync_with_clock(
+    headset_id: str,
+    monotonic_time: float,
+    system_time: float,
+) -> dict[str, str | int | dict[str, str | float]]:
+    """Sync the headset with the system clock.
+
+    Read More:
+        [syncWithClock](https://emotiv.gitbook.io/cortex-api/headset/syncwithclock)
 
     Args:
         headset_id (str): The headset ID.
-
-    Keyword Args:
-        connect (bool, optional): Connect to the headset.
-        disconnect (bool, optional): Disconnect from the headset.
+        monotonic_time (float): The monotonic time.
+        system_time (float): The system time.
 
     Returns:
-        dict[str, str | int, dict[str, str]]: The headset connection status.
+        dict[str, str | int | dict[str, str | float]]: The headset sync status.
 
     """
-    assert connect ^ disconnect, 'Either connect or disconnect must be True.'
-
-    _request: dict[str, str | int | dict[str, str]] = {
-        'id': HeadsetID.CONNECT if connect else HeadsetID.DISCONNECT,
+    _request: dict[str, str | int | dict[str, str | float]] = {
+        'id': HeadsetID.SYNC_WITH_CLOCK,
         'jsonrpc': '2.0',
-        'method': 'controlDevice',
+        'method': 'syncWithHeadsetClock',
         'params': {
-            'command': 'connect' if connect else 'disconnect',
             'headset': headset_id,
+            'monotonicTime': monotonic_time,
+            'systemTime': system_time,
         },
     }
 
