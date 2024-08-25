@@ -94,8 +94,9 @@ class FacialExpressionID(IntEnum):
 class MentalCommandID(IntEnum):
     """Mental command request IDs."""
 
-    ACTIVE_ACTION = 46
-    BRAIN_MAP = 47
-    SKILL_RATING = 48
-    TRAINING_THRESHOLD = 49
-    ACTION_SENSITIVITY = 50
+    SET_ACTIVE_ACTION = 46
+    GET_ACTIVE_ACTION = 47
+    BRAIN_MAP = 48
+    SKILL_RATING = 49
+    TRAINING_THRESHOLD = 50
+    ACTION_SENSITIVITY = 51
