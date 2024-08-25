@@ -3,18 +3,18 @@ from typing import Literal
 from cortex.cortex import Cortex
 
 
-from cortex.core.mental_command import (
+from cortex.api.mental_command import (
     action_sensitivity,
     active_action,
     brain_map,
     training_threshold,
 )
-from cortex.core.headset import (
+from cortex.api.headset import (
     make_connection,
     query_headset,
     subscription,
 )
-from cortex.core.profile import (
+from cortex.api.profile import (
     query_profile,
     current_profile,
     setup_profile,

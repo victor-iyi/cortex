@@ -30,7 +30,7 @@ https://emotiv.gitbook.io/cortex-api/authentication/authorize
 """
 
 from typing import Literal
-from cortex.core.id import AuthID
+from cortex.api.id import AuthID
 
 
 def get_info() -> dict[str, str | int]:

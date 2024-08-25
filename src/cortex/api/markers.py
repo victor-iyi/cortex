@@ -22,7 +22,7 @@ There are two types of markers:
 """
 
 from typing import Any
-from cortex.core.id import MarkersID
+from cortex.api.id import MarkersID
 
 
 def inject_marker(

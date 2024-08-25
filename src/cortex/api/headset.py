@@ -22,7 +22,7 @@ https://emotiv.gitbook.io/cortex-api/headset/queryheadsets
 """
 
 from typing import Literal, TypedDict
-from cortex.core.id import HeadsetID
+from cortex.api.id import HeadsetID
 
 
 class Setting(TypedDict, total=False):

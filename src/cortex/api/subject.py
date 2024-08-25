@@ -23,7 +23,7 @@ https://emotiv.gitbook.io/cortex-api/subjects/querysubjects
 
 """
 
-from cortex.core.id import SubjectsID
+from cortex.api.id import SubjectsID
 from typing import Literal, TypedDict
 
 

@@ -12,8 +12,8 @@ from typing import Any
 import websocket
 from pydispatch import Dispatcher
 from cortex.consts import CA_CERTS
-from cortex.core.auth import access, authorize, get_info, session
-from cortex.core.handler import stream_data
+from cortex.api.auth import access, authorize, get_info, session
+from cortex.api.handler import stream_data
 from cortex.logging import logger
 
 

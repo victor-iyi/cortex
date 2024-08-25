@@ -21,7 +21,7 @@ But it can open multiple sessions with multiple headsets.
 """
 
 from typing import Literal
-from cortex.core.id import SessionID
+from cortex.api.id import SessionID
 
 
 def create(

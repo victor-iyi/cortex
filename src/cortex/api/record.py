@@ -21,7 +21,7 @@ https://emotiv.gitbook.io/cortex-api/records/configoptout
 
 from typing import Any, Literal, TypedDict
 
-from cortex.core.id import RecordsID
+from cortex.api.id import RecordsID
 
 # A dict with fields "from" and "to".
 Interval = TypedDict('Interval', {'from': str, 'to': str})
