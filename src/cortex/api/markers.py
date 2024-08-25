@@ -21,8 +21,12 @@ There are two types of markers:
 
 """
 
-from typing import Any
+from typing import Any, Mapping, TypeAlias
 from cortex.api.id import MarkersID
+
+
+# Return type aliases.
+MarkerRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | dict[str, Any]]]
 
 
 def inject_marker(
@@ -34,7 +38,7 @@ def inject_marker(
     *,
     port: str | None = None,
     extras: dict[str, Any] | None = None,
-) -> dict[str, str | int | dict[str, str | int | dict[str, Any]]]:
+) -> MarkerRequest:
     """Inject a marker.
 
     Args:
@@ -52,7 +56,7 @@ def inject_marker(
         [injectMarker](https://emotiv.gitbook.io/cortex-api/markers/injectmarker)
 
     Returns:
-        dict[str, str | int | dict[str, str | int | dict[str, Any]]]: The marker injection status.
+        MarkerRequest: The marker injection status.
 
     """
     _params = {
@@ -69,7 +73,7 @@ def inject_marker(
     if extras is not None:
         _params['extras'] = extras
 
-    _marker: dict[str, str | int | dict[str, str | int | dict[str, Any]]] = {
+    _marker = {
         'id': MarkersID.INJECT,
         'jsonrpc': '2.0',
         'method': 'injectMarker',
@@ -86,7 +90,7 @@ def update_marker(
     time: int,
     *,
     extras: dict[str, Any] | None = None,
-) -> dict[str, str | int | dict[str, str | int | dict[str, Any]]]:
+) -> MarkerRequest:
     """Update a marker.
 
     Args:
@@ -102,7 +106,7 @@ def update_marker(
         [updateMarker](https://emotiv.gitbook.io/cortex-api/markers/updatemarker)
 
     Returns:
-        dict[str, str | int | dict[str, str | int | dict[str, Any]]]: The marker update status.
+        MarkerRequest: The marker update status.
 
     """
     _params = {
@@ -115,7 +119,7 @@ def update_marker(
     if extras is not None:
         _params['extras'] = extras
 
-    _marker: dict[str, str | int | dict[str, str | int | dict[str, Any]]] = {
+    _marker = {
         'id': MarkersID.UPDATE,
         'jsonrpc': '2.0',
         'method': 'updateMarker',

@@ -19,7 +19,8 @@ https://emotiv.gitbook.io/cortex-api/records/configoptout
 
 """
 
-from typing import Any, Literal, TypedDict
+# mypy: disable-error-code="assignment"
+from typing import Literal, Mapping, TypeAlias, TypedDict
 
 from cortex.api.id import RecordsID
 
@@ -52,6 +53,20 @@ class RecordQuery(TypedDict, total=False):
     duration: Interval
 
 
+# Return type aliases.
+CreateRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | list[str]]]
+StopRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+UpdateRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[str]]]
+DeleteRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
+ExportRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | list[str] | bool]]
+QueryRecordRequest: TypeAlias = Mapping[
+    str, str | int | Mapping[str, str | RecordQuery | int | bool | list[Mapping[str, str]]]
+]
+RecordInfoRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
+ConfigOptOutRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | bool]]
+DownloadRecordDataRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
+
+
 def create_record(
     auth: str,
     session_id: str,
@@ -61,7 +76,7 @@ def create_record(
     subject_name: str | None = None,
     tags: list[str] | None = None,
     experiment_id: int | None = None,
-) -> dict[str, str | int | dict[str, str | int | list[str]]]:
+) -> CreateRecordRequest:
     """Create a record.
 
     Args:
@@ -76,7 +91,7 @@ def create_record(
         ['createRecord](https://emotiv.gitbook.io/cortex-api/records/createrecord)
 
     Returns:
-        dict[str, str | int | dict[str, str | Any]]: The record creation status.
+        CreateRecordRequest: The record creation status.
 
     """
     _params = {
@@ -97,7 +112,7 @@ def create_record(
     if experiment_id is not None:
         _params['experimentId'] = experiment_id
 
-    _record: dict[str, str | int | dict[str, str | int | list[str]]] = {
+    _record = {
         'id': RecordsID.CREATE,
         'jsonrpc': '2.0',
         'method': 'createRecord',
@@ -110,7 +125,7 @@ def create_record(
 def stop_record(
     auth: str,
     session_id: str,
-) -> dict[str, str | int | dict[str, str]]:
+) -> StopRecordRequest:
     """Stop the record.
 
     Args:
@@ -121,10 +136,10 @@ def stop_record(
         [stopRecord](https://emotiv.gitbook.io/cortex-api/records/stoprecord)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The record stop status.
+        StopRecordRequest: The record stop status.
 
     """
-    _record: dict[str, str | int | dict[str, str]] = {
+    _record = {
         'id': RecordsID.STOP,
         'jsonrpc': '2.0',
         'method': 'stopRecord',
@@ -144,7 +159,7 @@ def update_record(
     title: str | None = None,
     description: str | None = None,
     tags: list[str] | None = None,
-) -> dict[str, str | int | dict[str, str | list[str]]]:
+) -> UpdateRecordRequest:
     """Update the record.
 
     Args:
@@ -160,7 +175,7 @@ def update_record(
         [updateRecord](https://emotiv.gitbook.io/cortex-api/records/updaterecord)
 
     Returns:
-        dict[str, str | int | dict[str, str | list[str]]: The record update status.
+        UpdateRecordRequest: The record update status.
 
     """
     _params = {
@@ -177,7 +192,7 @@ def update_record(
     if tags is not None:
         _params['tags'] = tags
 
-    _record: dict[str, str | int | dict[str, str | list[str]]] = {
+    _record = {
         'id': RecordsID.UPDATE,
         'jsonrpc': '2.0',
         'method': 'updateRecord',
@@ -190,7 +205,7 @@ def update_record(
 def delete_record(
     auth: str,
     records: list[str],
-) -> dict[str, str | int | dict[str, list[str]]]:
+) -> DeleteRecordRequest:
     """Delete a record.
 
     Args:
@@ -201,10 +216,10 @@ def delete_record(
         [deleteRecord](https://emotiv.gitbook.io/cortex-api/records/deleterecord)
 
     Returns:
-        dict[str, str | int | dict[str, list[str]]: The record deletion status.
+        DeleteRecordRequest: The record deletion status.
 
     """
-    _record: dict[str, str | int | dict[str, list[str]]] = {
+    _record = {
         'id': RecordsID.DELETE,
         'jsonrpc': '2.0',
         'method': 'deleteRecord',
@@ -230,7 +245,7 @@ def export_record(
     include_survey: bool = False,
     include_marker_extra_infos: bool = False,
     include_deprecated_pm: bool = False,
-) -> dict[str, str | int | dict[str, str | list[str] | Any]]:
+) -> ExportRecordRequest:
     """Export one or more records to EDF or CSV files.
 
     Args:
@@ -260,7 +275,7 @@ def export_record(
         [exportRecord](https://emotiv.gitbook.io/cortex-api/records/exportrecord)
 
     Returns:
-        dict[str, str | int | dict[str, str | list[str] | Any]]: The record export status.
+        ExportRecordRequest: The record export status.
 
     """
 
@@ -290,7 +305,7 @@ def export_record(
     if include_deprecated_pm:
         _params['includeDeprecatedPM'] = include_deprecated_pm
 
-    _record: dict[str, str | int | dict[str, str | list[str] | Any]] = {
+    _record = {
         'id': RecordsID.EXPORT,
         'jsonrpc': '2.0',
         'method': 'exportRecord',
@@ -309,7 +324,7 @@ def query_records(
     offset: int | None = None,
     include_markers: bool = False,
     include_sync_status_info: bool = False,
-) -> dict[str, str | int | dict[str, str | int | bool | list[dict[str, str]]]]:
+) -> QueryRecordRequest:
     """Query the records.
 
     Args:
@@ -330,8 +345,7 @@ def query_records(
         [queryRecords](https://emotiv.gitbook.io/cortex-api/records/queryrecords)
 
     Returns:
-        dict[str, str | int | dict[str, str | int | bool | list[dict[str, str]]]]:
-            The record query status.
+        QuerySubjectRequest: The record query status.
 
     """
     _params = {
@@ -365,7 +379,7 @@ def query_records(
 def record_infos(
     auth: str,
     record_ids: list[str],
-) -> dict[str, str | int | dict[str, list[str]]]:
+) -> RecordInfoRequest:
     """Get the record information.
 
     Args:
@@ -376,10 +390,10 @@ def record_infos(
         [getRecordInformation](https://emotiv.gitbook.io/cortex-api/records/getrecordinfos)
 
     Returns:
-        dict[str, str | int | dict[str, list[str]]]: The record information.
+        RecordInfoRequest: The record information.
 
     """
-    _record: dict[str, str | int | dict[str, list[str]]] = {
+    _record = {
         'id': RecordsID.INFO,
         'jsonrpc': '2.0',
         'method': 'getRecordInfos',
@@ -397,7 +411,7 @@ def config_opt_out(
     status: Literal['get', 'set'],
     *,
     new_opt_out: bool = False,
-) -> dict[str, str | int | dict[str, str | bool]]:
+) -> ConfigOptOutRequest:
     """Get or set the opt-out status.
 
     Args:
@@ -411,7 +425,7 @@ def config_opt_out(
         [configOptOut](https://emotiv.gitbook.io/cortex-api/records/configoptout)
 
     Returns:
-        dict[str, str | int | dict[str, str | bool]]: The opt-out status.
+        ConfigOptOutRequest: The opt-out status.
 
     """
     assert status in ['get', 'set'], 'status must be either "get" or "set".'
@@ -423,7 +437,7 @@ def config_opt_out(
     if status == 'set':
         _params['newOptOut'] = new_opt_out
 
-    _record: dict[str, str | int | dict[str, str | bool]] = {
+    _record = {
         'id': RecordsID.CONFIG_OPT_OUT,
         'jsonrpc': '2.0',
         'method': 'configOptOut',
@@ -436,7 +450,7 @@ def config_opt_out(
 def download_record_data(
     auth: str,
     record_ids: list[str],
-) -> dict[str, str | int | dict[str, list[str]]]:
+) -> DownloadRecordDataRequest:
     """Download record data.
 
     Args:
@@ -447,10 +461,10 @@ def download_record_data(
         [requestToDownloadRecordData](https://emotiv.gitbook.io/cortex-api/records/requesttodownloadrecorddata)
 
     Returns:
-        dict[str, str | int | dict[str, list[str]]]: The record data.
+        DownloadRecordDataRequest: The record data.
 
     """
-    _record: dict[str, str | int | dict[str, list[str]]] = {
+    _record = {
         'id': RecordsID.DOWNLOAD_DATA,
         'jsonrpc': '2.0',
         'method': 'requestToDownloadRecordData',

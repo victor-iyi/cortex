@@ -20,15 +20,19 @@ But it can open multiple sessions with multiple headsets.
 
 """
 
-from typing import Literal
+from typing import Literal, Mapping, TypeAlias
+
 from cortex.api.id import SessionID
+
+# Return type aliases.
+SessionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
 
 
 def create(
     auth: str,
     headset_id: str,
     status: Literal['open', 'active'],
-) -> dict[str, str | int, dict[str, str]]:
+) -> SessionRequest:
     """Either open a session or open and activate a session.
 
     Args:
@@ -42,12 +46,12 @@ def create(
         [createSession](https://emotiv.gitbook.io/cortex-api/session/createsession)
 
     Returns:
-        dict[str, str | int, dict[str, str]]: The session status.
+        SessionRequest: The session status.
 
     """
     assert status in ['open', 'active'], 'status must be either "open" or "active".'
 
-    _session: dict[str, str | int, dict[str, str]] = {
+    _session = {
         'id': SessionID.CREATE,
         'jsonrpc': '2.0',
         'method': 'createSession',
@@ -65,7 +69,7 @@ def update(
     auth: str,
     session_id: str,
     status: Literal['active', 'close'],
-) -> dict[str, str | int, dict[str, str]]:
+) -> SessionRequest:
     """Update or close a session.
 
     Args:
@@ -79,12 +83,12 @@ def update(
         [updateSession](https://emotiv.gitbook.io/cortex-api/session/updatesession)
 
     Returns:
-        dict[str, str | int, dict[str, str]]: The session status.
+        SessionRequest: The session status.
 
     """
     assert status in ['active', 'close'], 'status must be either "active" or "close".'
 
-    _session: dict[str, str | int, dict[str, str]] = {
+    _session = {
         'id': SessionID.UPDATE,
         'jsonrpc': '2.0',
         'method': 'updateSession',
@@ -98,7 +102,7 @@ def update(
     return _session
 
 
-def query(auth: str) -> dict[str, str | int, dict[str, str]]:
+def query(auth: str) -> SessionRequest:
     """Query the session.
 
     Args:
@@ -108,10 +112,10 @@ def query(auth: str) -> dict[str, str | int, dict[str, str]]:
         [querySession](https://emotiv.gitbook.io/cortex-api/session/querysessions)
 
     Returns:
-        dict[str, str | int, dict[str, str]]: The session status.
+        SessionRequest: The session status.
 
     """
-    _session: dict[str, str | int, dict[str, str]] = {
+    _session = {
         'id': SessionID.QUERY,
         'jsonrpc': '2.0',
         'method': 'querySession',
@@ -129,7 +133,7 @@ def query(auth: str) -> dict[str, str | int, dict[str, str]]:
 #     status: Literal['active', 'open', 'close'],
 #     headset_id: str | None = None,
 #     session_id: str | None = None,
-# ) -> dict[str, str | int, dict[str, str]]:
+# ) -> SessionRequest:
 #     """Create or close a session.
 #
 #     Args:
@@ -141,12 +145,12 @@ def query(auth: str) -> dict[str, str | int, dict[str, str]]:
 #         status (Literal['active', 'close'], optional): The session status.
 #
 #     Returns:
-#         dict[str, str | int, dict[str, str]]: The session status.
+#         SessionRequest: The session status.
 #
 #     """
 #     assert status in ['active', 'close'], 'status must be either "active" or "close".'
 #
-#     _params: dict[str, str] = {
+#     _params = {
 #         'cortexToken': auth,
 #     }
 #     if headset_id is not None and status == 'active':
@@ -162,7 +166,7 @@ def query(auth: str) -> dict[str, str | int, dict[str, str]]:
 #
 #     _params['status'] = status
 #
-#     _session: dict[str, str | int, dict[str, str]] = {
+#     _session = {
 #         'id': SessionID.CREATE_SESSION,
 #         'jsonrpc': '2.0',
 #         'method': _method,

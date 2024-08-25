@@ -29,18 +29,26 @@ https://emotiv.gitbook.io/cortex-api/authentication/authorize
 
 """
 
-from typing import Literal
+from typing import Literal, Mapping, TypeAlias
+
 from cortex.api.id import AuthID
 
 
-def get_info() -> dict[str, str | int]:
+# Return type aliases.
+BaseRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+AccessAuthRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+AuthorizeRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int]]
+TokenRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+
+
+def get_info() -> BaseRequest:
     """Get the Cortex info.
 
     Read More:
         [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)
 
     Returns:
-        dict[str, str | int]: The Cortex info.
+        BaseRequest: The Cortex info.
 
     """
     _info: dict[str, str | int] = {
@@ -52,17 +60,17 @@ def get_info() -> dict[str, str | int]:
     return _info
 
 
-def get_user_login() -> dict[str, str | int]:
+def get_user_login() -> BaseRequest:
     """Get the current logged in user.
 
     Read More:
         [getUserLogin](https://emotiv.gitbook.io/cortex-api/authentication/getuserlogin)
 
     Returns:
-        dict[str, str | int]: The user login request.
+        BaseRequest: The user login request.
 
     """
-    _login: dict[str, str | int] = {
+    _login = {
         'id': AuthID.USER_LOGIN,
         'jsonrpc': '2.0',
         'method': 'getUserLogin',
@@ -76,7 +84,7 @@ def access(
     client_secret: str,
     *,
     method: Literal['requestAccess', 'hasAccessRight'],
-) -> dict[str, str | int | dict[str, str]]:
+) -> AccessAuthRequest:
     """Request access or verify access right.
 
     Keyword Args:
@@ -89,7 +97,7 @@ def access(
         [hasAccessRight](https://emotiv.gitbook.io/cortex-api/authentication/hasaccessright)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The access status.
+        AccessAuthRequest: The access status.
 
     """
     assert method in ['requestAccess', 'hasAccessRight'], 'method must be either "requestAccess" or "hasAccessRight".'
@@ -99,7 +107,7 @@ def access(
     else:
         _id = AuthID.HAS_ACCESS_RIGHT
 
-    _access: dict[str, str | int | dict[str, str]] = {
+    _access = {
         'id': _id,
         'jsonrpc': '2.0',
         'method': method,
@@ -118,7 +126,7 @@ def authorize(
     *,
     license: str | None = None,
     debit: int | None = None,
-) -> dict[str, str | int, dict[str, str | int]]:
+) -> AuthorizeRequest:
     """Authorize the client.
 
     Args:
@@ -136,7 +144,7 @@ def authorize(
         [authorize](https://emotiv.gitbook.io/cortex-api/authentication/authorize)
 
     Returns:
-        dict[str, str | int, dict[str, str | int]]: The authorization status.
+        AuthorizeRequest: The authorization status.
 
     """
     _params = {
@@ -148,9 +156,9 @@ def authorize(
         _params['license'] = license
 
     if debit is not None:
-        _params['debit'] = debit
+        _params['debit'] = debit  # type: ignore[assignment]
 
-    authorization: dict[str, str | int, dict[str, str | int]] = {
+    authorization = {
         'id': AuthID.AUTHORIZE,
         'jsonrpc': '2.0',
         'method': 'authorize',
@@ -164,7 +172,7 @@ def generate_new_token(
     auth: str,
     client_id: str,
     client_secret: str,
-) -> dict[str, str | int, dict[str, str]]:
+) -> BaseRequest:
     """Generate a new token.
 
     Notes:
@@ -180,10 +188,10 @@ def generate_new_token(
         client_secret (str): The client secret.
 
     Returns:
-        dict[str, str | int, dict[str, str]]: The new token.
+        BaseRequest: The new token.
 
     """
-    _token: dict[str, str | int, dict[str, str]] = {
+    _token = {
         'id': AuthID.GEN_NEW_TOKEN,
         'jsonrpc': '2.0',
         'method': 'generateNewToken',
@@ -197,7 +205,7 @@ def generate_new_token(
     return _token
 
 
-def get_user_info(auth: str) -> dict[str, str | int]:
+def get_user_info(auth: str) -> BaseRequest:
     """Get the current user information.
 
     Args:
@@ -207,10 +215,10 @@ def get_user_info(auth: str) -> dict[str, str | int]:
         [getUserInformation](https://emotiv.gitbook.io/cortex-api/authentication/getuserinfo)
 
     Returns:
-        dict[str, str | int]: The user information.
+       BaseRequest: The user information.
 
     """
-    _info: dict[str, str | int] = {
+    _info = {
         'id': AuthID.USER_INFO,
         'jsonrpc': '2.0',
         'method': 'getUserInformation',
@@ -222,7 +230,7 @@ def get_user_info(auth: str) -> dict[str, str | int]:
     return _info
 
 
-def get_license_info(auth: str) -> dict[str, str | int]:
+def get_license_info(auth: str) -> BaseRequest:
     """Get the current license information.
 
     Args:
@@ -232,10 +240,10 @@ def get_license_info(auth: str) -> dict[str, str | int]:
         [getLicenseInfo](https://emotiv.gitbook.io/cortex-api/authentication/getlicenseinfo)
 
     Returns:
-        dict[str, str | int]: The license information.
+        BaseRequest: The license information.
 
     """
-    _info: dict[str, str | int] = {
+    _info = {
         'id': AuthID.LICENSE_INFO,
         'jsonrpc': '2.0',
         'method': 'getLicenseInfo',

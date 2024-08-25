@@ -23,9 +23,11 @@ https://emotiv.gitbook.io/cortex-api/subjects/querysubjects
 
 """
 
-from cortex.api.id import SubjectsID
-from typing import Literal, TypedDict
+# mypy: disable-error-code="assignment"
 
+from typing import Literal, Mapping, TypeAlias, TypedDict
+
+from cortex.api.id import SubjectsID
 
 # A dict with fields "from" and "to".
 Interval = TypedDict('Interval', {'from': str, 'to': str})
@@ -67,6 +69,16 @@ class Attribute(TypedDict):
     value: str
 
 
+# Return Type Aliases.
+CreateSubjectRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[Attribute]]]
+UpdateSubjectRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[Attribute]]]
+DeleteSubjectRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+QuerySubjectRequest: TypeAlias = Mapping[
+    str, str | int | Mapping[str, str | SubjectQuery | int | list[Mapping[str, str]]]
+]
+DemoAttrRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+
+
 def create_subject(
     auth: str,
     subject_name: str,
@@ -77,7 +89,7 @@ def create_subject(
     state: str | None = None,
     city: str | None = None,
     attributes: list[Attribute] | None = None,
-) -> dict[str, str | int | dict[str, str | list[Attribute]]]:
+) -> CreateSubjectRequest:
     """Create a subject.
 
     Args:
@@ -96,7 +108,7 @@ def create_subject(
         [createSubject](https://emotiv.gitbook.io/cortex-api/subjects/createsubject)
 
     Returns:
-        dict[str, str | int | dict[str, str | list[Attribute]]]: The subject creation status.
+        CreateSubjectRequest: The subject creation status.
 
     """
     _params = {
@@ -122,7 +134,7 @@ def create_subject(
     if attributes is not None:
         _params['attributes'] = attributes
 
-    _subject: dict[str, str | int | dict[str, str | list[Attribute]]] = {
+    _subject = {
         'id': SubjectsID.CREATE,
         'jsonrpc': '2.0',
         'method': 'createSubject',
@@ -132,7 +144,7 @@ def create_subject(
     return _subject
 
 
-def update_session(
+def update_subject(
     auth: str,
     subject_name: str,
     *,
@@ -142,7 +154,7 @@ def update_session(
     state: str | None = None,
     city: str | None = None,
     attributes: list[Attribute] | None = None,
-) -> dict[str, str | int | dict[str, str | list[Attribute]]]:
+) -> UpdateSubjectRequest:
     """Update a subject.
 
     Args:
@@ -161,7 +173,7 @@ def update_session(
         [updateSubject](https://emotiv.gitbook.io/cortex-api/subjects/querysubjects)
 
     Returns:
-        dict[str, str | int | dict[str, str | list[Attribute]]]: The subject update status.
+        UpdateSubjectRequest: The subject update status.
 
     """
     _params = {
@@ -187,7 +199,7 @@ def update_session(
     if attributes is not None:
         _params['attributes'] = attributes
 
-    _subject: dict[str, str | int | dict[str, str | list[Attribute]]] = {
+    _subject = {
         'id': SubjectsID.UPDATE,
         'jsonrpc': '2.0',
         'method': 'updateSubject',
@@ -200,7 +212,7 @@ def update_session(
 def delete_subject(
     auth: str,
     subject_name: str,
-) -> dict[str, str | int | dict[str, str]]:
+) -> DeleteSubjectRequest:
     """Delete a subject.
 
     Args:
@@ -214,7 +226,7 @@ def delete_subject(
         dict[str, str | int | dict[str, str]]: The subject deletion status.
 
     """
-    _subject: dict[str, str | int | dict[str, str]] = {
+    _subject = {
         'id': SubjectsID.DELETE,
         'jsonrpc': '2.0',
         'method': 'deleteSubjects',
@@ -234,7 +246,7 @@ def query_subject(
     *,
     limit: int | None = None,
     offset: int | None = None,
-) -> dict[str, str | int | dict[str, str, list[dict[str, str]]]]:
+) -> QuerySubjectRequest:
     """Query a subject.
 
     Args:
@@ -251,7 +263,7 @@ def query_subject(
         [querySubjects](https://emotiv.gitbook.io/cortex-api/subjects/querysubjects)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The subject query status.
+        QuerySubjectRequest: The subject query status.
 
     """
     _params = {
@@ -266,7 +278,7 @@ def query_subject(
     if offset is not None:
         _params['offset'] = offset
 
-    _subject: dict[str, str | int | dict[str, str]] = {
+    _subject = {
         'id': SubjectsID.QUERY,
         'jsonrpc': '2.0',
         'method': 'querySubjects',
@@ -276,7 +288,7 @@ def query_subject(
     return _subject
 
 
-def get_demographic_attr(auth: str) -> dict[str, str | int | dict[str, str]]:
+def get_demographic_attr(auth: str) -> DemoAttrRequest:
     """Get the demographic attributes.
 
     Args:
@@ -286,10 +298,10 @@ def get_demographic_attr(auth: str) -> dict[str, str | int | dict[str, str]]:
         [getDemographicAttributes](https://emotiv.gitbook.io/cortex-api/subjects/getdemographicattributes)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The demographic attributes.
+        DemoAttrRequest: The demographic attributes.
 
     """
-    _subject: dict[str, str | int | dict[str, str]] = {
+    _subject = {
         'id': SubjectsID.DEMO_ATTR,
         'jsonrpc': '2.0',
         'method': 'getDemographicAttributes',
