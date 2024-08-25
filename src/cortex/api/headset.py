@@ -21,7 +21,9 @@ https://emotiv.gitbook.io/cortex-api/headset/queryheadsets
 
 """
 
-from typing import Literal, TypedDict
+# mypy: disable-error-code=assignment
+
+from typing import Literal, Mapping, TypeAlias, TypedDict
 from cortex.api.id import HeadsetID
 
 
@@ -43,13 +45,22 @@ class Setting(TypedDict, total=False):
     memsRate: Literal[0, 32, 64, 128]
 
 
+# Return type aliases.
+ConnectHeadsetRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | Mapping[str, str]]]
+QueryHeadsetRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+UpdateHeadsetRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | Setting]]
+UpdateCustomInfoRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+SyncWithClockRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | float]]
+SubscriptionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[str]]]
+
+
 def make_connection(
     command: Literal['connect', 'disconnect', 'refresh'],
     *,
     headset_id: str | None = None,
     mappings: dict[str, str] | None = None,
     connection_type: str | None = None,
-) -> dict[str, str | int | dict[str, str | dict[str, str]]]:
+) -> ConnectHeadsetRequest:
     """Connect, refresh, or disconnect from the headset.
 
     Read More:
@@ -64,7 +75,7 @@ def make_connection(
         connection_type (str, optional): The connection type.
 
     Returns:
-        dict[str, str | int, dict[str, str | dict[str, str]]]: The headset connection status.
+        ConnectHeadsetRequest: The headset connection status.
 
     """
     _params = {'command': command}
@@ -85,7 +96,7 @@ def make_connection(
     if connection_type is not None:
         _params['connectionType'] = connection_type
 
-    _request: dict[str, str | int | dict[str, str | dict[str, str]]] = {
+    _request = {
         'id': _id,
         'jsonrpc': '2.0',
         'method': 'controlDevice',
@@ -95,7 +106,7 @@ def make_connection(
     return _request
 
 
-def query_headset(headset_id: str | None = None) -> dict[str, str | int | dict[str, str]]:
+def query_headset(headset_id: str | None = None) -> QueryHeadsetRequest:
     """Query the headset.
 
     Notes:
@@ -106,7 +117,7 @@ def query_headset(headset_id: str | None = None) -> dict[str, str | int | dict[s
         [queryHeadsets](https://emotiv.gitbook.io/cortex-api/headset/queryheadsets)
 
     Returns:
-        dict[str, str | int]: The headset query status.
+        QueryHeadsetRequest: The headset query status.
 
     """
     if headset_id is not None:
@@ -127,7 +138,7 @@ def update_headset(
     auth: str,
     headset_id: str,
     settings: Setting,
-) -> dict[str, str | int | dict[str, str | int]]:
+) -> UpdateHeadsetRequest:
     """Update the headset settings.
 
     Read More:
@@ -139,10 +150,10 @@ def update_headset(
         settings (dict[str, str | int]): The settings to update.
 
     Returns:
-        dict[str, str | int | dict[str, str | int]]: The headset update status.
+        UpdateHeadsetRequest: The headset update status.
 
     """
-    _request: dict[str, str | int | dict[str, str | int]] = {
+    _request = {
         'id': HeadsetID.UPDATE_HEADSET,
         'jsonrpc': '2.0',
         'method': 'updateHeadset',
@@ -160,7 +171,7 @@ def update_custom_info(
     auth: str,
     headset_id: str,
     headband_position: Literal['back', 'top'],
-) -> dict[str, str | int | dict[str, str]]:
+) -> UpdateCustomInfoRequest:
     """Update the headset custom information.
 
     Read More:
@@ -172,10 +183,10 @@ def update_custom_info(
         headband_position (Literal['back', 'top']): The headband position.
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The headset custom information status.
+        UpdateCustomInfoRequest: The headset custom information status.
 
     """
-    _request: dict[str, str | int | dict[str, str]] = {
+    _request = {
         'id': HeadsetID.UPDATE_CUSTOM_INFO,
         'jsonrpc': '2.0',
         'method': 'updateHeadsetCustomInfo',
@@ -193,7 +204,7 @@ def sync_with_clock(
     headset_id: str,
     monotonic_time: float,
     system_time: float,
-) -> dict[str, str | int | dict[str, str | float]]:
+) -> SyncWithClockRequest:
     """Sync the headset with the system clock.
 
     Read More:
@@ -205,10 +216,10 @@ def sync_with_clock(
         system_time (float): The system time.
 
     Returns:
-        dict[str, str | int | dict[str, str | float]]: The headset sync status.
+        SyncWithClockRequest: The headset sync status.
 
     """
-    _request: dict[str, str | int | dict[str, str | float]] = {
+    _request = {
         'id': HeadsetID.SYNC_WITH_CLOCK,
         'jsonrpc': '2.0',
         'method': 'syncWithHeadsetClock',
@@ -228,7 +239,7 @@ def subscription(
     streams: list[str],
     *,
     method: Literal['subscribe', 'unsubscribe'] = 'subscribe',
-) -> dict[str, str | int | dict[str, str | list[str]]]:
+) -> SubscriptionRequest:
     """Subscribe or unsubscribe from the headset.
 
     Read More:
@@ -245,13 +256,12 @@ def subscription(
             The subscription method.
 
     Returns:
-        dict[str, str | int, dict[str, str | list[str]]]: The subscription
-            status request.
+        SubscriptionRequest: The subscription status request.
 
     """
     assert method in ['subscribe', 'unsubscribe'], 'method must be either "subscribe" or "unsubscribe".'
 
-    _request: dict[str, str | int | dict[str, str | list[str]]] = {
+    _request = {
         'id': HeadsetID.SUBSCRIBE if method == 'subscribe' else HeadsetID.UNSUBSCRIBE,
         'jsonrpc': '2.0',
         'method': method,
