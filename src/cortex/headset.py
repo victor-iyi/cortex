@@ -44,7 +44,7 @@ class Headset(Cortex):
         logger.debug('Connecting to the headset.')
         logger.debug(connection)
 
-        self._ws.send(json.dumps(connection, indent=4))
+        self.ws.send(json.dumps(connection, indent=4))
 
     def disconnect(
         self,
@@ -65,7 +65,7 @@ class Headset(Cortex):
         logger.debug('Disconnecting from the headset.')
         logger.debug(connection)
 
-        self._ws.send(json.dumps(connection, indent=4))
+        self.ws.send(json.dumps(connection, indent=4))
 
     def query_headset(self) -> None:
         """Query the headset."""
@@ -77,7 +77,7 @@ class Headset(Cortex):
         logger.debug('Querying the headset.')
         logger.debug(query_headset)
 
-        self._ws.send(json.dumps(_query_headset, indent=4))
+        self.ws.send(json.dumps(_query_headset, indent=4))
 
     def subscribe(self, streams: list[str]) -> None:
         """Subscribe to one or more data stream.
@@ -91,14 +91,11 @@ class Headset(Cortex):
         """
         logger.info('--- Subscribing to the headset ---')
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
         _request = subscription(
-            auth=self._auth,
+            auth=self.auth,
             session_id=self.session_id,
             streams=streams,
             method='subscribe',
@@ -108,7 +105,7 @@ class Headset(Cortex):
         logger.debug('Subscribe request:')
         logger.debug(_request)
 
-        self._ws.send(json.dumps(_request, indent=4))
+        self.ws.send(json.dumps(_request, indent=4))
 
     def unsubscribe(self, streams: list[str]) -> None:
         """Unsubscribe from one or more data stream.
@@ -122,14 +119,11 @@ class Headset(Cortex):
         """
         logger.info('--- Unsubscribing from the headset ---')
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
         _request = subscription(
-            auth=self._auth,
+            auth=self.auth,
             session_id=self.session_id,
             streams=streams,
             method='unsubscribe',
@@ -139,14 +133,11 @@ class Headset(Cortex):
         logger.debug('Unsubscribe request:')
         logger.debug(_request)
 
-        self._ws.send(json.dumps(_request, indent=4))
+        self.ws.send(json.dumps(_request, indent=4))
 
     def query_profile(self) -> None:
         """Query the profile."""
         logger.info('--- Querying the profile ---')
-
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
 
         query = query_profile(auth=self._auth)
 
@@ -154,17 +145,17 @@ class Headset(Cortex):
         logger.debug('Querying the profile.')
         logger.debug(query)
 
-        self._ws.send(json.dumps(query, indent=4))
+        self.ws.send(json.dumps(query, indent=4))
 
     def get_current_profile(self) -> None:
         """Get the current profile."""
         logger.info('--- Getting the current profile ---')
 
-        if not self._auth and not self.headset_id:
-            raise ValueError('No authentication token or headset ID. Please connect to Cortex first.')
+        if not self.headset_id:
+            raise ValueError('No headset ID. Please connect to the headset first.')
 
         current = current_profile(
-            auth=self._auth,
+            auth=self.auth,
             headset_id=self.headset_id,
         )
 
@@ -172,7 +163,7 @@ class Headset(Cortex):
         logger.debug('Getting the current profile.')
         logger.debug(current)
 
-        self._ws.send(json.dumps(current, indent=4))
+        self.ws.send(json.dumps(current, indent=4))
 
     def setup_profile(
         self,
@@ -195,11 +186,14 @@ class Headset(Cortex):
         """
         logger.info('--- Setting up the profile ---')
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex')
+        # Update self.profile_name if the status is 'create' or 'rename'.
+        if status == 'create':
+            self.profile_name = profile_name
+        elif status == 'rename' and new_profile_name is not None:
+            self.profile_name = new_profile_name
 
         setup = setup_profile(
-            auth=self._auth,
+            auth=self.auth,
             status=status,
             profile_name=profile_name,
             headset_id=self.headset_id,
@@ -210,17 +204,14 @@ class Headset(Cortex):
         logger.debug('Setting up the profile.')
         logger.debug(setup)
 
-        self._ws.send(json.dumps(setup, indent=4))
+        self.ws.send(json.dumps(setup, indent=4))
 
     def get_mental_command_action_sensitive(self, profile_name: str) -> None:
         """Get the mental command action sensitivity."""
         logger.info('--- Getting mental command action sensitivity ---')
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
         sensitivity = action_sensitivity(
-            auth=self._auth,
+            auth=self.auth,
             profile_name=profile_name,
             status='get',
         )
@@ -229,7 +220,7 @@ class Headset(Cortex):
         logger.debug('Getting mental command action sensitivity.')
         logger.debug(sensitivity)
 
-        self._ws.send(json.dumps(sensitivity, indent=4))
+        self.ws.send(json.dumps(sensitivity, indent=4))
 
     def set_mental_command_action_sensitive(
         self,
@@ -239,14 +230,11 @@ class Headset(Cortex):
         """Set the mental command action sensitivity."""
         logger.info('--- Setting mental command action sensitivity ---')
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
         sensitivity = action_sensitivity(
-            auth=self._auth,
+            auth=self.auth,
             profile_name=profile_name,
             session_id=self.session_id,
             values=values,
@@ -257,15 +245,13 @@ class Headset(Cortex):
         logger.debug('Setting mental command action sensitivity.')
         logger.debug(sensitivity)
 
-        self._ws.send(json.dumps(sensitivity, indent=4))
+        self.ws.send(json.dumps(sensitivity, indent=4))
 
     def get_mental_command_active_action(self, profile_name: str) -> None:
         """Get the active mental command action."""
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
 
         active = active_action(
-            auth=self._auth,
+            auth=self.auth,
             status='get',
             profile_name=profile_name,
         )
@@ -274,7 +260,7 @@ class Headset(Cortex):
         logger.debug('Getting mental command active action.')
         logger.debug(active)
 
-        self._ws.send(json.dumps(active, indent=4))
+        self.ws.send(json.dumps(active, indent=4))
 
     def set_mental_command_active_action(
         self,
@@ -283,14 +269,11 @@ class Headset(Cortex):
         """Set the active mental command action."""
         logger.info('--- Setting mental command active action ---')
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
         active = active_action(
-            auth=self._auth,
+            auth=self.auth,
             status='set',
             session_id=self.session_id,
             actions=actions,
@@ -300,14 +283,11 @@ class Headset(Cortex):
         logger.debug('Setting mental command active action.')
         logger.debug(active)
 
-        self._ws.send(json.dumps(active, indent=4))
+        self.ws.send(json.dumps(active, indent=4))
 
     def get_mental_command_brain_map(self, profile_name: str) -> None:
         """Get the mental command brain map."""
         logger.info('--- Getting mental command brain map ---')
-
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
 
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
@@ -322,20 +302,17 @@ class Headset(Cortex):
         logger.debug('Getting mental command brain map.')
         logger.debug(brain)
 
-        self._ws.send(json.dumps(brain, indent=4))
+        self.ws.send(json.dumps(brain, indent=4))
 
     def get_mental_command_training_threshold(self, profile_name: str) -> None:
         """Get the mental command training threshold."""
         logger.info('--- Getting mental command training threshold ---')
 
-        if not self._auth:
-            raise ValueError('No authentication token. Please connect to Cortex first.')
-
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
         threshold = training_threshold(
-            auth=self._auth,
+            auth=self.auth,
             profile_name=profile_name,
             session_id=self.session_id,
         )
@@ -344,4 +321,4 @@ class Headset(Cortex):
         logger.debug('Getting mental command training threshold.')
         logger.debug(threshold)
 
-        self._ws.send(json.dumps(threshold, indent=4))
+        self.ws.send(json.dumps(threshold, indent=4))

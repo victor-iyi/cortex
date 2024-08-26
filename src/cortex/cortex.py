@@ -1,4 +1,3 @@
-# mypy: disable-error-code=union-attr
 import datetime
 import json
 import logging
@@ -103,7 +102,7 @@ class Cortex(Dispatcher):
         self._thread.join()
 
     def close(self) -> None:
-        self._ws.close()
+        self.ws.close()
         logger.info('Closed connection to Cortex.')
 
     def on_message(self, *args: Any, **kwargs: Any) -> None:
@@ -164,7 +163,7 @@ class Cortex(Dispatcher):
 
         logging.debug(_access)
 
-        self._ws.send(json.dumps(_access, indent=4))
+        self.ws.send(json.dumps(_access, indent=4))
 
     def has_access_right(self) -> None:
         """Request user approval for the current application through [EMOTIV
@@ -190,7 +189,7 @@ class Cortex(Dispatcher):
 
         logging.debug(_access)
 
-        self._ws.send(json.dumps(_access, indent=4))
+        self.ws.send(json.dumps(_access, indent=4))
 
     def authorize(self) -> None:
         """This method is to generate a Cortex access token.
@@ -215,7 +214,7 @@ class Cortex(Dispatcher):
 
         logging.debug(_authorize)
 
-        self._ws.send(json.dumps(_authorize, indent=4))
+        self.ws.send(json.dumps(_authorize, indent=4))
 
     def create_session(self) -> None:
         """Open a session with an Emotiv headset.
@@ -239,14 +238,14 @@ class Cortex(Dispatcher):
             return
 
         _session = create_session(
-            auth=self._auth,
+            auth=self.auth,
             headset_id=self.headset_id,
             status='active',
         )
 
         logging.debug(_session)
 
-        self._ws.send(json.dumps(_session, indent=4))
+        self.ws.send(json.dumps(_session, indent=4))
 
     def close_session(self) -> None:
         """Close a session with an Emotiv headset.
@@ -258,14 +257,14 @@ class Cortex(Dispatcher):
 
         logger.info('--- Closing session ---')
         _session = update_session(
-            auth=self._auth,
+            auth=self.auth,
             session_id=self.session_id,
             status='close',
         )
 
         logging.debug(_session)
 
-        self._ws.send(json.dumps(_session, indent=4))
+        self.ws.send(json.dumps(_session, indent=4))
 
     def get_cortex_info(self) -> None:
         """Return info about the Cortex service, like it's version and build
@@ -281,9 +280,18 @@ class Cortex(Dispatcher):
 
         logging.debug(_info)
 
-        self._ws.send(json.dumps(_info, indent=4))
+        self.ws.send(json.dumps(_info, indent=4))
 
     @property
-    def ws(self) -> websocket.WebSocketApp | None:
+    def ws(self) -> websocket.WebSocketApp:
         """WebSocketApp: The WebSocketApp object."""
+        if self._ws is None:
+            raise ValueError('Cortex is not initialized. Call `open()` to initialize it.')
         return self._ws
+
+    @property
+    def auth(self) -> str:
+        """str: The authorization token."""
+        if self._auth is None:
+            raise ValueError('No authorization token. Call `authorize()` to generate it.')
+        return self._auth
