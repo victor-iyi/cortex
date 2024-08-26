@@ -1,24 +1,23 @@
 import json
 from typing import Literal
-from cortex.cortex import Cortex
 
-
+from cortex.api.headset import (
+    make_connection,
+    query_headset,
+    subscription,
+)
 from cortex.api.mental_command import (
     action_sensitivity,
     active_action,
     brain_map,
     training_threshold,
 )
-from cortex.api.headset import (
-    make_connection,
-    query_headset,
-    subscription,
-)
 from cortex.api.profile import (
-    query_profile,
     current_profile,
+    query_profile,
     setup_profile,
 )
+from cortex.cortex import Cortex
 from cortex.logging import logger
 
 
@@ -26,13 +25,19 @@ class Headset(Cortex):
     def __init__(self, *args: str, **kwargs: bool | str) -> None:
         super().__init__(*args, **kwargs)
 
-    def connect(self) -> None:
+    def connect(
+        self,
+        mappings: dict[str, str] | None = None,
+        connection_type: str | None = None,
+    ) -> None:
         """Connect to the headset."""
         logger.info('--- Connecting to the headset ---')
 
         connection = make_connection(
+            command='connect',
             headset_id=self.headset_id,
-            connect=True,
+            mappings=mappings,
+            connection_type=connection_type,
         )
 
         # If debug mode is enabled, print the connection.
@@ -41,13 +46,19 @@ class Headset(Cortex):
 
         self._ws.send(json.dumps(connection, indent=4))
 
-    def disconnect(self) -> None:
+    def disconnect(
+        self,
+        mappings: dict[str, str] | None = None,
+        connection_type: str | None = None,
+    ) -> None:
         """Disconnect from the headset."""
         logger.info('--- Disconnecting from the headset ---')
 
         connection = make_connection(
+            command='disconnect',
             headset_id=self.headset_id,
-            disconnect=True,
+            mappings=mappings,
+            connection_type=connection_type,
         )
 
         # If debug mode is enabled, print the connection.
@@ -60,7 +71,7 @@ class Headset(Cortex):
         """Query the headset."""
         logger.info('--- Querying the headset ---')
 
-        _query_headset = query_headset()
+        _query_headset = query_headset(headset_id=self.headset_id)
 
         # If debug mode is enabled, print the query.
         logger.debug('Querying the headset.')
@@ -79,6 +90,9 @@ class Headset(Cortex):
 
         """
         logger.info('--- Subscribing to the headset ---')
+
+        if not self._auth:
+            raise ValueError('No authentication token. Please connect to Cortex first.')
 
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
@@ -108,6 +122,9 @@ class Headset(Cortex):
         """
         logger.info('--- Unsubscribing from the headset ---')
 
+        if not self._auth:
+            raise ValueError('No authentication token. Please connect to Cortex first.')
+
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
@@ -128,6 +145,9 @@ class Headset(Cortex):
         """Query the profile."""
         logger.info('--- Querying the profile ---')
 
+        if not self._auth:
+            raise ValueError('No authentication token. Please connect to Cortex first.')
+
         query = query_profile(auth=self._auth)
 
         # If debug mode is enabled, print the query.
@@ -139,6 +159,9 @@ class Headset(Cortex):
     def get_current_profile(self) -> None:
         """Get the current profile."""
         logger.info('--- Getting the current profile ---')
+
+        if not self._auth and not self.headset_id:
+            raise ValueError('No authentication token or headset ID. Please connect to Cortex first.')
 
         current = current_profile(
             auth=self._auth,
@@ -153,26 +176,34 @@ class Headset(Cortex):
 
     def setup_profile(
         self,
-        profile_name: str,
         status: Literal['create', 'load', 'unload', 'save', 'rename', 'delete'],
+        profile_name: str,
+        *,
+        new_profile_name: str | None = None,
     ) -> None:
         """Setup a profile.
 
         Args:
+            status (Literal['create', 'load', 'unload', 'save', 'rename', 'delete']):
+                The status of the profile.
             profile_name (str): The profile name.
 
         Keyword Args:
-            status (Literal['create', 'load', 'unload', 'save', 'rename', 'delete']):
-                The profile status.
+            new_profile_name (str, optional): The new profile name.
+                Only if the status is "rename".
 
         """
         logger.info('--- Setting up the profile ---')
 
+        if not self._auth:
+            raise ValueError('No authentication token. Please connect to Cortex')
+
         setup = setup_profile(
             auth=self._auth,
-            headset_id=self.headset_id,
-            profile_name=profile_name,
             status=status,
+            profile_name=profile_name,
+            headset_id=self.headset_id,
+            new_profile_name=new_profile_name,
         )
 
         # If debug mode is enabled, print the setup.
@@ -235,8 +266,8 @@ class Headset(Cortex):
 
         active = active_action(
             auth=self._auth,
-            profile_name=profile_name,
             status='get',
+            profile_name=profile_name,
         )
 
         # If debug mode is enabled, print the active action.
@@ -260,9 +291,9 @@ class Headset(Cortex):
 
         active = active_action(
             auth=self._auth,
+            status='set',
             session_id=self.session_id,
             actions=actions,
-            status='set',
         )
 
         # If debug mode is enabled, print the active action.
@@ -283,7 +314,7 @@ class Headset(Cortex):
 
         brain = brain_map(
             auth=self._auth,
-            session_id=self._session_id,
+            session_id=self.session_id,
             profile_name=profile_name,
         )
 
@@ -305,8 +336,8 @@ class Headset(Cortex):
 
         threshold = training_threshold(
             auth=self._auth,
-            session_id=self.session_id,
             profile_name=profile_name,
+            session_id=self.session_id,
         )
 
         # If debug mode is enabled, print the training threshold.

@@ -1,19 +1,21 @@
+# mypy: disable-error-code=union-attr
 import datetime
 import json
 import logging
 import os
 import ssl
 import threading
-
 from datetime import datetime as dt
 from pathlib import Path
 from typing import Any
 
 import websocket
 from pydispatch import Dispatcher
-from cortex.consts import CA_CERTS
-from cortex.api.auth import access, authorize, get_info, session
+
+from cortex.api.auth import access, authorize, get_info
 from cortex.api.handler import stream_data
+from cortex.api.session import create_session, update_session
+from cortex.consts import CA_CERTS
 from cortex.logging import logger
 
 
@@ -233,10 +235,10 @@ class Cortex(Dispatcher):
         logger.info('--- Creating session ---')
 
         if self.session_id is not None:
-            logging.warning(f'Session already exists. {self.session_id}')
+            logger.warning(f'Session already exists. {self.session_id}')
             return
 
-        _session = session(
+        _session = create_session(
             auth=self._auth,
             headset_id=self.headset_id,
             status='active',
@@ -255,7 +257,7 @@ class Cortex(Dispatcher):
         """
 
         logger.info('--- Closing session ---')
-        _session = session(
+        _session = update_session(
             auth=self._auth,
             session_id=self.session_id,
             status='close',

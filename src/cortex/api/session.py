@@ -28,7 +28,7 @@ from cortex.api.id import SessionID
 SessionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
 
 
-def create(
+def create_session(
     auth: str,
     headset_id: str,
     status: Literal['open', 'active'],
@@ -65,7 +65,7 @@ def create(
     return _session
 
 
-def update(
+def update_session(
     auth: str,
     session_id: str,
     status: Literal['active', 'close'],
@@ -102,7 +102,7 @@ def update(
     return _session
 
 
-def query(auth: str) -> SessionRequest:
+def query_session(auth: str) -> SessionRequest:
     """Query the session.
 
     Args:

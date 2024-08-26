@@ -7,8 +7,15 @@ threshold for mental commands.
 
 """
 
-from typing import Literal
+# mypy: disable-error-code=assignment
+
+from typing import Literal, Mapping, TypeAlias
+
 from cortex.api.id import MentalCommandID
+
+# Return type aliases.
+MentalCommandRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+MentalCommandActionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[str]]]
 
 
 def active_action(
@@ -18,7 +25,7 @@ def active_action(
     profile_name: str | None = None,
     session_id: str | None = None,
     actions: list[str] | None = None,
-) -> dict[str, str | int | dict[str, str | list[str]]]:
+) -> MentalCommandActionRequest:
     """Set or get the active mental command action.
 
     Notes:
@@ -37,13 +44,12 @@ def active_action(
         [mentalCommandActiveAction](https://emotiv.gitbook.io/cortex-api/advanced-bci/mentalcommandactiveaction)
 
     Returns:
-        dict[str, str | int | dict[str, str | list[str]]]:
-            The active mental command action.
+        MentalCommandActionRequest: The active mental command action.
 
     """
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
-    _params: dict[str, str | list[str]] = {
+    _params = {
         'cortexToken': auth,
         'status': status,
     }
@@ -57,7 +63,7 @@ def active_action(
         assert len(actions) <= 4, 'You can have at most 4 actions.'
         _params['actions'] = actions
 
-    _action: dict[str, str | int | dict[str, str | list[str]]] = {
+    _action = {
         'id': MentalCommandID.SET_ACTIVE_ACTION if status == 'set' else MentalCommandID.GET_ACTIVE_ACTION,
         'jsonrpc': '2.0',
         'method': 'mentalCommandActiveAction',
@@ -71,7 +77,7 @@ def brain_map(
     auth: str,
     session_id: str,
     profile_name: str,
-) -> dict[str, str | int | dict[str, str]]:
+) -> MentalCommandRequest:
     """Map the profile name to the corresponding mental command brain.
 
     Args:
@@ -83,10 +89,10 @@ def brain_map(
         [mentalCommandBrainMap](https://emotiv.gitbook.io/cortex-api/advanced-bci/mentalcommandbrainmap)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The mental command brain map.
+        MentalCommandRequest: The mental command brain map.
 
     """
-    _brain_map: dict[str, int | str | dict[str, str]] = {
+    _brain_map = {
         'id': MentalCommandID.BRAIN_MAP,
         'jsonrpc': '2.0',
         'method': 'mentalCommandBrainMap',
@@ -105,7 +111,7 @@ def get_skill_rating(
     profile_name: str | None = None,
     session_id: str | None = None,
     action: str | None = None,
-) -> dict[str, str | int | dict[str, str]]:
+) -> MentalCommandRequest:
     """Get the skill rating of the mental command action.
 
     Args:
@@ -120,7 +126,7 @@ def get_skill_rating(
         [mentalCommandGetSkillRating](https://emotiv.gitbook.io/cortex-api/advanced-bci/mentalcommandgetskillrating)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The skill rating of the mental command action.
+        MentalCommandRequest: The skill rating of the mental command action.
 
     """
     _params: dict[str, str] = {'cortexToken': auth}
@@ -148,7 +154,7 @@ def training_threshold(
     *,
     profile_name: str | None = None,
     session_id: str | None = None,
-) -> dict[str, int | str | dict[str, str]]:
+) -> MentalCommandRequest:
     """Get the training threshold for mental commands.
 
     Args:
@@ -173,7 +179,7 @@ def training_threshold(
     elif session_id is not None:
         _params['session'] = session_id
 
-    threshold: dict[str, int | str | dict[str, str]] = {
+    threshold = {
         'id': MentalCommandID.TRAINING_THRESHOLD,
         'jsonrpc': '2.0',
         'method': 'mentalCommandTrainingThreshold',
@@ -190,7 +196,7 @@ def action_sensitivity(
     profile_name: str | None = None,
     session_id: str | None = None,
     values: list[int] | None = None,
-) -> dict[str, str | int | dict[str, str | list[int]]]:
+) -> MentalCommandActionRequest:
     """Set or get the mental command action sensitivity.
 
     Notes:
@@ -212,13 +218,12 @@ def action_sensitivity(
         [mentalCommandActionSensitivity](https://emotiv.gitbook.io/cortex-api/advanced-bci/mentalcommandactionsensitivity)
 
     Returns:
-        dict[str, str | int | dict[str, str | list[int]]]: The mental command
-            action sensitivity.
+        MentalCommandActionRequest: The mental command action sensitivity.
 
     """
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
-    _params: dict[str, str | list[int]] = {
+    _params = {
         'cortexToken': auth,
         'status': status,
     }
@@ -232,7 +237,7 @@ def action_sensitivity(
         assert all(1 <= value <= 10 for value in values), 'values must be between 1 and 10.'
         _params['values'] = values
 
-    sensitivity: dict[str, str | int | dict[str, str | list[int]]] = {
+    sensitivity = {
         'id': MentalCommandID.ACTION_SENSITIVITY,
         'jsonrpc': '2.0',
         'method': 'mentalCommandActionSensitivity',

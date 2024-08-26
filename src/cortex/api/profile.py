@@ -21,22 +21,26 @@ https://emotiv.gitbook.io/cortex-api/bci/setupprofile
 
 """
 
-from typing import Literal
+from typing import Literal, Mapping, TypeAlias
 
 from cortex.api.id import ProfileID
 
 
-def query_profile(auth: str) -> dict[str, str | int | dict[str, str]]:
+# Return type aliases.
+ProfileRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+
+
+def query_profile(auth: str) -> ProfileRequest:
     """Query the list of all training profile.
 
     Read More:
         [queryProfile](https://emotiv.gitbook.io/cortex-api/bci/queryprofile)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The query profile request.
+        ProfileRequest: The query profile request.
 
     """
-    _query: dict[str, str | int | dict[str, str]] = {
+    _query = {
         'id': ProfileID.QUERY,
         'jsonrpc': '2.0',
         'method': 'queryProfile',
@@ -51,7 +55,7 @@ def query_profile(auth: str) -> dict[str, str | int | dict[str, str]]:
 def current_profile(
     auth: str,
     headset_id: str,
-) -> dict[str, str | int | dict[str, str]]:
+) -> ProfileRequest:
     """Get the current training profile that is loaded for a specific headset.
 
     Args:
@@ -62,10 +66,10 @@ def current_profile(
         [getCurrentProfile](https://emotiv.gitbook.io/cortex-api/bci/getcurrentprofile)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The current profile status.
+        ProfileRequest: The current profile status.
 
     """
-    _profile: dict[str, str | int | dict[str, str]] = {
+    _profile = {
         'id': ProfileID.CURRENT_PROFILE,
         'jsonrpc': '2.0',
         'method': 'getCurrentProfile',
@@ -85,7 +89,7 @@ def setup_profile(
     *,
     headset_id: str | None = None,
     new_profile_name: str | None = None,
-) -> dict[str, str | int | dict[str, str]]:
+) -> ProfileRequest:
     """Setup a training profile.
 
     Args:
@@ -101,7 +105,7 @@ def setup_profile(
         [setupProfile](https://emotiv.gitbook.io/cortex-api/bci/setupprofile)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The profile setup status.
+        ProfileRequest: The profile setup status.
 
     """
     assert status in [
@@ -125,7 +129,7 @@ def setup_profile(
     if new_profile_name is not None and status == 'rename':
         _params['newProfileName'] = new_profile_name
 
-    _profile: dict[str, str | int | dict[str, str]] = {
+    _profile = {
         'id': ProfileID.SETUP,
         'jsonrpc': '2.0',
         'method': 'setupProfile',
@@ -135,7 +139,7 @@ def setup_profile(
     return _profile
 
 
-def load_guest(auth: str, headset_id: str) -> dict[str, str | int | dict[str, str]]:
+def load_guest(auth: str, headset_id: str) -> ProfileRequest:
     """Loads an empty profile for a headset.
 
     Args:
@@ -146,11 +150,11 @@ def load_guest(auth: str, headset_id: str) -> dict[str, str | int | dict[str, st
         [loadGuestProfile](https://emotiv.gitbook.io/cortex-api/bci/loadguestprofile)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The guest profile status.
+        ProfileRequest: The guest profile status.
 
     """
 
-    _guest: dict[str, str | int | dict[str, str]] = {
+    _guest = {
         'id': ProfileID.GUEST,
         'jsonrpc': '2.0',
         'method': 'loadGuestProfile',
@@ -165,7 +169,7 @@ def load_guest(auth: str, headset_id: str) -> dict[str, str | int | dict[str, st
 
 def detection_info(
     detection: Literal['mentalCommand', 'facialExpression'],
-) -> dict[str, str | int | dict[str, str]]:
+) -> ProfileRequest:
     """Get the information about mental command or facial expression training.
 
     Args:
@@ -175,10 +179,10 @@ def detection_info(
         [getDetectionInfo](https://emotiv.gitbook.io/cortex-api/bci/getdetectioninfo)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The detection information.
+        ProfileRequest: The detection information.
 
     """
-    _detection: dict[str, str | int | dict[str, str]] = {
+    _detection = {
         'id': ProfileID.DETECTION_INFO,
         'jsonrpc': '2.0',
         'method': 'getDetectionInfo',

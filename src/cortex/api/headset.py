@@ -237,8 +237,7 @@ def subscription(
     auth: str,
     session_id: str,
     streams: list[str],
-    *,
-    method: Literal['subscribe', 'unsubscribe'] = 'subscribe',
+    method: Literal['subscribe', 'unsubscribe'],
 ) -> SubscriptionRequest:
     """Subscribe or unsubscribe from the headset.
 
@@ -250,8 +249,6 @@ def subscription(
         auth (str): The Cortex authentication token.
         session_id (str): The session ID.
         streams (list[str]): The streams you want to subscribe or unsubscribe to.
-
-    Keyword Args:
         method (Literal['subscribe', 'unsubscribe'], optional):
             The subscription method.
 
