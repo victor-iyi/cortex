@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from typing import Literal, TypedDict
 
 
@@ -6,7 +7,7 @@ class FlexMapping(TypedDict):
     # of EPOC Flex device. The keys are the names of the connectors, the
     # values are the names of the EEG channels.
     # Example: {"CMS": "TP8", "DRL": "P6", "RM": "TP10", "RN": "P4", "RO": "P8"}
-    mappings: dict[str, str]
+    mappings: Mapping[str, str]
 
 
 class SettingsObject(TypedDict, total=False):
@@ -126,7 +127,7 @@ class MarkerObject(TypedDict, total=False):
     endDatetime: str
 
     # Can be any extra information you want to associate with this marker.
-    extras: dict[str, str]
+    extras: Mapping[str, str]
 
 
 class DemographicAttribute(TypedDict):

@@ -29,7 +29,8 @@ https://emotiv.gitbook.io/cortex-api/authentication/authorize
 
 """
 
-from typing import Literal, Mapping, TypeAlias
+from collections.abc import Mapping
+from typing import Literal, TypeAlias
 
 from cortex.api.id import AuthID
 

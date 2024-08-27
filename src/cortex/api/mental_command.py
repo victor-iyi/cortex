@@ -9,7 +9,8 @@ threshold for mental commands.
 
 # mypy: disable-error-code=assignment
 
-from typing import Literal, Mapping, TypeAlias
+from collections.abc import Mapping
+from typing import Literal, TypeAlias
 
 from cortex.api.id import MentalCommandID
 

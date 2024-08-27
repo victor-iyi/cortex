@@ -19,7 +19,22 @@ from cortex.consts import CA_CERTS
 from cortex.logging import logger
 
 
-class Cortex(Dispatcher):
+class InheritEventsMeta(type):
+    # pylint: disable=bad-mcs-classmethod-argument
+    def __new__(cls, name: str, bases: tuple[Any], class_dict: dict[str, Any]) -> 'InheritEventsMeta':
+        # Combine events from all base classes
+        events: list[str] = []
+        for base in bases:
+            if hasattr(base, '_events_'):
+                events.extend(base._events_)
+        # Add current class events
+        if '_events_' in class_dict:
+            events.extend(class_dict['_events_'])
+        class_dict['_events_'] = events
+        return type.__new__(cls, name, bases, class_dict)
+
+
+class Cortex(Dispatcher, metaclass=InheritEventsMeta):
     def __init__(
         self,
         client_id: str | None = None,
@@ -49,6 +64,7 @@ class Cortex(Dispatcher):
                 You need to debit the license only if you want to *activate a session*.
                 The default is 0.
         """
+        super().__init__()
         self.client_id = os.environ.get('CLIENT_ID', client_id)
         self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
 

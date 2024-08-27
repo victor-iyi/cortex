@@ -25,7 +25,8 @@ https://emotiv.gitbook.io/cortex-api/subjects/querysubjects
 
 # mypy: disable-error-code="assignment"
 
-from typing import Literal, Mapping, TypeAlias, TypedDict
+from collections.abc import Mapping
+from typing import Literal, TypeAlias, TypedDict
 
 from cortex.api.id import SubjectsID
 
@@ -56,7 +57,7 @@ class SubjectQuery(TypedDict, total=False):
     # search and values are the list of fields to search.
     # The list of fields to search can contain
     # "subjectName", "lastName", "email".
-    keyword: dict[str, str]
+    keyword: Mapping[str, str]
 
 
 class Attribute(TypedDict):

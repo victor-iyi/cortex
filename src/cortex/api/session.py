@@ -20,7 +20,8 @@ But it can open multiple sessions with multiple headsets.
 
 """
 
-from typing import Literal, Mapping, TypeAlias
+from collections.abc import Mapping
+from typing import Literal, TypeAlias
 
 from cortex.api.id import SessionID
 

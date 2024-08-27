@@ -20,7 +20,9 @@ https://emotiv.gitbook.io/cortex-api/records/configoptout
 """
 
 # mypy: disable-error-code="assignment"
-from typing import Literal, Mapping, TypeAlias, TypedDict
+
+from collections.abc import Mapping
+from typing import Literal, TypeAlias, TypedDict
 
 from cortex.api.id import RecordsID
 

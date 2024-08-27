@@ -21,9 +21,10 @@ There are two types of markers:
 
 """
 
-from typing import Any, Mapping, TypeAlias
-from cortex.api.id import MarkersID
+from collections.abc import Mapping
+from typing import Any, TypeAlias
 
+from cortex.api.id import MarkersID
 
 # Return type aliases.
 MarkerRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | dict[str, Any]]]
