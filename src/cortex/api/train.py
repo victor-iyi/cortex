@@ -34,8 +34,12 @@ After step 2, but before step 3, you can send the **control "reset"** to cancel 
 
 """
 
-from typing import Literal
+from collections.abc import Mapping
+from typing import Literal, TypeAlias
 from cortex.api.id import TrainingID
+
+# Return type aliases.
+TrainingRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int]]
 
 
 def training(
@@ -44,7 +48,7 @@ def training(
     detection: Literal['mentalCommand', 'facialExpression'],
     status: Literal['start', 'accept', 'reject', 'reset', 'erase'],
     action: str,
-) -> dict[str, str | int | dict[str, str | int | dict[str, str]]]:
+) -> TrainingRequest:
     """Train the mental command or facial expression.
 
     Args:
@@ -63,7 +67,7 @@ def training(
         [train](https://emotiv.gitbook.io/cortex-api/bci/train)
 
     Returns:
-        dict[str, str | int | dict[str, str | int | dict[str, str]]]: The training status.
+        TrainingRequest: The training status.
 
     """
 
@@ -80,7 +84,7 @@ def training(
         'erase',
     ], 'status must be either "start", "accept", "reject", "reset", or "erase".'
 
-    _training: dict[str, str | int | dict[str, str | int | dict[str, str]]] = {
+    _training = {
         'id': TrainingID.TRAINING,
         'jsonrpc': '2.0',
         'method': 'train',
@@ -102,7 +106,7 @@ def trained_signature_actions(
     *,
     profile_name: str | None = None,
     session_id: str | None = None,
-) -> dict[str, str | int | dict[str, str]]:
+) -> TrainingRequest:
     """Get the list of trained actions of a profile.
 
     Args:
@@ -117,7 +121,7 @@ def trained_signature_actions(
         [getTrainedSignatureActions](https://emotiv.gitbook.io/cortex-api/advanced-bci/gettrainedsignatureactions)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The trained signature actions.
+        TrainingRequest: The trained signature actions.
 
     """
 
@@ -126,7 +130,7 @@ def trained_signature_actions(
         'facialExpression',
     ], 'detection must be either "mentalCommand" or "facialExpression".'
 
-    _params: dict[str, str] = {
+    _params = {
         'cortexToken': auth,
         'detection': detection,
     }
@@ -134,7 +138,7 @@ def trained_signature_actions(
         _params['profile'] = profile_name
         _params['session'] = session_id
 
-    _trained: dict[str, str | int | dict[str, str]] = {
+    _trained = {
         'id': TrainingID.SIGNATURE_ACTIONS,
         'jsonrpc': '2.0',
         'method': 'getTrainedSignatureActions',
@@ -148,7 +152,7 @@ def training_time(
     auth: str,
     detection: Literal['mentalCommand', 'facialExpression'],
     session_id: str,
-) -> dict[str, str | int | dict[str, str]]:
+) -> TrainingRequest:
     """Get the duration of a training.
 
     Args:
@@ -160,7 +164,7 @@ def training_time(
         [getTrainingTime](https://emotiv.gitbook.io/cortex-api/advanced-bci/gettrainingtime)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The training time.
+        TrainingRequest: The training time.
 
     """
 
@@ -169,7 +173,7 @@ def training_time(
         'facialExpression',
     ], 'detection must be either "mentalCommand" or "facialExpression".'
 
-    _training_time: dict[str, str | int | dict[str, str]] = {
+    _training_time = {
         'id': TrainingID.TRAINING_TIME,
         'jsonrpc': '2.0',
         'method': 'getTrainingTime',

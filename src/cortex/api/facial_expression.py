@@ -1,6 +1,10 @@
-from typing import Literal
+from collections.abc import Mapping
+from typing import Literal, TypeAlias
 
 from cortex.api.id import FacialExpressionID
+
+# Return type aliases.
+FacialExpressionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int]]
 
 
 def signature_type(
@@ -10,7 +14,7 @@ def signature_type(
     profile_name: str | None = None,
     session_id: str | None = None,
     signature: Literal['set', 'universal', 'trained'] | None = None,
-) -> dict[str, str | int | dict[str, str]]:
+) -> FacialExpressionRequest:
     """Set or get the facial expression signature type.
 
     Args:
@@ -26,13 +30,13 @@ def signature_type(
         [facialExpressionSignatureType](https://emotiv.gitbook.io/cortex-api/advanced-bci/facialexpressionsignaturetype)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The facial expression signature type.
+        FacialExpressionRequest: The facial expression signature type.
 
     """
 
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
-    _params: dict[str, str] = {
+    _params = {
         'cortexToken': auth,
         'status': status,
     }
@@ -50,7 +54,7 @@ def signature_type(
         ], 'signature must be either "set", "universal", or "trained".'
         _params['signature'] = signature
 
-    _signature: dict[str, str | int | dict[str, str]] = {
+    _signature = {
         'id': FacialExpressionID.SIGNATURE_TYPE,
         'jsonrpc': '2.0',
         'method': 'facialExpressionSignatureType',
@@ -68,7 +72,7 @@ def threshold(
     profile_name: str | None = None,
     session_id: str | None = None,
     value: int | None = None,
-) -> dict[str, str | int | dict[str, str | int]]:
+) -> FacialExpressionRequest:
     """Set or get the facial expression action threshold for a specific
     profile.
 
@@ -91,13 +95,13 @@ def threshold(
         [facialExpressionThreshold](https://emotiv.gitbook.io/cortex-api/advanced-bci/facialexpressionthreshold)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The facial expression threshold.
+        FacialExpressionRequest: The facial expression threshold.
 
     """
 
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
-    _params: dict[str, str | int] = {
+    _params = {
         'cortexToken': auth,
         'status': status,
         'action': action,
@@ -110,9 +114,9 @@ def threshold(
 
     if value is not None and status == 'set':
         assert 0 <= value <= 1000, 'value must be between 0 and 1000.'
-        _params['value'] = value
+        _params['value'] = value  # type: ignore[assignment]
 
-    _threshold: dict[str, str | int | dict[str, str | int]] = {
+    _threshold = {
         'id': FacialExpressionID.THRESHOLD,
         'jsonrpc': '2.0',
         'method': 'facialExpressionThreshold',

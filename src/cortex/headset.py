@@ -262,10 +262,7 @@ class Headset(Cortex):
 
         self.ws.send(json.dumps(active, indent=4))
 
-    def set_mental_command_active_action(
-        self,
-        actions: list[str],
-    ) -> None:
+    def set_mental_command_active_action(self, actions: list[str]) -> None:
         """Set the active mental command action."""
         logger.info('--- Setting mental command active action ---')
 

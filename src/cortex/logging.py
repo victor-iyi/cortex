@@ -4,10 +4,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 
-def set_logger(
-    name: str = 'cortex',
-    log_level: int = logging.INFO,
-) -> logging.Logger:
+def set_logger(name: str = 'cortex', log_level: int = logging.INFO) -> logging.Logger:
     """Set up a logger with a specified name and log level.
 
     Args:
