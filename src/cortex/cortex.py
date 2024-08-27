@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument
 import datetime
 import json
 import logging
@@ -29,7 +30,7 @@ class Cortex(Dispatcher):
         headset_id: str | None = None,
         profile_name: str | None = None,
         debit: int | None = None,
-        license: str | None = None,
+        license: str | None = None,  # pylint: disable=redefined-builtin
     ) -> None:
         """
 
@@ -243,7 +244,7 @@ class Cortex(Dispatcher):
             status='active',
         )
 
-        logging.debug(_session)
+        logger.debug(_session)
 
         self.ws.send(json.dumps(_session, indent=4))
 

@@ -25,7 +25,6 @@ from typing import Literal, Mapping, TypeAlias
 
 from cortex.api.id import ProfileID
 
-
 # Return type aliases.
 ProfileRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
 
@@ -70,7 +69,7 @@ def current_profile(
 
     """
     _profile = {
-        'id': ProfileID.CURRENT_PROFILE,
+        'id': ProfileID.CURRENT,
         'jsonrpc': '2.0',
         'method': 'getCurrentProfile',
         'params': {

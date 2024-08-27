@@ -33,7 +33,6 @@ from typing import Literal, Mapping, TypeAlias
 
 from cortex.api.id import AuthID
 
-
 # Return type aliases.
 BaseRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
 AccessAuthRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
@@ -124,7 +123,7 @@ def authorize(
     client_id: str,
     client_secret: str,
     *,
-    license: str | None = None,
+    license: str | None = None,  # pylint: disable=redefined-builtin
     debit: int | None = None,
 ) -> AuthorizeRequest:
     """Authorize the client.

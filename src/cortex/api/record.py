@@ -60,7 +60,8 @@ UpdateRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | lis
 DeleteRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
 ExportRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | list[str] | bool]]
 QueryRecordRequest: TypeAlias = Mapping[
-    str, str | int | Mapping[str, str | RecordQuery | int | bool | list[Mapping[str, str]]]
+    str,
+    str | int | Mapping[str, str | RecordQuery | int | bool | list[Mapping[str, str]]],
 ]
 RecordInfoRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
 ConfigOptOutRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | bool]]
@@ -237,6 +238,7 @@ def export_record(
     record_ids: list[str],
     folder: str,
     stream_types: list[str],
+    # pylint: disable-next=redefined-builtin,implicit-str-concat
     format: Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV'],
     *,
     version: Literal['V1', 'V2'] | None = None,
