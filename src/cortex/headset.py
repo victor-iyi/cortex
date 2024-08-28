@@ -1,12 +1,13 @@
 import json
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from cortex.api.headset import (
     make_connection,
     query_headset,
     subscription,
 )
+from cortex.api.markers import inject_marker, update_marker
 from cortex.api.mental_command import (
     action_sensitivity,
     active_action,
@@ -229,6 +230,12 @@ class Headset(Cortex):
             experiment_id (int): The experiment ID.
 
         """
+        if len(title) == 0:
+            logger.warning('Empty record title. Please fill the record title.')
+            # close socket.
+            self.close()
+            return
+
         logger.info(f'--- Creating a record: {title} ---')
 
         if not self.session_id:
@@ -341,6 +348,12 @@ class Headset(Cortex):
                  metrics (i.e. Focus) will be exported.
 
         """
+        if len(str(folder)) == 0:
+            logger.warning('Invalid folder path. Please set a writeable destination folder for exporting data.')
+            # close socket.
+            self.close()
+            return
+
         logger.info('--- Exporting records ---')
 
         export = export_record(
@@ -458,6 +471,72 @@ class Headset(Cortex):
         logger.debug(_download)
 
         self.ws.send(json.dumps(_download, indent=4))
+
+    def inject_marker(self, time: int, value: str | int, label: str, **kwargs: str | Any) -> None:
+        """Inject a marker.
+
+        Args:
+            time (int): The time in milliseconds.
+            value (str | int): The marker value.
+            label (str): The marker label.
+
+        Keyword Args:
+            port (str): The marker port.
+            extras (Mapping[str, Any]): Additional parameters.
+
+        """
+        logger.info('--- Injecting a marker ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _marker = inject_marker(
+            auth=self.auth,
+            session_id=self.session_id,
+            time=time,
+            value=value,
+            label=label,
+            **kwargs,
+        )
+
+        # If debug mode is enabled, print the marker.
+        logger.debug('Injecting a marker.')
+        logger.debug(_marker)
+
+        self.ws.send(json.dumps(_marker, indent=4))
+
+    def update_marker(self, marker_id: str, time: int, **kwargs: str | Any) -> None:
+        """Update a marker.
+
+        Args:
+            marker_id (str): The marker ID.
+            time (int): The time in milliseconds.
+
+        Keyword Args:
+            value (str | int): The marker value.
+            label (str): The marker label.
+            port (str): The marker port.
+            extras (Mapping[str, Any]): Additional parameters.
+
+        """
+        logger.info('--- Updating a marker ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _marker = update_marker(
+            auth=self.auth,
+            session_id=self.session_id,
+            marker_id=marker_id,
+            time=time,
+            **kwargs,
+        )
+
+        # If debug mode is enabled, print the marker.
+        logger.debug('Updating a marker.')
+        logger.debug(_marker)
+
+        self.ws.send(json.dumps(_marker, indent=4))
 
     def get_mental_command_action_sensitive(self, profile_name: str) -> None:
         """Get the mental command action sensitivity."""

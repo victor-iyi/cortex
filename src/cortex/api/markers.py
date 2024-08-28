@@ -21,6 +21,7 @@ There are two types of markers:
 
 """
 
+from collections.abc import Mapping
 from typing import Any
 
 from cortex.api.id import MarkersID
@@ -35,7 +36,7 @@ def inject_marker(
     label: str,
     *,
     port: str | None = None,
-    extras: dict[str, Any] | None = None,
+    extras: Mapping[str, Any] | None = None,
 ) -> MarkerRequest:
     """Inject a marker.
 
@@ -48,7 +49,7 @@ def inject_marker(
 
     Keyword Args:
         port (str, optional): The marker port.
-        extras (dict[str, Any], optinoal): Additional parameters.
+        extras (Mapping[str, Any], optinoal): Additional parameters.
 
     Read More:
         [injectMarker](https://emotiv.gitbook.io/cortex-api/markers/injectmarker)
@@ -87,7 +88,7 @@ def update_marker(
     marker_id: str,
     time: int,
     *,
-    extras: dict[str, Any] | None = None,
+    extras: Mapping[str, Any] | None = None,
 ) -> MarkerRequest:
     """Update a marker.
 
@@ -98,7 +99,7 @@ def update_marker(
         time (int): The time in milliseconds.
 
     Keyword Args:
-        extras (dict[str, Any], optional): Additional parameters.
+        extras (Mapping[str, Any], optional): Additional parameters.
 
     Read More:
         [updateMarker](https://emotiv.gitbook.io/cortex-api/markers/updatemarker)
