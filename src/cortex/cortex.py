@@ -1,10 +1,10 @@
 # pylint: disable=unused-argument
 import datetime
 import json
-import logging
 import os
 import ssl
 import threading
+from collections.abc import Mapping
 from datetime import datetime as dt
 from pathlib import Path
 from typing import Any
@@ -74,7 +74,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             raise ValueError('No CLIENT_SECRET. Add it to the environment or pass it as an argument.')
 
         if debug_mode:
-            logger.setLevel(logging.DEBUG)
+            logger.setLevel(logger.DEBUG)
 
         self.debug = debug_mode
         self.session_id = session_id
@@ -135,7 +135,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if len(args) == 2:
             logger.error(f'on_error: {args[1]}')
 
-    def handle_stream_data(self, data: dict[str, Any]) -> None:
+    def handle_stream_data(self, data: Mapping[str, Any]) -> None:
         """Handle the stream data."""
         if data.get('com') is not None:
             self.emit('new_com_data', stream_data(data, 'com'))
@@ -178,7 +178,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             method='requestAccess',
         )
 
-        logging.debug(_access)
+        logger.debug(_access)
 
         self.ws.send(json.dumps(_access, indent=4))
 
@@ -204,7 +204,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             method='hasAccessRight',
         )
 
-        logging.debug(_access)
+        logger.debug(_access)
 
         self.ws.send(json.dumps(_access, indent=4))
 
@@ -229,7 +229,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             debit=self.debit,
         )
 
-        logging.debug(_authorize)
+        logger.debug(_authorize)
 
         self.ws.send(json.dumps(_authorize, indent=4))
 
@@ -279,7 +279,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             status='close',
         )
 
-        logging.debug(_session)
+        logger.debug(_session)
 
         self.ws.send(json.dumps(_session, indent=4))
 
@@ -295,7 +295,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         _info = get_info()
 
-        logging.debug(_info)
+        logger.debug(_info)
 
         self.ws.send(json.dumps(_info, indent=4))
 
