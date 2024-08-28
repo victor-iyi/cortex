@@ -2,11 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
-from cortex.api.headset import (
-    make_connection,
-    query_headset,
-    subscription,
-)
+from cortex.api.headset import make_connection, query_headset, subscription
 from cortex.api.markers import inject_marker, update_marker
 from cortex.api.mental_command import (
     action_sensitivity,
@@ -25,11 +21,8 @@ from cortex.api.record import (
     config_opt_out,
     download_record_data,
 )
-from cortex.api.profile import (
-    current_profile,
-    query_profile,
-    setup_profile,
-)
+from cortex.api.profile import current_profile, query_profile, setup_profile
+from cortex.api.train import training, training_time, trained_signature_actions
 from cortex.api.types import RecordQuery
 from cortex.cortex import Cortex
 from cortex.logging import logger
@@ -537,6 +530,92 @@ class Headset(Cortex):
         logger.debug(_marker)
 
         self.ws.send(json.dumps(_marker, indent=4))
+
+    def train_request(
+        self,
+        detection: Literal['mentalCommand', 'facialExpression'],
+        status: Literal['start', 'accept', 'reject', 'reset', 'erase'],
+        action: str,
+    ) -> None:
+        """Send a training request.
+
+        Args:
+            detection (Literal['mentalCommand', 'facialExpression']): The detection type.
+            status (Literal['start', 'accept', 'reject', 'reset', 'erase']): The status.
+            action (str): The action to train.
+
+        """
+        logger.info('--- Sending a training request ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _training = training(
+            auth=self.auth,
+            session_id=self.session_id,
+            detection=detection,
+            status=status,
+            action=action,
+        )
+
+        # If debug mode is enabled, print the training.
+        logger.debug('Sending a training request.')
+        logger.debug(_training)
+
+        self.ws.send(json.dumps(_training, indent=4))
+
+    def training_signature_action(
+        self,
+        detection: Literal['mentalCommand', 'facialExpression'],
+        **kwargs: str,
+    ) -> None:
+        """Get the list of trained actions of a profile.
+
+        Args:
+            detection (Literal['mentalCommand', 'facialExpression']): The detection type.
+
+        Keyword Args:
+            profile_name (str): The profile name.
+            session_id (str): The session ID.
+
+        """
+        logger.info('--- Getting the list of trained actions ---')
+
+        _training = trained_signature_actions(
+            auth=self.auth,
+            detection=detection,
+            **kwargs,
+        )
+
+        # If debug mode is enabled, print the training.
+        logger.debug('Getting the list of trained actions.')
+        logger.debug(_training)
+
+        self.ws.send(json.dumps(_training, indent=4))
+
+    def training_time(self, detection: Literal['mentalCommand', 'facialExpression']) -> None:
+        """Get the training time.
+
+        Args:
+            detection (Literal['mentalCommand', 'facialExpression']): The detection type.
+
+        """
+        logger.info('--- Getting the training time ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _training = training_time(
+            auth=self.auth,
+            session_id=self.session_id,
+            detection=detection,
+        )
+
+        # If debug mode is enabled, print the training.
+        logger.debug('Getting the training time.')
+        logger.debug(_training)
+
+        self.ws.send(json.dumps(_training, indent=4))
 
     def get_mental_command_action_sensitive(self, profile_name: str) -> None:
         """Get the mental command action sensitivity."""

@@ -85,7 +85,7 @@ def training(
     _training = {
         'id': TrainingID.TRAINING,
         'jsonrpc': '2.0',
-        'method': 'train',
+        'method': 'training',
         'params': {
             'cortexToken': auth,
             'session': session_id,
@@ -132,9 +132,12 @@ def trained_signature_actions(
         'cortexToken': auth,
         'detection': detection,
     }
-    if profile_name is not None and session_id is not None:
+    if profile_name is not None:
         _params['profile'] = profile_name
+    elif session_id is not None:
         _params['session'] = session_id
+    else:
+        raise ValueError('Either profile_name or session_id must be provided.')
 
     _trained = {
         'id': TrainingID.SIGNATURE_ACTIONS,
