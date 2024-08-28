@@ -23,37 +23,17 @@ https://emotiv.gitbook.io/cortex-api/headset/queryheadsets
 
 # mypy: disable-error-code=assignment
 
-from collections.abc import Mapping
-from typing import Literal, TypeAlias, TypedDict
+from typing import Literal
 
 from cortex.api.id import HeadsetID
-
-
-class Setting(TypedDict, total=False):
-    """Headset setting."""
-
-    # In "EPOC" mode, the EEG resolution is 14 bits.
-    # In "EPOCPLUS" mode, the EEG resolutions are 16 bits.
-    mode: Literal['EPOC', 'EPOCPLUS']
-
-    # The EEG sample rate, in hertz.
-    # If the mode is "EPOC", then the EEG rate must be 128.
-    # If the mode is "EPOCPLUS", then the EEG rate can be 128 or 256.
-    eegRate: Literal[128, 256]
-
-    # The motion sample rate, in hertz.
-    # If the mode is "EPOC", then the motion rate must be 0.
-    # If the mode is "EPOCPLUS", then the motion rate can be 0, 32, 64, or 128.
-    memsRate: Literal[0, 32, 64, 128]
-
-
-# Return type aliases.
-ConnectHeadsetRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | Mapping[str, str]]]
-QueryHeadsetRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
-UpdateHeadsetRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | Setting]]
-UpdateCustomInfoRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
-SyncWithClockRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | float]]
-SubscriptionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[str]]]
+from cortex.api.types import (
+    BaseRequest,
+    ConnectHeadsetRequest,
+    UpdateHeadsetRequest,
+    SyncWithClockRequest,
+    SubscriptionRequest,
+    Setting,
+)
 
 
 def make_connection(
@@ -108,7 +88,7 @@ def make_connection(
     return _request
 
 
-def query_headset(headset_id: str | None = None) -> QueryHeadsetRequest:
+def query_headset(headset_id: str | None = None) -> BaseRequest:
     """Query the headset.
 
     Notes:
@@ -119,7 +99,7 @@ def query_headset(headset_id: str | None = None) -> QueryHeadsetRequest:
         [queryHeadsets](https://emotiv.gitbook.io/cortex-api/headset/queryheadsets)
 
     Returns:
-        QueryHeadsetRequest: The headset query status.
+        BaseRequest: The headset query status.
 
     """
     if headset_id is not None:
@@ -173,7 +153,7 @@ def update_custom_info(
     auth: str,
     headset_id: str,
     headband_position: Literal['back', 'top'],
-) -> UpdateCustomInfoRequest:
+) -> BaseRequest:
     """Update the headset custom information.
 
     Read More:
@@ -185,7 +165,7 @@ def update_custom_info(
         headband_position (Literal['back', 'top']): The headband position.
 
     Returns:
-        UpdateCustomInfoRequest: The headset custom information status.
+        BaseRequest: The headset custom information status.
 
     """
     _request = {

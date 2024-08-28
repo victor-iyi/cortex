@@ -21,13 +21,10 @@ There are two types of markers:
 
 """
 
-from collections.abc import Mapping
-from typing import Any, TypeAlias
+from typing import Any
 
 from cortex.api.id import MarkersID
-
-# Return type aliases.
-MarkerRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | dict[str, Any]]]
+from cortex.api.types import MarkerRequest
 
 
 def inject_marker(

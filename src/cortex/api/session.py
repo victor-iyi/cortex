@@ -20,20 +20,17 @@ But it can open multiple sessions with multiple headsets.
 
 """
 
-from collections.abc import Mapping
-from typing import Literal, TypeAlias
+from typing import Literal
 
 from cortex.api.id import SessionID
-
-# Return type aliases.
-SessionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+from cortex.api.types import BaseRequest
 
 
 def create_session(
     auth: str,
     headset_id: str,
     status: Literal['open', 'active'],
-) -> SessionRequest:
+) -> BaseRequest:
     """Either open a session or open and activate a session.
 
     Args:
@@ -47,7 +44,7 @@ def create_session(
         [createSession](https://emotiv.gitbook.io/cortex-api/session/createsession)
 
     Returns:
-        SessionRequest: The session status.
+        BaseRequest: The session status.
 
     """
     assert status in ['open', 'active'], 'status must be either "open" or "active".'
@@ -70,7 +67,7 @@ def update_session(
     auth: str,
     session_id: str,
     status: Literal['active', 'close'],
-) -> SessionRequest:
+) -> BaseRequest:
     """Update or close a session.
 
     Args:
@@ -84,7 +81,7 @@ def update_session(
         [updateSession](https://emotiv.gitbook.io/cortex-api/session/updatesession)
 
     Returns:
-        SessionRequest: The session status.
+        BaseRequest: The session status.
 
     """
     assert status in ['active', 'close'], 'status must be either "active" or "close".'
@@ -103,7 +100,7 @@ def update_session(
     return _session
 
 
-def query_session(auth: str) -> SessionRequest:
+def query_session(auth: str) -> BaseRequest:
     """Query the session.
 
     Args:
@@ -113,7 +110,7 @@ def query_session(auth: str) -> SessionRequest:
         [querySession](https://emotiv.gitbook.io/cortex-api/session/querysessions)
 
     Returns:
-        SessionRequest: The session status.
+        BaseRequest: The session status.
 
     """
     _session = {
@@ -126,52 +123,3 @@ def query_session(auth: str) -> SessionRequest:
     }
 
     return _session
-
-
-# def session(
-#     auth: str,
-#     *,
-#     status: Literal['active', 'open', 'close'],
-#     headset_id: str | None = None,
-#     session_id: str | None = None,
-# ) -> SessionRequest:
-#     """Create or close a session.
-#
-#     Args:
-#         auth (str): The Cortex authentication token.
-#
-#     Keyword Args:
-#         headset_id (str, optional): The headset ID.
-#         session_id (str, optional): The session ID.
-#         status (Literal['active', 'close'], optional): The session status.
-#
-#     Returns:
-#         SessionRequest: The session status.
-#
-#     """
-#     assert status in ['active', 'close'], 'status must be either "active" or "close".'
-#
-#     _params = {
-#         'cortexToken': auth,
-#     }
-#     if headset_id is not None and status == 'active':
-#         _method = 'createSession'
-#         _params['headset'] = headset_id
-#     elif session_id is not None and status == 'close':
-#         _method = 'updateSession'
-#         _params['session'] = session_id
-#     else:
-#         raise ValueError(
-#             'headset_id must be provided for active session, session_id must be provided for close session.'
-#         )
-#
-#     _params['status'] = status
-#
-#     _session = {
-#         'id': SessionID.CREATE_SESSION,
-#         'jsonrpc': '2.0',
-#         'method': _method,
-#         'params': _params,
-#     }
-#
-#     return _session

@@ -34,12 +34,10 @@ After step 2, but before step 3, you can send the **control "reset"** to cancel 
 
 """
 
-from collections.abc import Mapping
-from typing import Literal, TypeAlias
-from cortex.api.id import TrainingID
+from typing import Literal
 
-# Return type aliases.
-TrainingRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int]]
+from cortex.api.id import TrainingID
+from cortex.api.types import TrainingRequest
 
 
 def training(

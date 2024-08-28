@@ -29,16 +29,10 @@ https://emotiv.gitbook.io/cortex-api/authentication/authorize
 
 """
 
-from collections.abc import Mapping
-from typing import Literal, TypeAlias
+from typing import Literal
 
 from cortex.api.id import AuthID
-
-# Return type aliases.
-BaseRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
-AccessAuthRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
-AuthorizeRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int]]
-TokenRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+from cortex.api.types import AuthorizeRequest, BaseRequest
 
 
 def get_info() -> BaseRequest:
@@ -84,7 +78,7 @@ def access(
     client_secret: str,
     *,
     method: Literal['requestAccess', 'hasAccessRight'],
-) -> AccessAuthRequest:
+) -> BaseRequest:
     """Request access or verify access right.
 
     Keyword Args:
@@ -97,7 +91,7 @@ def access(
         [hasAccessRight](https://emotiv.gitbook.io/cortex-api/authentication/hasaccessright)
 
     Returns:
-        AccessAuthRequest: The access status.
+        BaseRequest: The access status.
 
     """
     assert method in ['requestAccess', 'hasAccessRight'], 'method must be either "requestAccess" or "hasAccessRight".'

@@ -9,14 +9,10 @@ threshold for mental commands.
 
 # mypy: disable-error-code=assignment
 
-from collections.abc import Mapping
-from typing import Literal, TypeAlias
+from typing import Literal
 
 from cortex.api.id import MentalCommandID
-
-# Return type aliases.
-MentalCommandRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
-MentalCommandActionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[str]]]
+from cortex.api.types import BaseRequest, MentalCommandActionRequest
 
 
 def active_action(
@@ -78,7 +74,7 @@ def brain_map(
     auth: str,
     session_id: str,
     profile_name: str,
-) -> MentalCommandRequest:
+) -> BaseRequest:
     """Map the profile name to the corresponding mental command brain.
 
     Args:
@@ -90,7 +86,7 @@ def brain_map(
         [mentalCommandBrainMap](https://emotiv.gitbook.io/cortex-api/advanced-bci/mentalcommandbrainmap)
 
     Returns:
-        MentalCommandRequest: The mental command brain map.
+        BaseRequest: The mental command brain map.
 
     """
     _brain_map = {
@@ -112,7 +108,7 @@ def get_skill_rating(
     profile_name: str | None = None,
     session_id: str | None = None,
     action: str | None = None,
-) -> MentalCommandRequest:
+) -> BaseRequest:
     """Get the skill rating of the mental command action.
 
     Args:
@@ -127,10 +123,10 @@ def get_skill_rating(
         [mentalCommandGetSkillRating](https://emotiv.gitbook.io/cortex-api/advanced-bci/mentalcommandgetskillrating)
 
     Returns:
-        MentalCommandRequest: The skill rating of the mental command action.
+        BaseRequest: The skill rating of the mental command action.
 
     """
-    _params: dict[str, str] = {'cortexToken': auth}
+    _params = {'cortexToken': auth}
 
     if profile_name is not None:
         _params['profile'] = profile_name
@@ -140,7 +136,7 @@ def get_skill_rating(
     if action is not None:
         _params['action'] = action
 
-    skill_rating: dict[str, str | int | dict[str, str]] = {
+    skill_rating = {
         'id': MentalCommandID.SKILL_RATING,
         'jsonrpc': '2.0',
         'method': 'mentalCommandGetSkillRating',
@@ -155,7 +151,7 @@ def training_threshold(
     *,
     profile_name: str | None = None,
     session_id: str | None = None,
-) -> MentalCommandRequest:
+) -> BaseRequest:
     """Get the training threshold for mental commands.
 
     Args:

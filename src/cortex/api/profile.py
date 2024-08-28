@@ -21,23 +21,20 @@ https://emotiv.gitbook.io/cortex-api/bci/setupprofile
 
 """
 
-from collections.abc import Mapping
-from typing import Literal, TypeAlias
+from typing import Literal
 
 from cortex.api.id import ProfileID
-
-# Return type aliases.
-ProfileRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+from cortex.api.types import BaseRequest
 
 
-def query_profile(auth: str) -> ProfileRequest:
+def query_profile(auth: str) -> BaseRequest:
     """Query the list of all training profile.
 
     Read More:
         [queryProfile](https://emotiv.gitbook.io/cortex-api/bci/queryprofile)
 
     Returns:
-        ProfileRequest: The query profile request.
+        BaseRequest: The query profile request.
 
     """
     _query = {
@@ -55,7 +52,7 @@ def query_profile(auth: str) -> ProfileRequest:
 def current_profile(
     auth: str,
     headset_id: str,
-) -> ProfileRequest:
+) -> BaseRequest:
     """Get the current training profile that is loaded for a specific headset.
 
     Args:
@@ -66,7 +63,7 @@ def current_profile(
         [getCurrentProfile](https://emotiv.gitbook.io/cortex-api/bci/getcurrentprofile)
 
     Returns:
-        ProfileRequest: The current profile status.
+        BaseRequest: The current profile status.
 
     """
     _profile = {
@@ -89,7 +86,7 @@ def setup_profile(
     *,
     headset_id: str | None = None,
     new_profile_name: str | None = None,
-) -> ProfileRequest:
+) -> BaseRequest:
     """Setup a training profile.
 
     Args:
@@ -105,7 +102,7 @@ def setup_profile(
         [setupProfile](https://emotiv.gitbook.io/cortex-api/bci/setupprofile)
 
     Returns:
-        ProfileRequest: The profile setup status.
+        BaseRequest: The profile setup status.
 
     """
     assert status in [
@@ -139,7 +136,7 @@ def setup_profile(
     return _profile
 
 
-def load_guest(auth: str, headset_id: str) -> ProfileRequest:
+def load_guest(auth: str, headset_id: str) -> BaseRequest:
     """Loads an empty profile for a headset.
 
     Args:
@@ -150,7 +147,7 @@ def load_guest(auth: str, headset_id: str) -> ProfileRequest:
         [loadGuestProfile](https://emotiv.gitbook.io/cortex-api/bci/loadguestprofile)
 
     Returns:
-        ProfileRequest: The guest profile status.
+        BaseRequest: The guest profile status.
 
     """
 
@@ -169,7 +166,7 @@ def load_guest(auth: str, headset_id: str) -> ProfileRequest:
 
 def detection_info(
     detection: Literal['mentalCommand', 'facialExpression'],
-) -> ProfileRequest:
+) -> BaseRequest:
     """Get the information about mental command or facial expression training.
 
     Args:
@@ -179,7 +176,7 @@ def detection_info(
         [getDetectionInfo](https://emotiv.gitbook.io/cortex-api/bci/getdetectioninfo)
 
     Returns:
-        ProfileRequest: The detection information.
+        BaseRequest: The detection information.
 
     """
     _detection = {

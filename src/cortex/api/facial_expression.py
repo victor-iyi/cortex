@@ -1,10 +1,7 @@
-from collections.abc import Mapping
-from typing import Literal, TypeAlias
+from typing import Literal
 
 from cortex.api.id import FacialExpressionID
-
-# Return type aliases.
-FacialExpressionRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int]]
+from cortex.api.types import FacialExpressionRequest
 
 
 def signature_type(

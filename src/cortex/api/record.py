@@ -21,53 +21,21 @@ https://emotiv.gitbook.io/cortex-api/records/configoptout
 
 # mypy: disable-error-code="assignment"
 
-from collections.abc import Mapping
-from typing import Literal, TypeAlias, TypedDict
+from typing import Literal
 
 from cortex.api.id import RecordsID
-
-# A dict with fields "from" and "to".
-Interval = TypedDict('Interval', {'from': str, 'to': str})
-
-
-class RecordQuery(TypedDict, total=False):
-    """Record query parameters."""
-
-    # Filter the records by their license.
-    licenseId: str
-
-    # Filter the records by their application ID.
-    applicationId: str
-
-    # Filter the records by title, description or subject name.
-    keyword: str
-
-    # An object with fields "from" and "to" to filter the records
-    # by their start date time.
-    startDatetime: Interval
-
-    # An object with fields "from" and "to" to filter the records
-    # by their modification date time.
-    modifiedDatetime: Interval
-
-    # An object with fields "from" and "to" to filter the records
-    # by their duration.
-    duration: Interval
-
-
-# Return type aliases.
-CreateRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | list[str]]]
-StopRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
-UpdateRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[str]]]
-DeleteRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
-ExportRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | list[str] | bool]]
-QueryRecordRequest: TypeAlias = Mapping[
-    str,
-    str | int | Mapping[str, str | RecordQuery | int | bool | list[Mapping[str, str]]],
-]
-RecordInfoRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
-ConfigOptOutRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | bool]]
-DownloadRecordDataRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
+from cortex.api.types import (
+    BaseRequest,
+    CreateRecordRequest,
+    ConfigOptOutRequest,
+    DeleteRecordRequest,
+    DownloadRecordDataRequest,
+    ExportRecordRequest,
+    QueryRecordRequest,
+    RecordInfoRequest,
+    RecordQuery,
+    UpdateRecordRequest,
+)
 
 
 def create_record(
@@ -128,7 +96,7 @@ def create_record(
 def stop_record(
     auth: str,
     session_id: str,
-) -> StopRecordRequest:
+) -> BaseRequest:
     """Stop the record.
 
     Args:
@@ -139,7 +107,7 @@ def stop_record(
         [stopRecord](https://emotiv.gitbook.io/cortex-api/records/stoprecord)
 
     Returns:
-        StopRecordRequest: The record stop status.
+        BaseRequest: The record stop status.
 
     """
     _record = {

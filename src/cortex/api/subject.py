@@ -25,59 +25,16 @@ https://emotiv.gitbook.io/cortex-api/subjects/querysubjects
 
 # mypy: disable-error-code="assignment"
 
-from collections.abc import Mapping
-from typing import Literal, TypeAlias, TypedDict
+from typing import Literal
 
 from cortex.api.id import SubjectsID
-
-# A dict with fields "from" and "to".
-Interval = TypedDict('Interval', {'from': str, 'to': str})
-
-
-class SubjectQuery(TypedDict, total=False):
-    """Query parameters."""
-
-    # Get a subject by its id.
-    uuid: str
-
-    # Filter the subjects by name.
-    subjectName: str
-
-    # Filter the subjects by their gender.
-    sex: Literal['M', 'F', 'U']
-
-    # Filter the subjects by their country code.
-    countryCode: str
-
-    # An object with fields "from" and "to" to filter
-    # the subjects by their date of birth.
-    dateOfBirth: Interval
-
-    # An object with the fields as the keyword to
-    # search and values are the list of fields to search.
-    # The list of fields to search can contain
-    # "subjectName", "lastName", "email".
-    keyword: Mapping[str, str]
-
-
-class Attribute(TypedDict):
-    """Demographic attribute."""
-
-    # The naem of the attribute.
-    name: str
-
-    # The value of the attribute.
-    value: str
-
-
-# Return Type Aliases.
-CreateSubjectRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[Attribute]]]
-UpdateSubjectRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | list[Attribute]]]
-DeleteSubjectRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
-QuerySubjectRequest: TypeAlias = Mapping[
-    str, str | int | Mapping[str, str | SubjectQuery | int | list[Mapping[str, str]]]
-]
-DemoAttrRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str]]
+from cortex.api.types import (
+    Attribute,
+    BaseRequest,
+    QuerySubjectRequest,
+    SubjectQuery,
+    SubjectRequest,
+)
 
 
 def create_subject(
@@ -90,7 +47,7 @@ def create_subject(
     state: str | None = None,
     city: str | None = None,
     attributes: list[Attribute] | None = None,
-) -> CreateSubjectRequest:
+) -> SubjectRequest:
     """Create a subject.
 
     Args:
@@ -109,7 +66,7 @@ def create_subject(
         [createSubject](https://emotiv.gitbook.io/cortex-api/subjects/createsubject)
 
     Returns:
-        CreateSubjectRequest: The subject creation status.
+        SubjectRequest: The subject creation status.
 
     """
     _params = {
@@ -155,7 +112,7 @@ def update_subject(
     state: str | None = None,
     city: str | None = None,
     attributes: list[Attribute] | None = None,
-) -> UpdateSubjectRequest:
+) -> SubjectRequest:
     """Update a subject.
 
     Args:
@@ -174,7 +131,7 @@ def update_subject(
         [updateSubject](https://emotiv.gitbook.io/cortex-api/subjects/querysubjects)
 
     Returns:
-        UpdateSubjectRequest: The subject update status.
+        SubjectRequest: The subject update status.
 
     """
     _params = {
@@ -210,10 +167,7 @@ def update_subject(
     return _subject
 
 
-def delete_subject(
-    auth: str,
-    subject_name: str,
-) -> DeleteSubjectRequest:
+def delete_subject(auth: str, subject_name: str) -> BaseRequest:
     """Delete a subject.
 
     Args:
@@ -224,7 +178,7 @@ def delete_subject(
         [deleteSubjects](https://emotiv.gitbook.io/cortex-api/subjects/deletesubjects)
 
     Returns:
-        dict[str, str | int | dict[str, str]]: The subject deletion status.
+        BaseRequest: The subject deletion status.
 
     """
     _subject = {
@@ -289,7 +243,7 @@ def query_subject(
     return _subject
 
 
-def get_demographic_attr(auth: str) -> DemoAttrRequest:
+def get_demographic_attr(auth: str) -> BaseRequest:
     """Get the demographic attributes.
 
     Args:
@@ -299,7 +253,7 @@ def get_demographic_attr(auth: str) -> DemoAttrRequest:
         [getDemographicAttributes](https://emotiv.gitbook.io/cortex-api/subjects/getdemographicattributes)
 
     Returns:
-        DemoAttrRequest: The demographic attributes.
+        BaseRequest: The demographic attributes.
 
     """
     _subject = {
