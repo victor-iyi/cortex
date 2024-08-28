@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import Literal
 
 from cortex.api.headset import (
@@ -12,11 +13,23 @@ from cortex.api.mental_command import (
     brain_map,
     training_threshold,
 )
+from cortex.api.record import (
+    create_record,
+    stop_record,
+    update_record,
+    delete_record,
+    export_record,
+    query_records,
+    record_infos,
+    config_opt_out,
+    download_record_data,
+)
 from cortex.api.profile import (
     current_profile,
     query_profile,
     setup_profile,
 )
+from cortex.api.types import RecordQuery
 from cortex.cortex import Cortex
 from cortex.logging import logger
 
@@ -154,10 +167,7 @@ class Headset(Cortex):
         if not self.headset_id:
             raise ValueError('No headset ID. Please connect to the headset first.')
 
-        current = current_profile(
-            auth=self.auth,
-            headset_id=self.headset_id,
-        )
+        current = current_profile(auth=self.auth, headset_id=self.headset_id)
 
         # If debug mode is enabled, print the current profile.
         logger.debug('Getting the current profile.')
@@ -184,7 +194,7 @@ class Headset(Cortex):
                 Only if the status is "rename".
 
         """
-        logger.info('--- Setting up the profile ---')
+        logger.info(f'--- {status.title()} the profile: {profile_name} ---')
 
         # Update self.profile_name if the status is 'create' or 'rename'.
         if status == 'create':
@@ -205,6 +215,249 @@ class Headset(Cortex):
         logger.debug(setup)
 
         self.ws.send(json.dumps(setup, indent=4))
+
+    def create_record(self, title: str, **kwargs: str | list[str] | int) -> None:
+        """Create a record.
+
+        Args:
+            title (str): The title of the record.
+
+        Keyword Args:
+            description (str): The description of the record.
+            subject_name (str): The name of the subject.
+            tags (list[str]): The tags of the record.
+            experiment_id (int): The experiment ID.
+
+        """
+        logger.info(f'--- Creating a record: {title} ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        record = create_record(
+            auth=self.auth,
+            session_id=self.session_id,
+            title=title,
+            **kwargs,
+        )
+
+        # If debug mode is enabled, print the record.
+        logger.debug('Creating a record.')
+        logger.debug(record)
+
+        self.ws.send(json.dumps(record, indent=4))
+
+    def stop_record(self) -> None:
+        """Stop the record."""
+        logger.info('--- Stopping the record ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        record = stop_record(auth=self.auth, session_id=self.session_id)
+
+        # If debug mode is enabled, print the record.
+        logger.debug('Stopping the record.')
+        logger.debug(record)
+
+        self.ws.send(json.dumps(record, indent=4))
+
+    def update_record(self, record_id: str, **kwargs: str | list[str]) -> None:
+        """Update a record.
+
+        Args:
+            record_id (str): The record ID.
+
+        Keyword Args:
+            title (str): The title of the record.
+            description (str): The description of the record.
+            tags (list[str]): The tags of the record.
+
+        """
+        logger.info(f'--- Updating a record {record_id} ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        record = update_record(
+            auth=self.auth,
+            record_id=record_id,
+            **kwargs,
+        )
+
+        # If debug mode is enabled, print the record.
+        logger.debug('Updating a record.')
+        logger.debug(record)
+
+        self.ws.send(json.dumps(record, indent=4))
+
+    def delete_record(self, records: list[str]) -> None:
+        """Delete one or more records.
+
+        Args:
+            records (list[str]): The record IDs.
+
+        """
+        logger.info('--- Deleting records ---')
+
+        record = delete_record(auth=self.auth, records=records)
+
+        # If debug mode is enabled, print the record.
+        logger.debug(f'Deleting records {records}.')
+        logger.debug(record)
+
+        self.ws.send(json.dumps(record, indent=4))
+
+    def export_record(
+        self,
+        record_ids: list[str],
+        folder: str | Path,
+        stream_types: list[str],
+        # pylint: disable-next=redefined-builtin,implicit-str-concat
+        format: Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV'],
+        **kwargs: str | list[str] | bool,
+    ) -> None:
+        """Export one or more records.
+
+        Args:
+            record_ids (list[str]): The record IDs.
+            folder (str | Path): The folder to save the records.
+            stream_types (list[str]): The stream types.
+            format (Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV']): The format.
+
+        Keyword Args:
+            version (Literal['V1', 'V2']): The version of the CSV format.
+                 If the format is "EDF", then you must omit this parameter.
+                 If the format is "CSV", then this parameter must be "V1" or "V2".
+            license_ids (list[str], optional): The default value is an empty list,
+                 which means that you can only export the records created by your app.
+            include_demographics (bool, optional): If `true` the the exported JSON
+                 file will include the demographic data of the user.
+            include_survey (bool, optional): If `true` the the exported JSON file
+                 will include the survey data of the record.
+            include_marker_extra_infos (bool, optional): If `true` the the markers of
+                 the records will be exported to a CSV file.
+            include_deprecated_pm (bool, optional): If `true` then deprecated performance
+                 metrics (i.e. Focus) will be exported.
+
+        """
+        logger.info('--- Exporting records ---')
+
+        export = export_record(
+            auth=self.auth,
+            record_ids=record_ids,
+            folder=str(folder),
+            stream_types=stream_types,
+            format=format,
+            **kwargs,
+        )
+
+        # If debug mode is enabled, print the export.
+        logger.debug(f'Exporting records to {folder}.')
+        logger.debug(export)
+
+        self.ws.send(json.dumps(export, indent=4))
+
+    def query_records(
+        self,
+        query: RecordQuery,
+        order_by: list[dict[str, Literal['ASC', 'DESC']]],
+        **kwargs: int | bool,
+    ) -> None:
+        """Query records.
+
+        Args:
+            query (RecordQuery): The query parameters.
+            order_by (list[dict[str, Literal['ASC', 'DESC']]]): The order by parameters.
+
+        Keyword Args:
+            limit (int): The maximum number of records to return.
+            offset (int): The number of records to skip.
+            include_markers (bool): If `true` the the markers of the records will be included.
+            include_sync_status_info (bool): If `true` the the sync status of the records will be included.
+
+        """
+        logger.info('--- Querying records ---')
+
+        _query = query_records(
+            auth=self.auth,
+            query=query,
+            order_by=order_by,
+            **kwargs,
+        )
+
+        # If debug mode is enabled, print the query.
+        logger.debug('Querying records.')
+        logger.debug(_query)
+
+        self.ws.send(json.dumps(_query, indent=4))
+
+    def get_record_info(self, record_ids: list[str]) -> None:
+        """Get the record information.
+
+        Args:
+            record_ids (list[str]): The record IDs.
+
+        """
+        logger.info('--- Getting record information ---')
+
+        record = record_infos(auth=self.auth, record_ids=record_ids)
+
+        # If debug mode is enabled, print the record.
+        logger.debug('Getting record information.')
+        logger.debug(record)
+
+        self.ws.send(json.dumps(record, indent=4))
+
+    def set_config_opt_out(self, opt_out: bool) -> None:
+        """Set the config opt out.
+
+        Args:
+            opt_out (bool): The opt out status.
+
+        """
+        logger.info('--- Setting the config opt out ---')
+
+        _config = config_opt_out(
+            auth=self.auth,
+            status='set',
+            new_opt_out=opt_out,
+        )
+
+        # If debug mode is enabled, print the config.
+        logger.debug('Setting the config opt out.')
+        logger.debug(_config)
+
+        self.ws.send(json.dumps(_config, indent=4))
+
+    def get_config_opt_out(self) -> None:
+        """Get the config opt out."""
+        logger.info('--- Getting the config opt out ---')
+
+        _config = config_opt_out(auth=self.auth, status='get')
+
+        # If debug mode is enabled, print the config.
+        logger.debug('Getting the config opt out.')
+        logger.debug(_config)
+
+        self.ws.send(json.dumps(_config, indent=4))
+
+    def download_record_data(self, record_ids: list[str]) -> None:
+        """Download the record data.
+
+        Args:
+            record_ids (list[str]): The record IDs.
+
+        """
+        logger.info('--- Downloading record data ---')
+
+        _download = download_record_data(auth=self.auth, record_ids=record_ids)
+
+        # If debug mode is enabled, print the download.
+        logger.debug('Downloading record data.')
+        logger.debug(_download)
+
+        self.ws.send(json.dumps(_download, indent=4))
 
     def get_mental_command_action_sensitive(self, profile_name: str) -> None:
         """Get the mental command action sensitivity."""
@@ -249,6 +502,7 @@ class Headset(Cortex):
 
     def get_mental_command_active_action(self, profile_name: str) -> None:
         """Get the active mental command action."""
+        logger.info('--- Getting mental command active action ---')
 
         active = active_action(
             auth=self.auth,

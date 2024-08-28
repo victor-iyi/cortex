@@ -1,9 +1,10 @@
 from enum import IntEnum
 from pathlib import Path
+from typing import Final
 
 # An Emotiv self-signed certificate is used to establish a secure connection to Cortex.
-CERTS_DIR: Path = Path(__file__).resolve().parent.parent.parent / 'certificates'
-CA_CERTS: Path = CERTS_DIR / 'rootCA.pem'
+CERTS_DIR: Final[Path] = Path(__file__).resolve().parent.parent.parent / 'certificates'
+CA_CERTS: Final[Path] = CERTS_DIR / 'rootCA.pem'
 
 
 class ErrorCode(IntEnum):
