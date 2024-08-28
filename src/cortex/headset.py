@@ -40,18 +40,16 @@ class Headset(Cortex):
         """Connect to the headset."""
         logger.info('--- Connecting to the headset ---')
 
-        connection = make_connection(
+        _connection = make_connection(
             command='connect',
             headset_id=self.headset_id,
             mappings=mappings,
             connection_type=connection_type,
         )
 
-        # If debug mode is enabled, print the connection.
-        logger.debug('Connecting to the headset.')
-        logger.debug(connection)
+        logger.debug(_connection)
 
-        self.ws.send(json.dumps(connection, indent=4))
+        self.ws.send(json.dumps(_connection, indent=4))
 
     def disconnect(
         self,
@@ -61,30 +59,26 @@ class Headset(Cortex):
         """Disconnect from the headset."""
         logger.info('--- Disconnecting from the headset ---')
 
-        connection = make_connection(
+        _connection = make_connection(
             command='disconnect',
             headset_id=self.headset_id,
             mappings=mappings,
             connection_type=connection_type,
         )
 
-        # If debug mode is enabled, print the connection.
-        logger.debug('Disconnecting from the headset.')
-        logger.debug(connection)
+        logger.debug(_connection)
 
-        self.ws.send(json.dumps(connection, indent=4))
+        self.ws.send(json.dumps(_connection, indent=4))
 
     def query_headset(self) -> None:
         """Query the headset."""
         logger.info('--- Querying the headset ---')
 
-        _query_headset = query_headset(headset_id=self.headset_id)
+        _query = query_headset(headset_id=self.headset_id)
 
-        # If debug mode is enabled, print the query.
-        logger.debug('Querying the headset.')
-        logger.debug(query_headset)
+        logger.debug(_query)
 
-        self.ws.send(json.dumps(_query_headset, indent=4))
+        self.ws.send(json.dumps(_query, indent=4))
 
     def subscribe(self, streams: list[str]) -> None:
         """Subscribe to one or more data stream.
@@ -108,8 +102,6 @@ class Headset(Cortex):
             method='subscribe',
         )
 
-        # If debug mode is enabled, print the subscription request.
-        logger.debug('Subscribe request:')
         logger.debug(_request)
 
         self.ws.send(json.dumps(_request, indent=4))
@@ -136,8 +128,6 @@ class Headset(Cortex):
             method='unsubscribe',
         )
 
-        # If debug mode is enabled, print the subscription request.
-        logger.debug('Unsubscribe request:')
         logger.debug(_request)
 
         self.ws.send(json.dumps(_request, indent=4))
@@ -146,13 +136,11 @@ class Headset(Cortex):
         """Query the profile."""
         logger.info('--- Querying the profile ---')
 
-        query = query_profile(auth=self._auth)
+        _query = query_profile(auth=self._auth)
 
-        # If debug mode is enabled, print the query.
-        logger.debug('Querying the profile.')
-        logger.debug(query)
+        logger.debug(_query)
 
-        self.ws.send(json.dumps(query, indent=4))
+        self.ws.send(json.dumps(_query, indent=4))
 
     def get_current_profile(self) -> None:
         """Get the current profile."""
@@ -161,13 +149,11 @@ class Headset(Cortex):
         if not self.headset_id:
             raise ValueError('No headset ID. Please connect to the headset first.')
 
-        current = current_profile(auth=self.auth, headset_id=self.headset_id)
+        _profile = current_profile(auth=self.auth, headset_id=self.headset_id)
 
-        # If debug mode is enabled, print the current profile.
-        logger.debug('Getting the current profile.')
-        logger.debug(current)
+        logger.debug(_profile)
 
-        self.ws.send(json.dumps(current, indent=4))
+        self.ws.send(json.dumps(_profile, indent=4))
 
     def setup_profile(
         self,
@@ -196,7 +182,7 @@ class Headset(Cortex):
         elif status == 'rename' and new_profile_name is not None:
             self.profile_name = new_profile_name
 
-        setup = setup_profile(
+        _profile = setup_profile(
             auth=self.auth,
             status=status,
             profile_name=profile_name,
@@ -204,11 +190,9 @@ class Headset(Cortex):
             new_profile_name=new_profile_name,
         )
 
-        # If debug mode is enabled, print the setup.
-        logger.debug('Setting up the profile.')
-        logger.debug(setup)
+        logger.debug(_profile)
 
-        self.ws.send(json.dumps(setup, indent=4))
+        self.ws.send(json.dumps(_profile, indent=4))
 
     def create_record(self, title: str, **kwargs: str | list[str] | int) -> None:
         """Create a record.
@@ -234,18 +218,16 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        record = create_record(
+        _record = create_record(
             auth=self.auth,
             session_id=self.session_id,
             title=title,
             **kwargs,
         )
 
-        # If debug mode is enabled, print the record.
-        logger.debug('Creating a record.')
-        logger.debug(record)
+        logger.debug(_record)
 
-        self.ws.send(json.dumps(record, indent=4))
+        self.ws.send(json.dumps(_record, indent=4))
 
     def stop_record(self) -> None:
         """Stop the record."""
@@ -254,13 +236,11 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        record = stop_record(auth=self.auth, session_id=self.session_id)
+        _record = stop_record(auth=self.auth, session_id=self.session_id)
 
-        # If debug mode is enabled, print the record.
-        logger.debug('Stopping the record.')
-        logger.debug(record)
+        logger.debug(_record)
 
-        self.ws.send(json.dumps(record, indent=4))
+        self.ws.send(json.dumps(_record, indent=4))
 
     def update_record(self, record_id: str, **kwargs: str | list[str]) -> None:
         """Update a record.
@@ -279,17 +259,15 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        record = update_record(
+        _record = update_record(
             auth=self.auth,
             record_id=record_id,
             **kwargs,
         )
 
-        # If debug mode is enabled, print the record.
-        logger.debug('Updating a record.')
-        logger.debug(record)
+        logger.debug(_record)
 
-        self.ws.send(json.dumps(record, indent=4))
+        self.ws.send(json.dumps(_record, indent=4))
 
     def delete_record(self, records: list[str]) -> None:
         """Delete one or more records.
@@ -300,13 +278,11 @@ class Headset(Cortex):
         """
         logger.info('--- Deleting records ---')
 
-        record = delete_record(auth=self.auth, records=records)
+        _record = delete_record(auth=self.auth, records=records)
 
-        # If debug mode is enabled, print the record.
-        logger.debug(f'Deleting records {records}.')
-        logger.debug(record)
+        logger.debug(_record)
 
-        self.ws.send(json.dumps(record, indent=4))
+        self.ws.send(json.dumps(_record, indent=4))
 
     def export_record(
         self,
@@ -349,7 +325,7 @@ class Headset(Cortex):
 
         logger.info('--- Exporting records ---')
 
-        export = export_record(
+        _export = export_record(
             auth=self.auth,
             record_ids=record_ids,
             folder=str(folder),
@@ -358,11 +334,9 @@ class Headset(Cortex):
             **kwargs,
         )
 
-        # If debug mode is enabled, print the export.
-        logger.debug(f'Exporting records to {folder}.')
-        logger.debug(export)
+        logger.debug(_export)
 
-        self.ws.send(json.dumps(export, indent=4))
+        self.ws.send(json.dumps(_export, indent=4))
 
     def query_records(
         self,
@@ -392,8 +366,6 @@ class Headset(Cortex):
             **kwargs,
         )
 
-        # If debug mode is enabled, print the query.
-        logger.debug('Querying records.')
         logger.debug(_query)
 
         self.ws.send(json.dumps(_query, indent=4))
@@ -430,8 +402,6 @@ class Headset(Cortex):
             new_opt_out=opt_out,
         )
 
-        # If debug mode is enabled, print the config.
-        logger.debug('Setting the config opt out.')
         logger.debug(_config)
 
         self.ws.send(json.dumps(_config, indent=4))
@@ -442,8 +412,6 @@ class Headset(Cortex):
 
         _config = config_opt_out(auth=self.auth, status='get')
 
-        # If debug mode is enabled, print the config.
-        logger.debug('Getting the config opt out.')
         logger.debug(_config)
 
         self.ws.send(json.dumps(_config, indent=4))
@@ -459,8 +427,6 @@ class Headset(Cortex):
 
         _download = download_record_data(auth=self.auth, record_ids=record_ids)
 
-        # If debug mode is enabled, print the download.
-        logger.debug('Downloading record data.')
         logger.debug(_download)
 
         self.ws.send(json.dumps(_download, indent=4))
@@ -492,8 +458,6 @@ class Headset(Cortex):
             **kwargs,
         )
 
-        # If debug mode is enabled, print the marker.
-        logger.debug('Injecting a marker.')
         logger.debug(_marker)
 
         self.ws.send(json.dumps(_marker, indent=4))
@@ -525,8 +489,6 @@ class Headset(Cortex):
             **kwargs,
         )
 
-        # If debug mode is enabled, print the marker.
-        logger.debug('Updating a marker.')
         logger.debug(_marker)
 
         self.ws.send(json.dumps(_marker, indent=4))
@@ -558,8 +520,6 @@ class Headset(Cortex):
             action=action,
         )
 
-        # If debug mode is enabled, print the training.
-        logger.debug('Sending a training request.')
         logger.debug(_training)
 
         self.ws.send(json.dumps(_training, indent=4))
@@ -587,8 +547,6 @@ class Headset(Cortex):
             **kwargs,
         )
 
-        # If debug mode is enabled, print the training.
-        logger.debug('Getting the list of trained actions.')
         logger.debug(_training)
 
         self.ws.send(json.dumps(_training, indent=4))
@@ -611,8 +569,6 @@ class Headset(Cortex):
             detection=detection,
         )
 
-        # If debug mode is enabled, print the training.
-        logger.debug('Getting the training time.')
         logger.debug(_training)
 
         self.ws.send(json.dumps(_training, indent=4))
@@ -621,30 +577,24 @@ class Headset(Cortex):
         """Get the mental command action sensitivity."""
         logger.info('--- Getting mental command action sensitivity ---')
 
-        sensitivity = action_sensitivity(
+        _sensitivity = action_sensitivity(
             auth=self.auth,
             profile_name=profile_name,
             status='get',
         )
 
-        # If debug mode is enabled, print the sensitivity.
-        logger.debug('Getting mental command action sensitivity.')
-        logger.debug(sensitivity)
+        logger.debug(_sensitivity)
 
-        self.ws.send(json.dumps(sensitivity, indent=4))
+        self.ws.send(json.dumps(_sensitivity, indent=4))
 
-    def set_mental_command_action_sensitive(
-        self,
-        profile_name: str,
-        values: list[int],
-    ) -> None:
+    def set_mental_command_action_sensitive(self, profile_name: str, values: list[int]) -> None:
         """Set the mental command action sensitivity."""
         logger.info('--- Setting mental command action sensitivity ---')
 
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        sensitivity = action_sensitivity(
+        _sensitivity = action_sensitivity(
             auth=self.auth,
             profile_name=profile_name,
             session_id=self.session_id,
@@ -652,27 +602,23 @@ class Headset(Cortex):
             status='set',
         )
 
-        # If debug mode is enabled, print the sensitivity.
-        logger.debug('Setting mental command action sensitivity.')
-        logger.debug(sensitivity)
+        logger.debug(_sensitivity)
 
-        self.ws.send(json.dumps(sensitivity, indent=4))
+        self.ws.send(json.dumps(_sensitivity, indent=4))
 
     def get_mental_command_active_action(self, profile_name: str) -> None:
         """Get the active mental command action."""
         logger.info('--- Getting mental command active action ---')
 
-        active = active_action(
+        _action = active_action(
             auth=self.auth,
             status='get',
             profile_name=profile_name,
         )
 
-        # If debug mode is enabled, print the active action.
-        logger.debug('Getting mental command active action.')
-        logger.debug(active)
+        logger.debug(_action)
 
-        self.ws.send(json.dumps(active, indent=4))
+        self.ws.send(json.dumps(_action, indent=4))
 
     def set_mental_command_active_action(self, actions: list[str]) -> None:
         """Set the active mental command action."""
@@ -681,18 +627,16 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        active = active_action(
+        _action = active_action(
             auth=self.auth,
             status='set',
             session_id=self.session_id,
             actions=actions,
         )
 
-        # If debug mode is enabled, print the active action.
-        logger.debug('Setting mental command active action.')
-        logger.debug(active)
+        logger.debug(_action)
 
-        self.ws.send(json.dumps(active, indent=4))
+        self.ws.send(json.dumps(_action, indent=4))
 
     def get_mental_command_brain_map(self, profile_name: str) -> None:
         """Get the mental command brain map."""
@@ -701,17 +645,15 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        brain = brain_map(
+        _brain_map = brain_map(
             auth=self._auth,
             session_id=self.session_id,
             profile_name=profile_name,
         )
 
-        # If debug mode is enabled, print the brain map.
-        logger.debug('Getting mental command brain map.')
-        logger.debug(brain)
+        logger.debug(_brain_map)
 
-        self.ws.send(json.dumps(brain, indent=4))
+        self.ws.send(json.dumps(_brain_map, indent=4))
 
     def get_mental_command_training_threshold(self, profile_name: str) -> None:
         """Get the mental command training threshold."""
@@ -720,14 +662,12 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        threshold = training_threshold(
+        _threshold = training_threshold(
             auth=self.auth,
             profile_name=profile_name,
             session_id=self.session_id,
         )
 
-        # If debug mode is enabled, print the training threshold.
-        logger.debug('Getting mental command training threshold.')
-        logger.debug(threshold)
+        logger.debug(_threshold)
 
-        self.ws.send(json.dumps(threshold, indent=4))
+        self.ws.send(json.dumps(_threshold, indent=4))
