@@ -1,25 +1,18 @@
-"""## [Subjects]
+"""## Subjects_.
 
-A subject represents a human being who is the subject of a [record], ie
-the person wearing the headset during the record. A subject is a
-permanent object. It is stored on the hard drive and then synchronized
-to the EMOTIV cloud.
+A subject represents a human being who is the subject of a record_, ie the person wearing the headset during the
+record. A subject is a permanent object. It is stored on the hard drive and then synchronized to the EMOTIV cloud.
 
-To associate a subject to a record, you must create the subject first,
-by calling [createSubject]. Then you must specify the subject name when
-you call [createRecord]. A subject is identified by his/her name.
+To associate a subject to a record, you must create the subject first, by calling createSubject_. Then you must specify
+the subject name when you call createRecord_. A subject is identified by his/her name.
 
-You can call [querySubjects] to list the subjects already created for
-the current user.
+You can call querySubjects_ to list the subjects already created for the current user.
 
-[Subjects]:
-https://emotiv.gitbook.io/cortex-api/subjects
- [record]: https://emotiv.gitbook.io/cortex-api/records [createSubject]:
-https://emotiv.gitbook.io/cortex-api/subjects/createsubject
- [createRecord]:
-https://emotiv.gitbook.io/cortex-api/records/createrecord
- [querySubjects]:
-https://emotiv.gitbook.io/cortex-api/subjects/querysubjects
+.. _Subjects: https://emotiv.gitbook.io/cortex-api/subjects
+.. _record: https://emotiv.gitbook.io/cortex-api/records
+.. _createSubject: https://emotiv.gitbook.io/cortex-api/subjects/createsubject
+.. _createRecord: https://emotiv.gitbook.io/cortex-api/records/createrecord
+.. _querySubjects: https://emotiv.gitbook.io/cortex-api/subjects/querysubjects
 
 """
 
@@ -28,13 +21,7 @@ https://emotiv.gitbook.io/cortex-api/subjects/querysubjects
 from typing import Literal
 
 from cortex.api.id import SubjectsID
-from cortex.api.types import (
-    Attribute,
-    BaseRequest,
-    QuerySubjectRequest,
-    SubjectQuery,
-    SubjectRequest,
-)
+from cortex.api.types import Attribute, BaseRequest, QuerySubjectRequest, SubjectQuery, SubjectRequest
 
 
 def create_subject(
@@ -69,10 +56,7 @@ def create_subject(
         SubjectRequest: The subject creation status.
 
     """
-    _params = {
-        'cortexToken': auth,
-        'subjectName': subject_name,
-    }
+    _params = {'cortexToken': auth, 'subjectName': subject_name}
 
     if date_of_birth is not None:
         _params['dateOfBirth'] = date_of_birth
@@ -92,12 +76,7 @@ def create_subject(
     if attributes is not None:
         _params['attributes'] = attributes
 
-    _subject = {
-        'id': SubjectsID.CREATE,
-        'jsonrpc': '2.0',
-        'method': 'createSubject',
-        'params': _params,
-    }
+    _subject = {'id': SubjectsID.CREATE, 'jsonrpc': '2.0', 'method': 'createSubject', 'params': _params}
 
     return _subject
 
@@ -134,10 +113,7 @@ def update_subject(
         SubjectRequest: The subject update status.
 
     """
-    _params = {
-        'cortexToken': auth,
-        'subjectName': subject_name,
-    }
+    _params = {'cortexToken': auth, 'subjectName': subject_name}
 
     if date_of_birth is not None:
         _params['dateOfBirth'] = date_of_birth
@@ -157,12 +133,7 @@ def update_subject(
     if attributes is not None:
         _params['attributes'] = attributes
 
-    _subject = {
-        'id': SubjectsID.UPDATE,
-        'jsonrpc': '2.0',
-        'method': 'updateSubject',
-        'params': _params,
-    }
+    _subject = {'id': SubjectsID.UPDATE, 'jsonrpc': '2.0', 'method': 'updateSubject', 'params': _params}
 
     return _subject
 
@@ -185,10 +156,7 @@ def delete_subject(auth: str, subject_name: str) -> BaseRequest:
         'id': SubjectsID.DELETE,
         'jsonrpc': '2.0',
         'method': 'deleteSubjects',
-        'params': {
-            'cortexToken': auth,
-            'subjectName': subject_name,
-        },
+        'params': {'cortexToken': auth, 'subjectName': subject_name},
     }
 
     return _subject
@@ -221,11 +189,7 @@ def query_subject(
         QuerySubjectRequest: The subject query status.
 
     """
-    _params = {
-        'cortexToken': auth,
-        'query': query,
-        'orderBy': order_by,
-    }
+    _params = {'cortexToken': auth, 'query': query, 'orderBy': order_by}
 
     if limit is not None:
         _params['limit'] = limit
@@ -233,12 +197,7 @@ def query_subject(
     if offset is not None:
         _params['offset'] = offset
 
-    _subject = {
-        'id': SubjectsID.QUERY,
-        'jsonrpc': '2.0',
-        'method': 'querySubjects',
-        'params': _params,
-    }
+    _subject = {'id': SubjectsID.QUERY, 'jsonrpc': '2.0', 'method': 'querySubjects', 'params': _params}
 
     return _subject
 
@@ -260,9 +219,7 @@ def get_demographic_attr(auth: str) -> BaseRequest:
         'id': SubjectsID.DEMO_ATTR,
         'jsonrpc': '2.0',
         'method': 'getDemographicAttributes',
-        'params': {
-            'cortexToken': auth,
-        },
+        'params': {'cortexToken': auth},
     }
 
     return _subject

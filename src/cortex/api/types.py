@@ -1,3 +1,5 @@
+"""Type aliases for the Cortex API."""
+
 from collections.abc import Mapping
 from typing import Any, Literal, TypeAlias, TypedDict
 
@@ -111,8 +113,7 @@ UpdateRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | lis
 DeleteRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
 ExportRecordRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | int | list[str] | bool]]
 QueryRecordRequest: TypeAlias = Mapping[
-    str,
-    str | int | Mapping[str, str | RecordQuery | int | bool | list[Mapping[str, str]]],
+    str, str | int | Mapping[str, str | RecordQuery | int | bool | list[Mapping[str, str]]]
 ]
 RecordInfoRequest: TypeAlias = Mapping[str, str | int | Mapping[str, list[str]]]
 ConfigOptOutRequest: TypeAlias = Mapping[str, str | int | Mapping[str, str | bool]]

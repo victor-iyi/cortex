@@ -1,4 +1,4 @@
-"""## [Sessions]
+"""## [Sessions].
 
 A session is an object that makes the link between your application and an
 EMOTIV headset. When the user wants to work with a headset, your application
@@ -26,11 +26,7 @@ from cortex.api.id import SessionID
 from cortex.api.types import BaseRequest
 
 
-def create_session(
-    auth: str,
-    headset_id: str,
-    status: Literal['open', 'active'],
-) -> BaseRequest:
+def create_session(auth: str, headset_id: str, status: Literal['open', 'active']) -> BaseRequest:
     """Either open a session or open and activate a session.
 
     Args:
@@ -53,21 +49,13 @@ def create_session(
         'id': SessionID.CREATE,
         'jsonrpc': '2.0',
         'method': 'createSession',
-        'params': {
-            'cortexToken': auth,
-            'headset': headset_id,
-            'status': status,
-        },
+        'params': {'cortexToken': auth, 'headset': headset_id, 'status': status},
     }
 
     return _session
 
 
-def update_session(
-    auth: str,
-    session_id: str,
-    status: Literal['active', 'close'],
-) -> BaseRequest:
+def update_session(auth: str, session_id: str, status: Literal['active', 'close']) -> BaseRequest:
     """Update or close a session.
 
     Args:
@@ -90,11 +78,7 @@ def update_session(
         'id': SessionID.UPDATE,
         'jsonrpc': '2.0',
         'method': 'updateSession',
-        'params': {
-            'cortexToken': auth,
-            'session': session_id,
-            'status': status,
-        },
+        'params': {'cortexToken': auth, 'session': session_id, 'status': status},
     }
 
     return _session
@@ -113,13 +97,6 @@ def query_session(auth: str) -> BaseRequest:
         BaseRequest: The session status.
 
     """
-    _session = {
-        'id': SessionID.QUERY,
-        'jsonrpc': '2.0',
-        'method': 'querySession',
-        'params': {
-            'cortexToken': auth,
-        },
-    }
+    _session = {'id': SessionID.QUERY, 'jsonrpc': '2.0', 'method': 'querySession', 'params': {'cortexToken': auth}}
 
     return _session

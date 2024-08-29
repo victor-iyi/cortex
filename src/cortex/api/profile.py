@@ -1,23 +1,15 @@
-"""## [Profile]
+"""## Profile_.
 
-A profile is a persistent object that stores training data for the
-facial expression and mental command detections. A profile belongs to a
-user and is synchronized to the EMOTIV cloud.
+A profile is a persistent object that stores training data for the facial expression and mental command detections. A
+profile belongs to a user and is synchronized to the EMOTIV cloud.
 
-You can use [queryProfile] to list the profiles of the current user. Use
-[setupProfile] to manage the profiles, and also to load or unload a
-profile for a headset. You can use [training] to add training data to a
-profile.
+You can use queryProfile_ to list the profiles of the current user. Use setupProfile_ to manage the profiles, and also
+to load or unload a profile for a headset. You can use training_ to add training data to a profile.
 
-[Profile]:
-https://emotiv.gitbook.io/cortex-api/bci#profile
-
-[queryProfile]: https://emotiv.gitbook.io/cortex-api/bci/queryprofile
-
-[setupProfile]:
-https://emotiv.gitbook.io/cortex-api/bci/setupprofile
-
-[training]: https://emotiv.gitbook.io/cortex-api/bci/training
+.. _Profile: https://emotiv.gitbook.io/cortex-api/bci#profile
+.. _queryProfile: https://emotiv.gitbook.io/cortex-api/bci/queryprofile
+.. _setupProfile: https://emotiv.gitbook.io/cortex-api/bci/setupprofile
+.. _training: https://emotiv.gitbook.io/cortex-api/bci/training
 
 """
 
@@ -37,22 +29,12 @@ def query_profile(auth: str) -> BaseRequest:
         BaseRequest: The query profile request.
 
     """
-    _query = {
-        'id': ProfileID.QUERY,
-        'jsonrpc': '2.0',
-        'method': 'queryProfile',
-        'params': {
-            'cortexToken': auth,
-        },
-    }
+    _query = {'id': ProfileID.QUERY, 'jsonrpc': '2.0', 'method': 'queryProfile', 'params': {'cortexToken': auth}}
 
     return _query
 
 
-def current_profile(
-    auth: str,
-    headset_id: str,
-) -> BaseRequest:
+def current_profile(auth: str, headset_id: str) -> BaseRequest:
     """Get the current training profile that is loaded for a specific headset.
 
     Args:
@@ -70,10 +52,7 @@ def current_profile(
         'id': ProfileID.CURRENT,
         'jsonrpc': '2.0',
         'method': 'getCurrentProfile',
-        'params': {
-            'cortexToken': auth,
-            'headset': headset_id,
-        },
+        'params': {'cortexToken': auth, 'headset': headset_id},
     }
 
     return _profile
@@ -114,11 +93,7 @@ def setup_profile(
         'delete',
     ], 'Status must be one of create, load, unload, save, rename, delete.'
 
-    _params = {
-        'cortexToken': auth,
-        'status': status,
-        'profile': profile_name,
-    }
+    _params = {'cortexToken': auth, 'status': status, 'profile': profile_name}
 
     if headset_id is not None and status in ('create', 'load', 'unload', 'save'):
         _params['headset'] = headset_id
@@ -126,12 +101,7 @@ def setup_profile(
     if new_profile_name is not None and status == 'rename':
         _params['newProfileName'] = new_profile_name
 
-    _profile = {
-        'id': ProfileID.SETUP,
-        'jsonrpc': '2.0',
-        'method': 'setupProfile',
-        'params': _params,
-    }
+    _profile = {'id': ProfileID.SETUP, 'jsonrpc': '2.0', 'method': 'setupProfile', 'params': _params}
 
     return _profile
 
@@ -154,18 +124,13 @@ def load_guest(auth: str, headset_id: str) -> BaseRequest:
         'id': ProfileID.GUEST,
         'jsonrpc': '2.0',
         'method': 'loadGuestProfile',
-        'params': {
-            'cortexToken': auth,
-            'headset': headset_id,
-        },
+        'params': {'cortexToken': auth, 'headset': headset_id},
     }
 
     return _guest
 
 
-def detection_info(
-    detection: Literal['mentalCommand', 'facialExpression'],
-) -> BaseRequest:
+def detection_info(detection: Literal['mentalCommand', 'facialExpression']) -> BaseRequest:
     """Get the information about mental command or facial expression training.
 
     Args:
@@ -182,9 +147,7 @@ def detection_info(
         'id': ProfileID.DETECTION_INFO,
         'jsonrpc': '2.0',
         'method': 'getDetectionInfo',
-        'params': {
-            'detection': detection,
-        },
+        'params': {'detection': detection},
     }
 
     return _detection

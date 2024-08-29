@@ -1,23 +1,15 @@
-"""## [Headsets]
+"""## Headsets_.
 
-After you finish the [authentication] process, your application should
-start headset scanning to search for EMOTIV headsets, using the method
-[controlDevice] with "refresh" command, then use the method
-[queryHeadsets] to get the discovered headsets.
+After you finish the authentication_ process, your application should start headset scanning to search for EMOTIV
+headsets, using the method controlDevice_ with "refresh" command, then use the method queryHeadsets_ to get the
+discovered headsets.
 
-If the headset is not connected to Cortex yet, then you must call
-[controlDevice] with "connect" command.
+If the headset is not connected to Cortex yet, then you must call controlDevice_ with "connect" command.
 
-[Headsets]:
-https://emotiv.gitbook.io/cortex-api/headset
-
-[authentication]: https://emotiv.gitbook.io/cortex-api/authentication
-
-[controlDevice]:
-https://emotiv.gitbook.io/cortex-api/headset/controldevice
-
-[queryHeadsets]:
-https://emotiv.gitbook.io/cortex-api/headset/queryheadsets
+.. _Headsets: https://emotiv.gitbook.io/cortex-api/headset
+.. _authentication: https://emotiv.gitbook.io/cortex-api/authentication
+.. _controlDevice: https://emotiv.gitbook.io/cortex-api/headset/controldevice
+.. _queryHeadsets: https://emotiv.gitbook.io/cortex-api/headset/queryheadsets
 
 """
 
@@ -29,10 +21,10 @@ from cortex.api.id import HeadsetID
 from cortex.api.types import (
     BaseRequest,
     ConnectHeadsetRequest,
-    UpdateHeadsetRequest,
-    SyncWithClockRequest,
-    SubscriptionRequest,
     Setting,
+    SubscriptionRequest,
+    SyncWithClockRequest,
+    UpdateHeadsetRequest,
 )
 
 
@@ -78,12 +70,7 @@ def make_connection(
     if connection_type is not None:
         _params['connectionType'] = connection_type
 
-    _request = {
-        'id': _id,
-        'jsonrpc': '2.0',
-        'method': 'controlDevice',
-        'params': _params,
-    }
+    _request = {'id': _id, 'jsonrpc': '2.0', 'method': 'controlDevice', 'params': _params}
 
     return _request
 
@@ -106,21 +93,12 @@ def query_headset(headset_id: str | None = None) -> BaseRequest:
         _params = {'id': headset_id}
     else:
         _params = {}
-    _query: dict[str, str | int | dict[str, str]] = {
-        'id': HeadsetID.QUERY_HEADSET,
-        'jsonrpc': '2.0',
-        'method': 'queryHeadsets',
-        'params': _params,
-    }
+    _query = {'id': HeadsetID.QUERY_HEADSET, 'jsonrpc': '2.0', 'method': 'queryHeadsets', 'params': _params}
 
     return _query
 
 
-def update_headset(
-    auth: str,
-    headset_id: str,
-    settings: Setting,
-) -> UpdateHeadsetRequest:
+def update_headset(auth: str, headset_id: str, settings: Setting) -> UpdateHeadsetRequest:
     """Update the headset settings.
 
     Read More:
@@ -129,7 +107,7 @@ def update_headset(
     Args:
         auth (str): The Cortex authentication token.
         headset_id (str): The headset ID.
-        settings (dict[str, str | int]): The settings to update.
+        settings (Setting): The settings to update.
 
     Returns:
         UpdateHeadsetRequest: The headset update status.
@@ -139,21 +117,13 @@ def update_headset(
         'id': HeadsetID.UPDATE_HEADSET,
         'jsonrpc': '2.0',
         'method': 'updateHeadset',
-        'params': {
-            'cortexToken': auth,
-            'headsetId': headset_id,
-            'setting': settings,
-        },
+        'params': {'cortexToken': auth, 'headsetId': headset_id, 'setting': settings},
     }
 
     return _request
 
 
-def update_custom_info(
-    auth: str,
-    headset_id: str,
-    headband_position: Literal['back', 'top'],
-) -> BaseRequest:
+def update_custom_info(auth: str, headset_id: str, headband_position: Literal['back', 'top']) -> BaseRequest:
     """Update the headset custom information.
 
     Read More:
@@ -172,21 +142,13 @@ def update_custom_info(
         'id': HeadsetID.UPDATE_CUSTOM_INFO,
         'jsonrpc': '2.0',
         'method': 'updateHeadsetCustomInfo',
-        'params': {
-            'cortexToken': auth,
-            'headsetId': headset_id,
-            'headbandPosition': headband_position,
-        },
+        'params': {'cortexToken': auth, 'headsetId': headset_id, 'headbandPosition': headband_position},
     }
 
     return _request
 
 
-def sync_with_clock(
-    headset_id: str,
-    monotonic_time: float,
-    system_time: float,
-) -> SyncWithClockRequest:
+def sync_with_clock(headset_id: str, monotonic_time: float, system_time: float) -> SyncWithClockRequest:
     """Sync the headset with the system clock.
 
     Read More:
@@ -205,21 +167,14 @@ def sync_with_clock(
         'id': HeadsetID.SYNC_WITH_CLOCK,
         'jsonrpc': '2.0',
         'method': 'syncWithHeadsetClock',
-        'params': {
-            'headset': headset_id,
-            'monotonicTime': monotonic_time,
-            'systemTime': system_time,
-        },
+        'params': {'headset': headset_id, 'monotonicTime': monotonic_time, 'systemTime': system_time},
     }
 
     return _request
 
 
 def subscription(
-    auth: str,
-    session_id: str,
-    streams: list[str],
-    method: Literal['subscribe', 'unsubscribe'],
+    auth: str, session_id: str, streams: list[str], method: Literal['subscribe', 'unsubscribe']
 ) -> SubscriptionRequest:
     """Subscribe or unsubscribe from the headset.
 
@@ -244,11 +199,7 @@ def subscription(
         'id': HeadsetID.SUBSCRIBE if method == 'subscribe' else HeadsetID.UNSUBSCRIBE,
         'jsonrpc': '2.0',
         'method': method,
-        'params': {
-            'cortexToken': auth,
-            'session': session_id,
-            'streams': streams,
-        },
+        'params': {'cortexToken': auth, 'session': session_id, 'streams': streams},
     }
 
     return _request

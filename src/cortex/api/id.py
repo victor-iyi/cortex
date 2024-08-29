@@ -1,3 +1,5 @@
+"""ID constants for the Cortex API."""
+
 from enum import IntEnum
 
 

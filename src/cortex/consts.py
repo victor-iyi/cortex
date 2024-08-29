@@ -1,3 +1,5 @@
+"""Constants used by the Cortex API."""
+
 from enum import IntEnum
 from pathlib import Path
 from typing import Final

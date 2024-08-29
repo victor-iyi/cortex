@@ -1,4 +1,4 @@
-"""## [Training workflow]
+"""## [Training workflow].
 
 The training works that same for the mental command detection and the facial
 expression detection. However, they don't use the same actions, events or controls.
@@ -126,10 +126,7 @@ def trained_signature_actions(
         'facialExpression',
     ], 'detection must be either "mentalCommand" or "facialExpression".'
 
-    _params = {
-        'cortexToken': auth,
-        'detection': detection,
-    }
+    _params = {'cortexToken': auth, 'detection': detection}
     if profile_name is not None:
         _params['profile'] = profile_name
     elif session_id is not None:
@@ -148,9 +145,7 @@ def trained_signature_actions(
 
 
 def training_time(
-    auth: str,
-    detection: Literal['mentalCommand', 'facialExpression'],
-    session_id: str,
+    auth: str, detection: Literal['mentalCommand', 'facialExpression'], session_id: str
 ) -> TrainingRequest:
     """Get the duration of a training.
 
@@ -175,11 +170,7 @@ def training_time(
         'id': TrainingID.TRAINING_TIME,
         'jsonrpc': '2.0',
         'method': 'getTrainingTime',
-        'params': {
-            'cortexToken': auth,
-            'detection': detection,
-            'session': session_id,
-        },
+        'params': {'cortexToken': auth, 'detection': detection, 'session': session_id},
     }
 
     return _training_time

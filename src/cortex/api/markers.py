@@ -1,4 +1,4 @@
-"""## [Markers]
+"""## [Markers].
 
 A marker is to mark a point in time, or a period of time, inside a [record].
 
@@ -58,13 +58,7 @@ def inject_marker(
         MarkerRequest: The marker injection status.
 
     """
-    _params = {
-        'cortexToken': auth,
-        'session': session_id,
-        'time': time,
-        'value': value,
-        'label': label,
-    }
+    _params = {'cortexToken': auth, 'session': session_id, 'time': time, 'value': value, 'label': label}
 
     if port is not None:
         _params['port'] = port
@@ -72,23 +66,13 @@ def inject_marker(
     if extras is not None:
         _params['extras'] = extras
 
-    _marker = {
-        'id': MarkersID.INJECT,
-        'jsonrpc': '2.0',
-        'method': 'injectMarker',
-        'params': _params,
-    }
+    _marker = {'id': MarkersID.INJECT, 'jsonrpc': '2.0', 'method': 'injectMarker', 'params': _params}
 
     return _marker
 
 
 def update_marker(
-    auth: str,
-    session_id: str,
-    marker_id: str,
-    time: int,
-    *,
-    extras: Mapping[str, Any] | None = None,
+    auth: str, session_id: str, marker_id: str, time: int, *, extras: Mapping[str, Any] | None = None
 ) -> MarkerRequest:
     """Update a marker.
 
@@ -108,21 +92,11 @@ def update_marker(
         MarkerRequest: The marker update status.
 
     """
-    _params = {
-        'cortexToken': auth,
-        'session': session_id,
-        'markerId': marker_id,
-        'time': time,
-    }
+    _params = {'cortexToken': auth, 'session': session_id, 'markerId': marker_id, 'time': time}
 
     if extras is not None:
         _params['extras'] = extras
 
-    _marker = {
-        'id': MarkersID.UPDATE,
-        'jsonrpc': '2.0',
-        'method': 'updateMarker',
-        'params': _params,
-    }
+    _marker = {'id': MarkersID.UPDATE, 'jsonrpc': '2.0', 'method': 'updateMarker', 'params': _params}
 
     return _marker

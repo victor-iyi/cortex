@@ -1,21 +1,16 @@
-"""## Records
+"""## Records_.
 
-After you opened a [session] with a headset, you can create a record. A
-record is a permanent object to store data from an EMOTIV headset. You
-can associate a [subject] to a record. You can add one or more [markers]
-to a record.
+After you opened a session_ with a headset, you can create a record. A record is a permanent object to store data from
+an EMOTIV headset. You can associate a subject_ to a record. You can add one or more markers_ to a record.
 
-Unlike a [session], a record is a permanent object. It is stored on the
-hard drive and then can be synchronized to the EMOTIV cloud. The [opt-
-out] configuration can let you decide if the records of a user are
-uploaded to the cloud or not.
+Unlike a session_, a record is a permanent object. It is stored on the hard drive and then can be synchronized to the
+EMOTIV cloud. The `opt-out`_ configuration can let you decide if the records of a user are uploaded to the cloud or not.
 
-[Records]:
-https://emotiv.gitbook.io/cortex-api/records
- [session]: https://emotiv.gitbook.io/cortex-api/session [subject]:
-https://emotiv.gitbook.io/cortex-api/subjects
- [markers]: https://emotiv.gitbook.io/cortex-api/markers [opt-out]:
-https://emotiv.gitbook.io/cortex-api/records/configoptout
+.. _Records: https://emotiv.gitbook.io/cortex-api/records
+.. _session: https://emotiv.gitbook.io/cortex-api/session
+.. _subject: https://emotiv.gitbook.io/cortex-api/subjects
+.. _markers: https://emotiv.gitbook.io/cortex-api/markers
+.. _`opt-out`: https://emotiv.gitbook.io/cortex-api/records/configoptout
 
 """
 
@@ -26,8 +21,8 @@ from typing import Literal
 from cortex.api.id import RecordsID
 from cortex.api.types import (
     BaseRequest,
-    CreateRecordRequest,
     ConfigOptOutRequest,
+    CreateRecordRequest,
     DeleteRecordRequest,
     DownloadRecordDataRequest,
     ExportRecordRequest,
@@ -56,7 +51,10 @@ def create_record(
         title (str): The record title.
 
     Keyword Args:
-        **kwargs (Any): Additional parameters.
+        description (str, optional): The record description.
+        subject_name (str, optional): The subject name.
+        tags (list[str], optional): The record tags.
+        experiment_id (int, optional): The experiment ID.
 
     Read More:
         ['createRecord](https://emotiv.gitbook.io/cortex-api/records/createrecord)
@@ -65,11 +63,7 @@ def create_record(
         CreateRecordRequest: The record creation status.
 
     """
-    _params = {
-        'cortexToken': auth,
-        'session': session_id,
-        'title': title,
-    }
+    _params = {'cortexToken': auth, 'session': session_id, 'title': title}
 
     if description is not None:
         _params['description'] = description
@@ -83,20 +77,12 @@ def create_record(
     if experiment_id is not None:
         _params['experimentId'] = experiment_id
 
-    _record = {
-        'id': RecordsID.CREATE,
-        'jsonrpc': '2.0',
-        'method': 'createRecord',
-        'params': _params,
-    }
+    _record = {'id': RecordsID.CREATE, 'jsonrpc': '2.0', 'method': 'createRecord', 'params': _params}
 
     return _record
 
 
-def stop_record(
-    auth: str,
-    session_id: str,
-) -> BaseRequest:
+def stop_record(auth: str, session_id: str) -> BaseRequest:
     """Stop the record.
 
     Args:
@@ -114,10 +100,7 @@ def stop_record(
         'id': RecordsID.STOP,
         'jsonrpc': '2.0',
         'method': 'stopRecord',
-        'params': {
-            'cortexToken': auth,
-            'session': session_id,
-        },
+        'params': {'cortexToken': auth, 'session': session_id},
     }
 
     return _record
@@ -149,10 +132,7 @@ def update_record(
         UpdateRecordRequest: The record update status.
 
     """
-    _params = {
-        'cortexToken': auth,
-        'record': record_id,
-    }
+    _params = {'cortexToken': auth, 'record': record_id}
 
     if title is not None:
         _params['title'] = title
@@ -163,20 +143,12 @@ def update_record(
     if tags is not None:
         _params['tags'] = tags
 
-    _record = {
-        'id': RecordsID.UPDATE,
-        'jsonrpc': '2.0',
-        'method': 'updateRecord',
-        'params': _params,
-    }
+    _record = {'id': RecordsID.UPDATE, 'jsonrpc': '2.0', 'method': 'updateRecord', 'params': _params}
 
     return _record
 
 
-def delete_record(
-    auth: str,
-    records: list[str],
-) -> DeleteRecordRequest:
+def delete_record(auth: str, records: list[str]) -> DeleteRecordRequest:
     """Delete a record.
 
     Args:
@@ -194,10 +166,7 @@ def delete_record(
         'id': RecordsID.DELETE,
         'jsonrpc': '2.0',
         'method': 'deleteRecord',
-        'params': {
-            'cortexToken': auth,
-            'records': records,
-        },
+        'params': {'cortexToken': auth, 'records': records},
     }
 
     return _record
@@ -276,12 +245,7 @@ def export_record(
     if include_deprecated_pm:
         _params['includeDeprecatedPM'] = include_deprecated_pm
 
-    _record = {
-        'id': RecordsID.EXPORT,
-        'jsonrpc': '2.0',
-        'method': 'exportRecord',
-        'params': _params,
-    }
+    _record = {'id': RecordsID.EXPORT, 'jsonrpc': '2.0', 'method': 'exportRecord', 'params': _params}
 
     return _record
 
@@ -319,11 +283,7 @@ def query_records(
         QuerySubjectRequest: The record query status.
 
     """
-    _params = {
-        'cortexToken': auth,
-        'query': query,
-        'orderBy': order_by,
-    }
+    _params = {'cortexToken': auth, 'query': query, 'orderBy': order_by}
 
     if limit is not None:
         _params['limit'] = limit
@@ -337,20 +297,12 @@ def query_records(
     if include_sync_status_info:
         _params['includeSyncStatusInfo'] = include_sync_status_info
 
-    _record = {
-        'id': RecordsID.QUERY,
-        'jsonrpc': '2.0',
-        'method': 'queryRecords',
-        'params': _params,
-    }
+    _record = {'id': RecordsID.QUERY, 'jsonrpc': '2.0', 'method': 'queryRecords', 'params': _params}
 
     return _record
 
 
-def record_infos(
-    auth: str,
-    record_ids: list[str],
-) -> RecordInfoRequest:
+def record_infos(auth: str, record_ids: list[str]) -> RecordInfoRequest:
     """Get the record information.
 
     Args:
@@ -368,21 +320,13 @@ def record_infos(
         'id': RecordsID.INFO,
         'jsonrpc': '2.0',
         'method': 'getRecordInfos',
-        'params': {
-            'cortexToken': auth,
-            'recordIds': record_ids,
-        },
+        'params': {'cortexToken': auth, 'recordIds': record_ids},
     }
 
     return _record
 
 
-def config_opt_out(
-    auth: str,
-    status: Literal['get', 'set'],
-    *,
-    new_opt_out: bool = False,
-) -> ConfigOptOutRequest:
+def config_opt_out(auth: str, status: Literal['get', 'set'], *, new_opt_out: bool = False) -> ConfigOptOutRequest:
     """Get or set the opt-out status.
 
     Args:
@@ -401,27 +345,16 @@ def config_opt_out(
     """
     assert status in ['get', 'set'], 'status must be either "get" or "set".'
 
-    _params = {
-        'cortexToken': auth,
-        'status': status,
-    }
+    _params = {'cortexToken': auth, 'status': status}
     if status == 'set':
         _params['newOptOut'] = new_opt_out
 
-    _record = {
-        'id': RecordsID.CONFIG_OPT_OUT,
-        'jsonrpc': '2.0',
-        'method': 'configOptOut',
-        'params': _params,
-    }
+    _record = {'id': RecordsID.CONFIG_OPT_OUT, 'jsonrpc': '2.0', 'method': 'configOptOut', 'params': _params}
 
     return _record
 
 
-def download_record_data(
-    auth: str,
-    record_ids: list[str],
-) -> DownloadRecordDataRequest:
+def download_record_data(auth: str, record_ids: list[str]) -> DownloadRecordDataRequest:
     """Download record data.
 
     Args:
@@ -439,10 +372,7 @@ def download_record_data(
         'id': RecordsID.DOWNLOAD_DATA,
         'jsonrpc': '2.0',
         'method': 'requestToDownloadRecordData',
-        'params': {
-            'cortexToken': auth,
-            'recordIds': record_ids,
-        },
+        'params': {'cortexToken': auth, 'recordIds': record_ids},
     }
 
     return _record

@@ -63,6 +63,8 @@ in-place = true
 recursive = true
 blank = true
 close-quotes-on-newline = true
+wrap-summaries = 120
+wrap-descriptions = 120
 
 # Style hinting.
 [tool.mypy]
@@ -94,40 +96,50 @@ reportOptionalMemberAccess = "none"
 reportUnboundVariable = "none"
 
 [tool.ruff]
+fix = true
 line-length = 120
+show-fixes = true
+extend-exclude = ["tests", "src/cortex/deprecated/*.py"]
+
+[tool.ruff.format]
+quote-style = "single"
+skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
 select = [
   # pycodestyle
   "E",
-  # # pydocstyle
-  # "D",
+  # pydocstyle
+  "D",
   # pyupgrade
   "UP",
 ]
 
 extend-select = [
-  # # pydocstyle
-  # # Missing docstring in public module.
-  # "D100",
-  # # Missing docstring in public class.
-  # "D101",
-  # # FIXME: Missing docstring in public method.
-  # "D102",
-  # # Missing docstring in public package.
-  # "D104",
-  # # FIXME: Missing docstring in __init__
-  # "D107",
-  # # No blank line allowed after function docstring.
-  # "D202",
-  # # 1 blank line required between summary line and description.
-  # "D205",
-  # # First line should end with a period, question mark, or exclamation point.
-  # "D415",
+  # pydocstyle
+  # One-line docstring should fit on one line.
+  "D200",
+  # Multi-line docstring summary should start at the first line.
+  "D212",
+  # Use triple double quotes """.
+  "D300",
+  # First word of the first line should be capitalized: {} -> {}.
+  "D403",
+  # First line should end with a period, question mark, or exclamation point
+  "D415",
 ]
 
-# [tool.ruff.lint.pydocstyle]
-# convention = "google"
+ignore = [
+  # pydocstyle
+  # Missing docstring in public package.
+  "D104",
+]
 
-[tool.ruff.format]
-quote-style = "single"
+logger-objects = ["cortex.logging.logger"]
+typing-modules = ["cortex.api.types"]
+
+# [tool.ruff.lint.pycodestyle]
+# max-doc-length = 120
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

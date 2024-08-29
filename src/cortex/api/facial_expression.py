@@ -1,3 +1,5 @@
+"""Facial Expression API."""
+
 from typing import Literal
 
 from cortex.api.id import FacialExpressionID
@@ -32,10 +34,7 @@ def signature_type(
     """
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
-    _params = {
-        'cortexToken': auth,
-        'status': status,
-    }
+    _params = {'cortexToken': auth, 'status': status}
     if profile_name is not None:
         _params['profile'] = profile_name
 
@@ -69,8 +68,7 @@ def threshold(
     session_id: str | None = None,
     value: int | None = None,
 ) -> FacialExpressionRequest:
-    """Set or get the facial expression action threshold for a specific
-    profile.
+    """Set or get the facial expression action threshold for a specific profile.
 
     Notes:
         Actions with a low threshold are less likely to be detected.
@@ -96,11 +94,7 @@ def threshold(
     """
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
-    _params = {
-        'cortexToken': auth,
-        'status': status,
-        'action': action,
-    }
+    _params = {'cortexToken': auth, 'status': status, 'action': action}
     if profile_name is not None:
         _params['profile'] = profile_name
 

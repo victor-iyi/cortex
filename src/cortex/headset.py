@@ -1,15 +1,16 @@
+"""Headset API.
+
+This module contains the Headset class, which is used to interact with the Emotiv headset.
+
+"""
+
 import json
 from pathlib import Path
 from typing import Any, Literal
 
 from cortex.api.headset import make_connection, query_headset, subscription
 from cortex.api.markers import inject_marker, update_marker
-from cortex.api.mental_command import (
-    action_sensitivity,
-    active_action,
-    brain_map,
-    training_threshold,
-)
+from cortex.api.mental_command import action_sensitivity, active_action, brain_map, training_threshold
 from cortex.api.profile import current_profile, query_profile, setup_profile
 from cortex.api.record import (
     config_opt_out,
@@ -29,41 +30,46 @@ from cortex.logging import logger
 
 
 class Headset(Cortex):
+    """The Headset class.
+
+    This class is used to interact with the Emotiv headset.
+
+    """
+
     def __init__(self, *args: str, **kwargs: bool | str | int) -> None:
+        """Initialize the Headset class."""
         super().__init__(*args, **kwargs)
 
-    def connect(
-        self,
-        mappings: dict[str, str] | None = None,
-        connection_type: str | None = None,
-    ) -> None:
-        """Connect to the headset."""
+    def connect(self, mappings: dict[str, str] | None = None, connection_type: str | None = None) -> None:
+        """Connect to the headset.
+
+        Args:
+            mappings (dict[str, str], optional): The mappings.
+            connection_type (str, optional): The connection type.
+
+        """
         logger.info('--- Connecting to the headset ---')
 
         _connection = make_connection(
-            command='connect',
-            headset_id=self.headset_id,
-            mappings=mappings,
-            connection_type=connection_type,
+            command='connect', headset_id=self.headset_id, mappings=mappings, connection_type=connection_type
         )
 
         logger.debug(_connection)
 
         self.ws.send(json.dumps(_connection, indent=4))
 
-    def disconnect(
-        self,
-        mappings: dict[str, str] | None = None,
-        connection_type: str | None = None,
-    ) -> None:
-        """Disconnect from the headset."""
+    def disconnect(self, mappings: dict[str, str] | None = None, connection_type: str | None = None) -> None:
+        """Disconnect from the headset.
+
+        Args:
+            mappings (dict[str, str], optional): The mappings.
+            connection_type (str, optional): The connection type.
+
+        """
         logger.info('--- Disconnecting from the headset ---')
 
         _connection = make_connection(
-            command='disconnect',
-            headset_id=self.headset_id,
-            mappings=mappings,
-            connection_type=connection_type,
+            command='disconnect', headset_id=self.headset_id, mappings=mappings, connection_type=connection_type
         )
 
         logger.debug(_connection)
@@ -95,12 +101,7 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _request = subscription(
-            auth=self.auth,
-            session_id=self.session_id,
-            streams=streams,
-            method='subscribe',
-        )
+        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='subscribe')
 
         logger.debug(_request)
 
@@ -121,12 +122,7 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _request = subscription(
-            auth=self.auth,
-            session_id=self.session_id,
-            streams=streams,
-            method='unsubscribe',
-        )
+        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='unsubscribe')
 
         logger.debug(_request)
 
@@ -165,8 +161,7 @@ class Headset(Cortex):
         """Setup a profile.
 
         Args:
-            status (Literal['create', 'load', 'unload', 'save', 'rename', 'delete']):
-                The status of the profile.
+            status (Literal['create', 'load', 'unload', 'save', 'rename', 'delete']): The status of the profile.
             profile_name (str): The profile name.
 
         Keyword Args:
@@ -194,7 +189,7 @@ class Headset(Cortex):
 
         self.ws.send(json.dumps(_profile, indent=4))
 
-    def create_record(self, title: str, **kwargs: str | list[str] | int) -> None:
+    def create_record(self, title: str, **kwargs: str | list[str] | int) -> None:  # noqa: D417
         """Create a record.
 
         Args:
@@ -218,12 +213,7 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _record = create_record(
-            auth=self.auth,
-            session_id=self.session_id,
-            title=title,
-            **kwargs,
-        )
+        _record = create_record(auth=self.auth, session_id=self.session_id, title=title, **kwargs)
 
         logger.debug(_record)
 
@@ -242,7 +232,7 @@ class Headset(Cortex):
 
         self.ws.send(json.dumps(_record, indent=4))
 
-    def update_record(self, record_id: str, **kwargs: str | list[str]) -> None:
+    def update_record(self, record_id: str, **kwargs: str | list[str]) -> None:  # noqa: D417
         """Update a record.
 
         Args:
@@ -259,11 +249,7 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _record = update_record(
-            auth=self.auth,
-            record_id=record_id,
-            **kwargs,
-        )
+        _record = update_record(auth=self.auth, record_id=record_id, **kwargs)
 
         logger.debug(_record)
 
@@ -284,7 +270,7 @@ class Headset(Cortex):
 
         self.ws.send(json.dumps(_record, indent=4))
 
-    def export_record(
+    def export_record(  # noqa: D417
         self,
         record_ids: list[str],
         folder: str | Path,
@@ -338,11 +324,8 @@ class Headset(Cortex):
 
         self.ws.send(json.dumps(_export, indent=4))
 
-    def query_records(
-        self,
-        query: RecordQuery,
-        order_by: list[dict[str, Literal['ASC', 'DESC']]],
-        **kwargs: int | bool,
+    def query_records(  # noqa: D417
+        self, query: RecordQuery, order_by: list[dict[str, Literal['ASC', 'DESC']]], **kwargs: int | bool
     ) -> None:
         """Query records.
 
@@ -359,12 +342,7 @@ class Headset(Cortex):
         """
         logger.info('--- Querying records ---')
 
-        _query = query_records(
-            auth=self.auth,
-            query=query,
-            order_by=order_by,
-            **kwargs,
-        )
+        _query = query_records(auth=self.auth, query=query, order_by=order_by, **kwargs)
 
         logger.debug(_query)
 
@@ -396,11 +374,7 @@ class Headset(Cortex):
         """
         logger.info('--- Setting the config opt out ---')
 
-        _config = config_opt_out(
-            auth=self.auth,
-            status='set',
-            new_opt_out=opt_out,
-        )
+        _config = config_opt_out(auth=self.auth, status='set', new_opt_out=opt_out)
 
         logger.debug(_config)
 
@@ -431,7 +405,7 @@ class Headset(Cortex):
 
         self.ws.send(json.dumps(_download, indent=4))
 
-    def inject_marker(self, time: int, value: str | int, label: str, **kwargs: str | Any) -> None:
+    def inject_marker(self, time: int, value: str | int, label: str, **kwargs: str | Any) -> None:  # noqa: D417
         """Inject a marker.
 
         Args:
@@ -450,19 +424,14 @@ class Headset(Cortex):
             raise ValueError('No session ID. Please create a session first.')
 
         _marker = inject_marker(
-            auth=self.auth,
-            session_id=self.session_id,
-            time=time,
-            value=value,
-            label=label,
-            **kwargs,
+            auth=self.auth, session_id=self.session_id, time=time, value=value, label=label, **kwargs
         )
 
         logger.debug(_marker)
 
         self.ws.send(json.dumps(_marker, indent=4))
 
-    def update_marker(self, marker_id: str, time: int, **kwargs: str | Any) -> None:
+    def update_marker(self, marker_id: str, time: int, **kwargs: str | Any) -> None:  # noqa: D417
         """Update a marker.
 
         Args:
@@ -481,13 +450,7 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _marker = update_marker(
-            auth=self.auth,
-            session_id=self.session_id,
-            marker_id=marker_id,
-            time=time,
-            **kwargs,
-        )
+        _marker = update_marker(auth=self.auth, session_id=self.session_id, marker_id=marker_id, time=time, **kwargs)
 
         logger.debug(_marker)
 
@@ -513,22 +476,14 @@ class Headset(Cortex):
             raise ValueError('No session ID. Please create a session first.')
 
         _training = training(
-            auth=self.auth,
-            session_id=self.session_id,
-            detection=detection,
-            status=status,
-            action=action,
+            auth=self.auth, session_id=self.session_id, detection=detection, status=status, action=action
         )
 
         logger.debug(_training)
 
         self.ws.send(json.dumps(_training, indent=4))
 
-    def training_signature_action(
-        self,
-        detection: Literal['mentalCommand', 'facialExpression'],
-        **kwargs: str,
-    ) -> None:
+    def training_signature_action(self, detection: Literal['mentalCommand', 'facialExpression'], **kwargs: str) -> None:  # noqa: D417
         """Get the list of trained actions of a profile.
 
         Args:
@@ -541,11 +496,7 @@ class Headset(Cortex):
         """
         logger.info('--- Getting the list of trained actions ---')
 
-        _training = trained_signature_actions(
-            auth=self.auth,
-            detection=detection,
-            **kwargs,
-        )
+        _training = trained_signature_actions(auth=self.auth, detection=detection, **kwargs)
 
         logger.debug(_training)
 
@@ -563,43 +514,42 @@ class Headset(Cortex):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _training = training_time(
-            auth=self.auth,
-            session_id=self.session_id,
-            detection=detection,
-        )
+        _training = training_time(auth=self.auth, session_id=self.session_id, detection=detection)
 
         logger.debug(_training)
 
         self.ws.send(json.dumps(_training, indent=4))
 
     def get_mental_command_action_sensitive(self, profile_name: str) -> None:
-        """Get the mental command action sensitivity."""
+        """Get the mental command action sensitivity.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
         logger.info('--- Getting mental command action sensitivity ---')
 
-        _sensitivity = action_sensitivity(
-            auth=self.auth,
-            profile_name=profile_name,
-            status='get',
-        )
+        _sensitivity = action_sensitivity(auth=self.auth, profile_name=profile_name, status='get')
 
         logger.debug(_sensitivity)
 
         self.ws.send(json.dumps(_sensitivity, indent=4))
 
     def set_mental_command_action_sensitive(self, profile_name: str, values: list[int]) -> None:
-        """Set the mental command action sensitivity."""
+        """Set the mental command action sensitivity.
+
+        Args:
+            profile_name (str): The profile name.
+            values (list[int]): The sensitivity values.
+
+        """
         logger.info('--- Setting mental command action sensitivity ---')
 
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
         _sensitivity = action_sensitivity(
-            auth=self.auth,
-            profile_name=profile_name,
-            session_id=self.session_id,
-            values=values,
-            status='set',
+            auth=self.auth, profile_name=profile_name, session_id=self.session_id, values=values, status='set'
         )
 
         logger.debug(_sensitivity)
@@ -607,66 +557,69 @@ class Headset(Cortex):
         self.ws.send(json.dumps(_sensitivity, indent=4))
 
     def get_mental_command_active_action(self, profile_name: str) -> None:
-        """Get the active mental command action."""
+        """Get the active mental command action.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
         logger.info('--- Getting mental command active action ---')
 
-        _action = active_action(
-            auth=self.auth,
-            status='get',
-            profile_name=profile_name,
-        )
+        _action = active_action(auth=self.auth, status='get', profile_name=profile_name)
 
         logger.debug(_action)
 
         self.ws.send(json.dumps(_action, indent=4))
 
     def set_mental_command_active_action(self, actions: list[str]) -> None:
-        """Set the active mental command action."""
+        """Set the active mental command action.
+
+        Args:
+            actions (list[str]): The actions.
+
+        """
         logger.info('--- Setting mental command active action ---')
 
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _action = active_action(
-            auth=self.auth,
-            status='set',
-            session_id=self.session_id,
-            actions=actions,
-        )
+        _action = active_action(auth=self.auth, status='set', session_id=self.session_id, actions=actions)
 
         logger.debug(_action)
 
         self.ws.send(json.dumps(_action, indent=4))
 
     def get_mental_command_brain_map(self, profile_name: str) -> None:
-        """Get the mental command brain map."""
+        """Get the mental command brain map.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
         logger.info('--- Getting mental command brain map ---')
 
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _brain_map = brain_map(
-            auth=self.auth,
-            session_id=self.session_id,
-            profile_name=profile_name,
-        )
+        _brain_map = brain_map(auth=self.auth, session_id=self.session_id, profile_name=profile_name)
 
         logger.debug(_brain_map)
 
         self.ws.send(json.dumps(_brain_map, indent=4))
 
     def get_mental_command_training_threshold(self, profile_name: str) -> None:
-        """Get the mental command training threshold."""
+        """Get the mental command training threshold.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
         logger.info('--- Getting mental command training threshold ---')
 
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _threshold = training_threshold(
-            auth=self.auth,
-            profile_name=profile_name,
-            session_id=self.session_id,
-        )
+        _threshold = training_threshold(auth=self.auth, profile_name=profile_name, session_id=self.session_id)
 
         logger.debug(_threshold)
 

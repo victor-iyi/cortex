@@ -1,22 +1,22 @@
-from typing import Any
+"""Data stream handler."""
+
+from collections.abc import Mapping
+from typing import Any, Literal
 
 
-def stream_data(data: dict[str, Any], key: str) -> Any:
+def stream_data(data: Mapping[str, Any], key: Literal['com', 'fac', 'eeg', 'mot', 'dev', 'met', 'pow', 'sys']) -> Any:
     """Stream the data.
 
     Args:
-        result (dict[str, Any]): The result dictionary.
+        data (dict[str, Any]): The data.
+        key (Literal['com', 'fac', 'eeg', 'mot', 'dev', 'met', 'pow', 'sys']): The key.
 
     Returns:
-        dict[str, Any]: The streamed data.
+        Any: The streamed data.
 
     """
     _result = {
-        'com': {
-            'action': data['com'][0],
-            'power': data['com'][1],
-            'time': data['time'],
-        },
+        'com': {'action': data['com'][0], 'power': data['com'][1], 'time': data['time']},
         'fac': {
             'eyeAct': data['fac'][0],  # eye action
             'uAct': data['fac'][1],  # upper action
@@ -30,24 +30,15 @@ def stream_data(data: dict[str, Any], key: str) -> Any:
             'eeg': data['eeg'].pop(),  # remove markers
             'time': data['time'],
         },
-        'mot': {
-            'mot': data['mot'],
-            'time': data['time'],
-        },
+        'mot': {'mot': data['mot'], 'time': data['time']},
         'dev': {
             'signal': data['dev'][1],
             'dev': data['dev'][2],
             'batteryPercent': data['dev'][3],
             'time': data['time'],
         },
-        'met': {
-            'met': data['met'],
-            'time': data['time'],
-        },
-        'pow': {
-            'pow': data['pow'],
-            'time': data['time'],
-        },
+        'met': {'met': data['met'], 'time': data['time']},
+        'pow': {'pow': data['pow'], 'time': data['time']},
         'sys': data['sys'],
     }
 

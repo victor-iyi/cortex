@@ -1,3 +1,4 @@
+# pylint: disable=all
 import json
 import os
 import ssl
@@ -99,14 +100,10 @@ class Cortex(Dispatcher):
         self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
 
         if not self.client_id:
-            raise ValueError(
-                'Empty CLIENT_ID. Make sure to add CLIENT_ID to your environment variables.',
-            )
+            raise ValueError('Empty CLIENT_ID. Make sure to add CLIENT_ID to your environment variables.')
 
         if not self.client_secret:
-            raise ValueError(
-                'Empty CLIENT_SECRET. Make sure to add CLIENT_SECRET to your environment variables.',
-            )
+            raise ValueError('Empty CLIENT_SECRET. Make sure to add CLIENT_SECRET to your environment variables.')
 
         self.debug = debug_mode
 
@@ -132,14 +129,9 @@ class Cortex(Dispatcher):
         # please replace by the below line  by sslopt={'cert_reqs': ssl.CERT_NONE}
         ca_certs = Path(__file__).resolve().parent.parent / 'certificates/rootCA.pem'
         if ca_certs.exists():
-            sslopt = {
-                'ca_certs': ca_certs,
-                'cert_reqs': ssl.CERT_REQUIRED,
-            }
+            sslopt = {'ca_certs': ca_certs, 'cert_reqs': ssl.CERT_REQUIRED}
         else:
-            warnings.warn(
-                'No certificate file found. Please check the certificate folder.',
-            )
+            warnings.warn('No certificate file found. Please check the certificate folder.')
             sslopt = {'cert_reqs': ssl.CERT_NONE}
 
         self.websock_thread = threading.Thread(
@@ -239,13 +231,9 @@ class Cortex(Dispatcher):
                     time.sleep(3)
                     self.query_headset()
                 else:
-                    warnings.warn(
-                        f'query_headset resp: Invalid connection status {headset_status}',
-                    )
+                    warnings.warn(f'query_headset resp: Invalid connection status {headset_status}')
             elif not found_headset:
-                warnings.warn(
-                    f'Can not found the headset {self.headset_id}. Please make sure the id is correct.',
-                )
+                warnings.warn(f'Can not found the headset {self.headset_id}. Please make sure the id is correct.')
 
         # create session.
         elif req_id == CREATE_SESSION_ID:
@@ -259,9 +247,7 @@ class Cortex(Dispatcher):
             for stream in result_dic['success']:
                 stream_name = stream['streamName']
                 stream_labels = stream['cols']
-                print(
-                    f'The data stream {stream_name} is subscribed successfully.',
-                )
+                print(f'The data stream {stream_name} is subscribed successfully.')
                 # ignore com, fac and sys data label because they are handled in on_new_data
                 if stream_name != 'com' and stream_name != 'fac':
                     self.extract_data_labels(stream_name, stream_labels)
@@ -269,24 +255,18 @@ class Cortex(Dispatcher):
             for stream in result_dic['failure']:
                 stream_name = stream['streamName']
                 stream_msg = stream['message']
-                print(
-                    f'The data stream {stream_name} is subscribed unsuccessfully. Because: {stream_msg}',
-                )
+                print(f'The data stream {stream_name} is subscribed unsuccessfully. Because: {stream_msg}')
 
         # unsubscribe to data stream.
         elif req_id == UNSUB_REQUEST_ID:
             for stream in result_dic['success']:
                 stream_name = stream['streamName']
-                print(
-                    f'The data stream {stream_name} is unsubscribed successfully.',
-                )
+                print(f'The data stream {stream_name} is unsubscribed successfully.')
 
             for stream in result_dic['failure']:
                 stream_name = stream['streamName']
                 stream_msg = stream['message']
-                print(
-                    f'The data stream {stream_name} is unsubscribed unsuccessfully. Because: {stream_msg}',
-                )
+                print(f'The data stream {stream_name} is unsubscribed unsuccessfully. Because: {stream_msg}')
 
         # Query profile.
         elif req_id == QUERY_PROFILE_ID:
@@ -318,19 +298,13 @@ class Cortex(Dispatcher):
             name = result_dic['name']
             if name is None:
                 # no profile loaded with the headset
-                print(
-                    f'get_current_profile: no profile loaded with the headset {self.headset_id}',
-                )
+                print(f'get_current_profile: no profile loaded with the headset {self.headset_id}')
                 self.setup_profile(self.profile_name, 'load')
             else:
                 loaded_by_this_app = result_dic['loadedByThisApp']
-                print(
-                    f'get current profile response: {name}, loadedByThisApp: {loaded_by_this_app}',
-                )
+                print(f'get current profile response: {name}, loadedByThisApp: {loaded_by_this_app}')
                 if name != self.profile_name:
-                    warnings.warn(
-                        f'There is profile {name} is loaded for headset {self.headset_id}',
-                    )
+                    warnings.warn(f'There is profile {name} is loaded for headset {self.headset_id}')
                 elif loaded_by_this_app:
                     self.emit('load_unload_profile_done', isLoaded=True)
                 else:
@@ -363,9 +337,7 @@ class Cortex(Dispatcher):
             for record in result_dic['failure']:
                 record_id = record['recordId']
                 failure_msg = record['message']
-                print(
-                    f'export_record resp failure cases: {record_id}: {failure_msg}',
-                )
+                print(f'export_record resp failure cases: {record_id}: {failure_msg}')
 
             self.emit('export_record_done', data=success_export)
         elif req_id == INJECT_MARKER_REQUEST_ID:
@@ -472,8 +444,7 @@ class Cortex(Dispatcher):
             raise KeyError
 
     def query_headset(self) -> None:
-        """Shows details of any headsets connected to the device via USB
-        dongle, USB cable, or Bluetooth.
+        """Shows details of any headsets connected to the device via USB dongle, USB cable, or Bluetooth.
 
         You can query a specific headset by its id, or you can specify a wildcard
         for partial matching.
@@ -490,10 +461,7 @@ class Cortex(Dispatcher):
             'params': {},
         }
         if self.debug:
-            print(
-                'queryHeadsets request\n',
-                json.dumps(query_headset_request, indent=4),
-            )
+            print('queryHeadsets request\n', json.dumps(query_headset_request, indent=4))
 
         self.ws.send(json.dumps(query_headset_request, indent=4))
 
@@ -528,16 +496,12 @@ class Cortex(Dispatcher):
             },
         }
         if self.debug:
-            print(
-                'controlDevice request\n',
-                json.dumps(connect_headset_request, indent=4),
-            )
+            print('controlDevice request\n', json.dumps(connect_headset_request, indent=4))
 
         self.ws.send(json.dumps(connect_headset_request, indent=4))
 
     def request_access(self) -> None:
-        """Request user approval for the current application through [EMOTIV
-        Launcher].
+        """Request user approval for the current application through [EMOTIV Launcher].
 
         When your application calls this method for the first time, [EMOTIV Launcher]
         displays a message to approve your application.
@@ -562,8 +526,7 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(request_access_request, indent=4))
 
     def has_access_right(self) -> None:
-        """Check if your application has been granted access rights in [EMOTIV
-        Launcher].
+        """Check if your application has been granted access rights in [EMOTIV Launcher].
 
         [Emotiv Launcher]: https://emotiv.gitbook.io/emotiv-launcher/
 
@@ -578,10 +541,7 @@ class Cortex(Dispatcher):
         has_access_request = {
             'jsonrpc': '2.0',
             'method': 'hasAccessRight',
-            'params': {
-                'clientId': self.client_id,
-                'clientSecret': self.client_secret,
-            },
+            'params': {'clientId': self.client_id, 'clientSecret': self.client_secret},
             'id': HAS_ACCESS_RIGHT_ID,
         }
         self.ws.send(json.dumps(has_access_request, indent=4))
@@ -637,18 +597,11 @@ class Cortex(Dispatcher):
             'jsonrpc': '2.0',
             'id': CREATE_SESSION_ID,
             'method': 'createSession',
-            'params': {
-                'cortexToken': self.auth,
-                'headset': self.headset_id,
-                'status': 'active',
-            },
+            'params': {'cortexToken': self.auth, 'headset': self.headset_id, 'status': 'active'},
         }
 
         if self.debug:
-            print(
-                'create session request\n',
-                json.dumps(create_session_request, indent=4),
-            )
+            print('create session request\n', json.dumps(create_session_request, indent=4))
 
         self.ws.send(json.dumps(create_session_request))
 
@@ -674,8 +627,7 @@ class Cortex(Dispatcher):
         self.ws.send(json.dumps(close_session_request))
 
     def get_cortex_info(self) -> None:
-        """Return information about the Cortex service, like its version and
-        build number.
+        """Return information about the Cortex service, like its version and build number.
 
         Read More:
             [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)
@@ -760,10 +712,7 @@ class Cortex(Dispatcher):
             'id': SUB_REQUEST_ID,
         }
         if self.debug:
-            print(
-                'subscribe request\n',
-                json.dumps(sub_request_json, indent=4),
-            )
+            print('subscribe request\n', json.dumps(sub_request_json, indent=4))
 
         self.ws.send(json.dumps(sub_request_json))
 
@@ -789,10 +738,7 @@ class Cortex(Dispatcher):
             'id': UNSUB_REQUEST_ID,
         }
         if self.debug:
-            print(
-                'unsubscribe request\n',
-                json.dumps(unsub_request_json, indent=4),
-            )
+            print('unsubscribe request\n', json.dumps(unsub_request_json, indent=4))
 
         self.ws.send(json.dumps(unsub_request_json))
 
@@ -836,10 +782,7 @@ class Cortex(Dispatcher):
         }
 
         if self.debug:
-            print(
-                'query profile request\n',
-                json.dumps(query_profile_json, indent=4),
-            )
+            print('query profile request\n', json.dumps(query_profile_json, indent=4))
             print('\n')
 
         self.ws.send(json.dumps(query_profile_json))
@@ -857,10 +800,7 @@ class Cortex(Dispatcher):
         }
 
         if self.debug:
-            print(
-                'get current profile json:\n',
-                json.dumps(get_profile_json, indent=4),
-            )
+            print('get current profile json:\n', json.dumps(get_profile_json, indent=4))
             print('\n')
 
         self.ws.send(json.dumps(get_profile_json))
@@ -884,10 +824,7 @@ class Cortex(Dispatcher):
         }
 
         if self.debug:
-            print(
-                'setup profile json:\n',
-                json.dumps(setup_profile_json, indent=4),
-            )
+            print('setup profile json:\n', json.dumps(setup_profile_json, indent=4))
             print('\n')
 
         self.ws.send(json.dumps(setup_profile_json))
@@ -912,10 +849,7 @@ class Cortex(Dispatcher):
             'id': TRAINING_ID,
         }
         if self.debug:
-            print(
-                'training request:\n',
-                json.dumps(train_request_json, indent=4),
-            )
+            print('training request:\n', json.dumps(train_request_json, indent=4))
             print('\n')
 
         self.ws.send(json.dumps(train_request_json))
@@ -924,9 +858,7 @@ class Cortex(Dispatcher):
         print('create record --------------------------------')
 
         if len(title) == 0:
-            warnings.warn(
-                'Empty record_title. Please fill the record_title before running script.',
-            )
+            warnings.warn('Empty record_title. Please fill the record_title before running script.')
             # close socket
             self.close()
             return
@@ -947,10 +879,7 @@ class Cortex(Dispatcher):
             'id': CREATE_RECORD_REQUEST_ID,
         }
         if self.debug:
-            print(
-                'create record request:\n',
-                json.dumps(create_record_request, indent=4),
-            )
+            print('create record request:\n', json.dumps(create_record_request, indent=4))
 
         self.ws.send(json.dumps(create_record_request))
 
@@ -966,10 +895,7 @@ class Cortex(Dispatcher):
             'id': STOP_RECORD_REQUEST_ID,
         }
         if self.debug:
-            print(
-                'stop record request:\n',
-                json.dumps(stop_record_request, indent=4),
-            )
+            print('stop record request:\n', json.dumps(stop_record_request, indent=4))
         self.ws.send(json.dumps(stop_record_request))
 
     def export_record(
@@ -984,9 +910,7 @@ class Cortex(Dispatcher):
         print('export record --------------------------------: ')
         # validate destination folder
         if len(folder) == 0:
-            warnings.warn(
-                'Invalid folder parameter. Please set a writable destination folder for exporting data.',
-            )
+            warnings.warn('Invalid folder parameter. Please set a writable destination folder for exporting data.')
             # close socket
             self.close()
             return
@@ -1013,10 +937,7 @@ class Cortex(Dispatcher):
         }
 
         if self.debug:
-            print(
-                'export record request \n',
-                json.dumps(export_record_request, indent=4),
-            )
+            print('export record request \n', json.dumps(export_record_request, indent=4))
 
         self.ws.send(json.dumps(export_record_request))
 
@@ -1046,10 +967,7 @@ class Cortex(Dispatcher):
             'params': params_val,
         }
         if self.debug:
-            print(
-                'inject marker request\n',
-                json.dumps(inject_marker_request, indent=4),
-            )
+            print('inject marker request\n', json.dumps(inject_marker_request, indent=4))
         self.ws.send(json.dumps(inject_marker_request))
 
     def update_marker_request(
@@ -1076,10 +994,7 @@ class Cortex(Dispatcher):
             'params': params_val,
         }
         if self.debug:
-            print(
-                'update marker request\n',
-                json.dumps(update_marker_request, indent=4),
-            )
+            print('update marker request\n', json.dumps(update_marker_request, indent=4))
         self.ws.send(json.dumps(update_marker_request))
 
     def get_mental_command_action_sensitivity(self, profile_name: str) -> None:
@@ -1095,18 +1010,11 @@ class Cortex(Dispatcher):
             },
         }
         if self.debug:
-            print(
-                'get mental command sensitivity \n',
-                json.dumps(sensitivity_request, indent=4),
-            )
+            print('get mental command sensitivity \n', json.dumps(sensitivity_request, indent=4))
 
         self.ws.send(json.dumps(sensitivity_request))
 
-    def set_mental_command_action_sensitivity(
-        self,
-        profile_name: str,
-        values: list[int],
-    ) -> None:
+    def set_mental_command_action_sensitivity(self, profile_name: str, values: list[int]) -> None:
         print('set mental command sensitivity ------------------')
         sensitivity_request = {
             'id': SENSITIVITY_REQUEST_ID,
@@ -1121,10 +1029,7 @@ class Cortex(Dispatcher):
             },
         }
         if self.debug:
-            print(
-                'set mental command sensitivity \n',
-                json.dumps(sensitivity_request, indent=4),
-            )
+            print('set mental command sensitivity \n', json.dumps(sensitivity_request, indent=4))
 
         self.ws.send(json.dumps(sensitivity_request))
 
@@ -1141,10 +1046,7 @@ class Cortex(Dispatcher):
             },
         }
         if self.debug:
-            print(
-                'get mental command active action \n',
-                json.dumps(command_active_request, indent=4),
-            )
+            print('get mental command active action \n', json.dumps(command_active_request, indent=4))
 
         self.ws.send(json.dumps(command_active_request))
 
@@ -1163,10 +1065,7 @@ class Cortex(Dispatcher):
         }
 
         if self.debug:
-            print(
-                'set mental command active action \n',
-                json.dumps(command_active_request, indent=4),
-            )
+            print('set mental command active action \n', json.dumps(command_active_request, indent=4))
 
         self.ws.send(json.dumps(command_active_request))
 
@@ -1183,10 +1082,7 @@ class Cortex(Dispatcher):
             },
         }
         if self.debug:
-            print(
-                'get mental command brain map \n',
-                json.dumps(brain_map_request, indent=4),
-            )
+            print('get mental command brain map \n', json.dumps(brain_map_request, indent=4))
         self.ws.send(json.dumps(brain_map_request))
 
     def get_mental_command_training_threshold(self, profile_name: str) -> None:
@@ -1202,8 +1098,5 @@ class Cortex(Dispatcher):
             },
         }
         if self.debug:
-            print(
-                'get mental command training threshold \n',
-                json.dumps(training_threshold_request, indent=4),
-            )
+            print('get mental command training threshold \n', json.dumps(training_threshold_request, indent=4))
         self.ws.send(json.dumps(training_threshold_request))

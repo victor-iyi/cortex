@@ -1,3 +1,9 @@
+"""Cortex API.
+
+This module provides a Python interface to the Emotiv Cortex API.
+
+"""
+
 # pylint: disable=unused-argument
 import datetime
 import json
@@ -21,8 +27,11 @@ from cortex.logging import logger
 
 
 class InheritEventsMeta(type):
+    """Metaclass to inherit events from base classes."""
+
     # pylint: disable=bad-mcs-classmethod-argument
     def __new__(cls, name: str, bases: tuple[Any], class_dict: dict[str, Any]) -> 'InheritEventsMeta':
+        """Create a new class."""
         # Combine events from all base classes
         events: list[str] = []
         for base in bases:
@@ -36,6 +45,12 @@ class InheritEventsMeta(type):
 
 
 class Cortex(Dispatcher, metaclass=InheritEventsMeta):
+    """The Cortex class.
+
+    This class provides a Python interface to the Emotiv Cortex API.
+
+    """
+
     def __init__(
         self,
         client_id: str | None = None,
@@ -97,51 +112,50 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         logger.info('Opening connection to Cortex.')
         url: str = 'wss://localhost:6868'
         self._ws = websocket.WebSocketApp(
-            url,
-            on_open=self.on_open,
-            on_message=self.on_message,
-            on_error=self.on_error,
-            on_close=self.on_close,
+            url, on_open=self.on_open, on_message=self.on_message, on_error=self.on_error, on_close=self.on_close
         )
         thread_name = f'WebSocketThread-{dt.now(datetime.UTC):%Y%m%d%H%M%S}'
 
         sslopt: dict[str, Path | ssl.VerifyMode] = {}
         if CA_CERTS.exists():
-            sslopt = {
-                'ca_certs': CA_CERTS,
-                'cert_reqs': ssl.CERT_REQUIRED,
-            }
+            sslopt = {'ca_certs': CA_CERTS, 'cert_reqs': ssl.CERT_REQUIRED}
         else:
             logger.warning('No certificate found. Please check the certificates folder.')
             sslopt = {'cert_reqs': ssl.CERT_NONE}
 
-        self._thread = threading.Thread(
-            target=self._ws.run_forever,
-            name=thread_name,
-            args=(None, sslopt),
-        )
+        self._thread = threading.Thread(target=self._ws.run_forever, name=thread_name, args=(None, sslopt))
         self._thread.start()
         self._thread.join()
 
     def close(self) -> None:
+        """Close the connection to Cortex."""
         self.ws.close()
         logger.info('Closed connection to Cortex.')
 
     def on_message(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the message."""
         logger.info('Received message: %s', args)
 
     def on_open(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the open event."""
         logger.info('Websocket opened.')
 
     def on_close(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the close event."""
         logger.info(f'on_close: {args[1]}')
 
     def on_error(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the error."""
         if len(args) == 2:
             logger.error(f'on_error: {args[1]}')
 
     def handle_stream_data(self, data: Mapping[str, Any]) -> None:
-        """Handle the stream data."""
+        """Handle the stream data.
+
+        Args:
+            data (Mapping[str, Any]): The data to handle.
+
+        """
         if data.get('com') is not None:
             self.emit('new_com_data', stream_data(data, 'com'))
         elif data.get('fac') is not None:
@@ -162,8 +176,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             logger.warning('Unknown data: {data}')
 
     def request_access(self) -> None:
-        """Request user approval for the current application through [EMOTIV
-        Launcher].
+        """Request user approval for the current application through [EMOTIV Launcher].
 
         Notes:
             When your application calls this method for the first time,
@@ -177,19 +190,14 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access ---')
 
-        _access = access(
-            client_id=self.client_id,
-            client_secret=self.client_secret,
-            method='requestAccess',
-        )
+        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='requestAccess')
 
         logger.debug(_access)
 
         self.ws.send(json.dumps(_access, indent=4))
 
     def has_access_right(self) -> None:
-        """Request user approval for the current application through [EMOTIV
-        Launcher].
+        """Request user approval for the current application through [EMOTIV Launcher].
 
         Notes:
             When your application calls this method for the first time,
@@ -203,11 +211,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access right ---')
 
-        _access = access(
-            client_id=self.client_id,
-            client_secret=self.client_secret,
-            method='hasAccessRight',
-        )
+        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='hasAccessRight')
 
         logger.debug(_access)
 
@@ -228,10 +232,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         logger.info('--- Authorizing application ---')
 
         _authorize = authorize(
-            client_id=self.client_id,
-            client_secret=self.client_secret,
-            license=self.license,
-            debit=self.debit,
+            client_id=self.client_id, client_secret=self.client_secret, license=self.license, debit=self.debit
         )
 
         logger.debug(_authorize)
@@ -259,11 +260,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             logger.warning(f'Session already exists. {self.session_id}')
             return
 
-        _session = create_session(
-            auth=self.auth,
-            headset_id=self.headset_id,
-            status='active',
-        )
+        _session = create_session(auth=self.auth, headset_id=self.headset_id, status='active')
 
         logger.debug(_session)
 
@@ -277,19 +274,14 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         logger.info('--- Closing session ---')
-        _session = update_session(
-            auth=self.auth,
-            session_id=self.session_id,
-            status='close',
-        )
+        _session = update_session(auth=self.auth, session_id=self.session_id, status='close')
 
         logger.debug(_session)
 
         self.ws.send(json.dumps(_session, indent=4))
 
     def get_cortex_info(self) -> None:
-        """Return info about the Cortex service, like it's version and build
-        number.
+        """Return info about the Cortex service, like it's version and build number.
 
         Read More:
             [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)

@@ -1,8 +1,12 @@
+"""Response objects for the Cortex API."""
+
 from collections.abc import Mapping
 from typing import Literal, TypedDict
 
 
 class FlexMapping(TypedDict):
+    """The mapping of the EEG channels of an EPOC Flex device."""
+
     # Describe which EEG channel is mapped to which physical connector
     # of EPOC Flex device. The keys are the names of the connectors, the
     # values are the names of the EEG channels.
@@ -11,6 +15,8 @@ class FlexMapping(TypedDict):
 
 
 class SettingsObject(TypedDict, total=False):
+    """The configuration of the EEG and motion data of a headset."""
+
     # Can be "EPOC", "EPOCPLUS", or "EPOCFLEX"
     mode: Literal['EPOC', 'EPOCPLUS', 'EPOCFLEX']
 
@@ -28,6 +34,8 @@ class SettingsObject(TypedDict, total=False):
 
 
 class HeadsetObject(TypedDict, total=False):
+    """The information about a headset."""
+
     # The id of this headset.
     id: str
 
@@ -64,6 +72,8 @@ class HeadsetObject(TypedDict, total=False):
 
 
 class SessionObject(TypedDict, total=False):
+    """The information about a session."""
+
     # The id of this session.
     id: str
 
@@ -103,6 +113,8 @@ class SessionObject(TypedDict, total=False):
 
 
 class MarkerObject(TypedDict, total=False):
+    """The information about a marker."""
+
     # The id of the marker.
     uuid: str
 
@@ -131,6 +143,8 @@ class MarkerObject(TypedDict, total=False):
 
 
 class DemographicAttribute(TypedDict):
+    """A demographic attribute of a subject."""
+
     # The name of the attribute.
     name: str
 
@@ -139,6 +153,8 @@ class DemographicAttribute(TypedDict):
 
 
 class SubjectObject(TypedDict, total=False):
+    """The information about a subject."""
+
     # The name of the subject
     subjectName: str
 

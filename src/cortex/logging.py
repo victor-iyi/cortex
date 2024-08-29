@@ -1,3 +1,9 @@
+"""Logging utilities for the Cortex library.
+
+This module provides a set of utilities for logging messages to the console.
+
+"""
+
 import logging
 
 from rich.console import Console
@@ -43,4 +49,4 @@ def set_logger(name: str = 'cortex', log_level: int = logging.INFO) -> logging.L
 
 
 # Global library logger.
-logger = set_logger()
+logger: logging.Logger = set_logger()

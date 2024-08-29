@@ -1,9 +1,8 @@
 """Mental command request functions.
 
-This module provides functions to set or get the mental command action
-sensitivity, get the active mental command action, map the profile name
-to the corresponding mental command brain, and get the training
-threshold for mental commands.
+This module provides functions to set or get the mental command action sensitivity, get the active mental command
+action, map the profile name to the corresponding mental command brain, and get the training threshold for mental
+commands.
 
 """
 
@@ -31,6 +30,9 @@ def active_action(
 
     Args:
         auth (str): The Cortex authentication token.
+        status (Literal['set', 'get']): The status. Whether to set or get the active action.
+
+    Keyword Args:
         profile_name (str, optional): The name of the profile.
         session_id (str, optional): The session ID.
         actions (list[str], optional): If the status is "set", this parameter
@@ -46,10 +48,7 @@ def active_action(
     """
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
-    _params = {
-        'cortexToken': auth,
-        'status': status,
-    }
+    _params = {'cortexToken': auth, 'status': status}
 
     if profile_name is not None:
         _params['profile'] = profile_name
@@ -70,11 +69,7 @@ def active_action(
     return _action
 
 
-def brain_map(
-    auth: str,
-    session_id: str,
-    profile_name: str,
-) -> BaseRequest:
+def brain_map(auth: str, session_id: str, profile_name: str) -> BaseRequest:
     """Map the profile name to the corresponding mental command brain.
 
     Args:
@@ -93,21 +88,13 @@ def brain_map(
         'id': MentalCommandID.BRAIN_MAP,
         'jsonrpc': '2.0',
         'method': 'mentalCommandBrainMap',
-        'params': {
-            'cortexToken': auth,
-            'profile': profile_name,
-            'session': session_id,
-        },
+        'params': {'cortexToken': auth, 'profile': profile_name, 'session': session_id},
     }
     return _brain_map
 
 
 def get_skill_rating(
-    auth: str,
-    *,
-    profile_name: str | None = None,
-    session_id: str | None = None,
-    action: str | None = None,
+    auth: str, *, profile_name: str | None = None, session_id: str | None = None, action: str | None = None
 ) -> BaseRequest:
     """Get the skill rating of the mental command action.
 
@@ -115,9 +102,9 @@ def get_skill_rating(
         auth (str): The Cortex authentication token.
 
     Keyword Args:
-        profile_name (str): The name of the profile.
-        session_id (str): The session ID.
-        action (str): The mental command action.
+        profile_name (str, optional): The name of the profile.
+        session_id (str, optional): The session ID.
+        action (str, optional): The mental command action.
 
     Read More:
         [mentalCommandGetSkillRating](https://emotiv.gitbook.io/cortex-api/advanced-bci/mentalcommandgetskillrating)
@@ -146,12 +133,7 @@ def get_skill_rating(
     return skill_rating
 
 
-def training_threshold(
-    auth: str,
-    *,
-    profile_name: str | None = None,
-    session_id: str | None = None,
-) -> BaseRequest:
+def training_threshold(auth: str, *, profile_name: str | None = None, session_id: str | None = None) -> BaseRequest:
     """Get the training threshold for mental commands.
 
     Args:
@@ -220,10 +202,7 @@ def action_sensitivity(
     """
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
-    _params = {
-        'cortexToken': auth,
-        'status': status,
-    }
+    _params = {'cortexToken': auth, 'status': status}
 
     if profile_name is not None:
         _params['profile'] = profile_name
