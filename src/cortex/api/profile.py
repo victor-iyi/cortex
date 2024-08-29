@@ -150,7 +150,6 @@ def load_guest(auth: str, headset_id: str) -> BaseRequest:
         BaseRequest: The guest profile status.
 
     """
-
     _guest = {
         'id': ProfileID.GUEST,
         'jsonrpc': '2.0',

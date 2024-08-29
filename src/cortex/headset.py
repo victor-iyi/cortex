@@ -10,26 +10,26 @@ from cortex.api.mental_command import (
     brain_map,
     training_threshold,
 )
+from cortex.api.profile import current_profile, query_profile, setup_profile
 from cortex.api.record import (
+    config_opt_out,
     create_record,
-    stop_record,
-    update_record,
     delete_record,
+    download_record_data,
     export_record,
     query_records,
     record_infos,
-    config_opt_out,
-    download_record_data,
+    stop_record,
+    update_record,
 )
-from cortex.api.profile import current_profile, query_profile, setup_profile
-from cortex.api.train import training, training_time, trained_signature_actions
+from cortex.api.train import trained_signature_actions, training, training_time
 from cortex.api.types import RecordQuery
 from cortex.cortex import Cortex
 from cortex.logging import logger
 
 
 class Headset(Cortex):
-    def __init__(self, *args: str, **kwargs: bool | str) -> None:
+    def __init__(self, *args: str, **kwargs: bool | str | int) -> None:
         super().__init__(*args, **kwargs)
 
     def connect(
@@ -136,7 +136,7 @@ class Headset(Cortex):
         """Query the profile."""
         logger.info('--- Querying the profile ---')
 
-        _query = query_profile(auth=self._auth)
+        _query = query_profile(auth=self.auth)
 
         logger.debug(_query)
 
@@ -646,7 +646,7 @@ class Headset(Cortex):
             raise ValueError('No session ID. Please create a session first.')
 
         _brain_map = brain_map(
-            auth=self._auth,
+            auth=self.auth,
             session_id=self.session_id,
             profile_name=profile_name,
         )

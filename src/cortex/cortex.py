@@ -1,6 +1,7 @@
 # pylint: disable=unused-argument
 import datetime
 import json
+import logging
 import os
 import ssl
 import threading
@@ -47,14 +48,17 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         debit: int | None = None,
         license: str | None = None,  # pylint: disable=redefined-builtin
     ) -> None:
-        """
+        """Initialize Cortex.
 
         Args:
             client_id (str): The client ID of your Cortex application.
             client_secret (str): The client secret of your Cortex application.
-            session_id(str, optional):
-            headset_id(str, optional):
-            profile_name(str, optional):
+
+        Keyword Args:
+            debug_mode (bool, optional): Whether to enable debug mode.
+            session_id(str, optional): The session id.
+            headset_id(str, optional): The headset id.
+            profile_name(str, optional): The profile name.
             license (str, optional): A licnese id. In most cases, you don't need to
                 specify the license id. Cortex will find the appropriate
                 license based on the client id.
@@ -63,6 +67,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
                 so that it can be spent locally without having to authorize again.
                 You need to debit the license only if you want to *activate a session*.
                 The default is 0.
+
         """
         super().__init__()
         self.client_id = os.environ.get('CLIENT_ID', client_id)
@@ -74,7 +79,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             raise ValueError('No CLIENT_SECRET. Add it to the environment or pass it as an argument.')
 
         if debug_mode:
-            logger.setLevel(logger.DEBUG)
+            logger.setLevel(logging.DEBUG)
 
         self.debug = debug_mode
         self.session_id = session_id
@@ -271,7 +276,6 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             [updateSession](https://emotiv.gitbook.io/cortex-api/session/updateSession)
 
         """
-
         logger.info('--- Closing session ---')
         _session = update_session(
             auth=self.auth,

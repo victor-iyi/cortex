@@ -68,7 +68,6 @@ def training(
         TrainingRequest: The training status.
 
     """
-
     assert detection in [
         'mentalCommand',
         'facialExpression',
@@ -122,7 +121,6 @@ def trained_signature_actions(
         TrainingRequest: The trained signature actions.
 
     """
-
     assert detection in [
         'mentalCommand',
         'facialExpression',
@@ -168,7 +166,6 @@ def training_time(
         TrainingRequest: The training time.
 
     """
-
     assert detection in [
         'mentalCommand',
         'facialExpression',

@@ -250,7 +250,6 @@ def export_record(
         ExportRecordRequest: The record export status.
 
     """
-
     _params = {
         'cortexToken': auth,
         'recordIds': record_ids,

@@ -30,7 +30,6 @@ def signature_type(
         FacialExpressionRequest: The facial expression signature type.
 
     """
-
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
     _params = {
@@ -95,7 +94,6 @@ def threshold(
         FacialExpressionRequest: The facial expression threshold.
 
     """
-
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
     _params = {
