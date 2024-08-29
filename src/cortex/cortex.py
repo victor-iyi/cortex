@@ -22,7 +22,7 @@ from pydispatch import Dispatcher
 from cortex.api.auth import access, authorize, get_info
 from cortex.api.handler import stream_data
 from cortex.api.session import create_session, update_session
-from cortex.consts import CA_CERTS
+from cortex.consts import CA_CERTS, WarningCode
 from cortex.logging import logger
 
 
@@ -89,9 +89,11 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
 
         if not self.client_id:
-            raise ValueError('No CLIENT_ID. Add it to the environment or pass it as an argument.')
+            raise ValueError(
+                'No CLIENT_ID. Add it to the environment or pass it as an argument.')
         if not self.client_secret:
-            raise ValueError('No CLIENT_SECRET. Add it to the environment or pass it as an argument.')
+            raise ValueError(
+                'No CLIENT_SECRET. Add it to the environment or pass it as an argument.')
 
         if debug_mode:
             logger.setLevel(logging.DEBUG)
@@ -120,10 +122,12 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if CA_CERTS.exists():
             sslopt = {'ca_certs': CA_CERTS, 'cert_reqs': ssl.CERT_REQUIRED}
         else:
-            logger.warning('No certificate found. Please check the certificates folder.')
+            logger.warning(
+                'No certificate found. Please check the certificates folder.')
             sslopt = {'cert_reqs': ssl.CERT_NONE}
 
-        self._thread = threading.Thread(target=self._ws.run_forever, name=thread_name, args=(None, sslopt))
+        self._thread = threading.Thread(
+            target=self._ws.run_forever, name=thread_name, args=(None, sslopt))
         self._thread.start()
         self._thread.join()
 
@@ -148,6 +152,54 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """Handle the error."""
         if len(args) == 2:
             logger.error(f'on_error: {args[1]}')
+
+    def handle_error(self, response: Mapping[str, Any]) -> None:
+        """Handle the error response.
+
+        Args:
+            response (Mapping[str, Any]): The error response to handle.
+
+        """
+        request_id = response['id']
+
+        logger.error(f'handle_error: Request ID: {request_id}')
+        logger.debug(response)
+
+        self.emit('inform_error', error_data=response['error'])
+
+    def handle_warning(self, response: Mapping[str, Any]) -> None:
+        """Handle the warning response.
+
+        Args:
+            response (Mapping[str, Any]): The warning response to handle.
+
+        """
+        logger.debug('Handling warning response.')
+        logger.debug(response)
+
+        code = response['code']
+        message = response['message']
+
+        if code == WarningCode.ACCESS_RIGHT_GRANTED:
+            # Call authorize again.
+            logger.warning('Authorizing again...')
+            self.authorize()
+        elif code == WarningCode.HEADSET_CONNECTED:
+            # Query headset again, then create session.
+            logger.warning('Querying headset again...')
+            self.query_headset()
+        elif code == WarningCode.CORTEX_AUTO_UNLOAD_PROFILE:
+            # Unload the profile.
+            logger.warning('Setting profile name to empty...')
+            self.profile_name = ''
+        elif code == WarningCode.CORTEX_STOP_ALL_STREAMS:
+            logger.debug(message.get('behavior'))
+
+            session_id = message['sessionId']
+            if session_id == self.session_id:
+                logger.warning('Stopping all streams...')
+                self.emit('warn_cortex_stop_all_sub', data=session_id)
+                self.session_id = ''
 
     def handle_stream_data(self, data: Mapping[str, Any]) -> None:
         """Handle the stream data.
@@ -190,7 +242,8 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access ---')
 
-        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='requestAccess')
+        _access = access(client_id=self.client_id,
+                         client_secret=self.client_secret, method='requestAccess')
 
         logger.debug(_access)
 
@@ -211,7 +264,8 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access right ---')
 
-        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='hasAccessRight')
+        _access = access(client_id=self.client_id,
+                         client_secret=self.client_secret, method='hasAccessRight')
 
         logger.debug(_access)
 
@@ -260,7 +314,8 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             logger.warning(f'Session already exists. {self.session_id}')
             return
 
-        _session = create_session(auth=self.auth, headset_id=self.headset_id, status='active')
+        _session = create_session(
+            auth=self.auth, headset_id=self.headset_id, status='active')
 
         logger.debug(_session)
 
@@ -274,7 +329,8 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         logger.info('--- Closing session ---')
-        _session = update_session(auth=self.auth, session_id=self.session_id, status='close')
+        _session = update_session(
+            auth=self.auth, session_id=self.session_id, status='close')
 
         logger.debug(_session)
 
@@ -299,12 +355,14 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
     def ws(self) -> websocket.WebSocketApp:
         """WebSocketApp: The WebSocketApp object."""
         if self._ws is None:
-            raise ValueError('Cortex is not initialized. Call `open()` to initialize it.')
+            raise ValueError(
+                'Cortex is not initialized. Call `open()` to initialize it.')
         return self._ws
 
     @property
     def auth(self) -> str:
         """str: The authorization token."""
         if self._auth is None:
-            raise ValueError('No authorization token. Call `authorize()` to generate it.')
+            raise ValueError(
+                'No authorization token. Call `authorize()` to generate it.')
         return self._auth

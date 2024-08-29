@@ -138,8 +138,5 @@ ignore = [
 logger-objects = ["cortex.logging.logger"]
 typing-modules = ["cortex.api.types"]
 
-# [tool.ruff.lint.pycodestyle]
-# max-doc-length = 120
-
 [tool.ruff.lint.pydocstyle]
 convention = "google"
