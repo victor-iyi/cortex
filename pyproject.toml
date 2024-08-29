@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cortex"
-version = "0.2.2"
+version = "0.2.3"
 description = "Cortex is an API for communicating with your emotiv EEG device."
 license = "MIT"
 
@@ -34,22 +34,22 @@ packages = [{ include = "cortex", from = "src" }]
 python = "^3.11"
 
 # WebSocket client for Python with low level API options.
-websocket-client = "^1.5.1"
+websocket-client = "^1.8.0"
 # Lightweight Event Handling.
-python-dispatch = "^0.2.1"
+python-dispatch = "^0.2.2"
 # Render rich text, progress bars, syntax highlighting and more to the terminal
-rich = "^13.7.1"
+rich = "^13.8.0"
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
 # Optional static typing for Python.
-mypy = "^1.0.1"
+mypy = "^1.11.2"
 # Managing and maintaining pre-commit hooks.
-pre-commit = "^3.1.0"
+pre-commit = "^3.8.0"
 # Formats docstring to follow PEP 257.
-docformatter = { version = "^1.5.1", extras = ["tomli"] }
+docformatter = { version = "^1.7.5", extras = ["tomli"] }
 # Fast Python linter and code formatter.
 ruff = "^0.6.2"
 
