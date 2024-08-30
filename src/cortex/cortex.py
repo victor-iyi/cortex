@@ -11,10 +11,11 @@ import logging
 import os
 import ssl
 import threading
+from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import datetime as dt
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import websocket
 from pydispatch import Dispatcher
@@ -67,7 +68,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
     """
 
-    __events__: list[str] = []
+    __events__: ClassVar[list[str]] = []
 
     def __init__(
         self,
@@ -153,22 +154,21 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         self.ws.close()
         logger.info('Closed connection to Cortex.')
 
+    @abstractmethod
     def on_message(self, *args: Any, **kwargs: Any) -> None:
         """Handle the message."""
-        logger.info('Received message: %s', args)
 
+    @abstractmethod
     def on_open(self, *args: Any, **kwargs: Any) -> None:
         """Handle the open event."""
-        logger.info('Websocket opened.')
 
+    @abstractmethod
     def on_close(self, *args: Any, **kwargs: Any) -> None:
         """Handle the close event."""
-        logger.info(f'on_close: {args[1]}')
 
+    @abstractmethod
     def on_error(self, *args: Any, **kwargs: Any) -> None:
         """Handle the error."""
-        if len(args) == 2:
-            logger.error(f'on_error: {args[1]}')
 
     def request_access(self) -> None:
         """Request user approval for the current application through [EMOTIV Launcher].

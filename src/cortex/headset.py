@@ -5,7 +5,7 @@ This module contains the Headset class, which is used to interact with the Emoti
 """
 
 # mypy: disable-error-code=has-type
-
+import json
 import time as m_time
 from collections.abc import Callable, Mapping
 from typing import Any, ClassVar
@@ -49,6 +49,33 @@ class Headset(Cortex):
         """Initialize the Headset class."""
         super().__init__(*args, **kwargs)
         self._headset_list: list[dict[str, Any]] | None = None
+
+    def on_open(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the open event."""
+        logger.info('Websocket opened.')
+
+    def on_close(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the close event."""
+        logger.info(f'on_close: {args[1]}')
+
+    def on_error(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the error."""
+        if len(args) == 2:
+            logger.error(f'on_error: {args[1]}')
+
+    def on_message(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the message."""
+        recv_dict = json.loads(args[1])
+        if 'sid' in recv_dict:
+            self.handle_stream_data(recv_dict)
+        elif 'result' in recv_dict:
+            self.handle_result(recv_dict)
+        elif 'warning' in recv_dict:
+            self.handle_warning(recv_dict['warning'])
+        elif 'error' in recv_dict:
+            self.handle_error(recv_dict)
+        else:
+            raise KeyError('Unknown message type.')
 
     def extract_data_labels(self, stream_name: str, stream_cols: list[str]) -> None:
         """Extract data labels from a data stream.
