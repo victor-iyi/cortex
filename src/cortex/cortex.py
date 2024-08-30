@@ -67,6 +67,8 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
     """
 
+    __events__: list[str] = []
+
     def __init__(
         self,
         client_id: str | None = None,

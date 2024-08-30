@@ -10,6 +10,16 @@ import time as m_time
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from cortex.api.events import (
+    ErrorEvent,
+    MarkerEvent,
+    MentalCommandEvent,
+    NewDataEvent,
+    ProfileEvent,
+    RecordEvent,
+    SessionEvent,
+    WarningEvent,
+)
 from cortex.api.handler import stream_data
 from cortex.api.id import AuthID, HeadsetID, MarkersID, MentalCommandID, ProfileID, RecordsID, SessionID
 from cortex.consts import WarningCode
@@ -24,31 +34,15 @@ class Headset(Cortex):
 
     """
 
-    _events_ = [
-        'inform_error',
-        'create_session_done',
-        'query_profile_done',
-        'load_unload_profile_done',
-        'save_profile_done',
-        'get_mc_active_action_done',
-        'mc_brainmap_done',
-        'mc_action_sensitivity_done',
-        'mc_training_threshold_done',
-        'create_record_done',
-        'stop_record_done',
-        'warn_cortex_stop_all_sub',
-        'inject_marker_done',
-        'update_marker_done',
-        'export_record_done',
-        'new_data_labels',
-        'new_com_data',
-        'new_fe_data',
-        'new_eeg_data',
-        'new_mot_data',
-        'new_dev_data',
-        'new_met_data',
-        'new_pow_data',
-        'new_sys_data',
+    _events_: list[str] = [
+        *ErrorEvent.get_events(),
+        *MarkerEvent.get_events(),
+        *MentalCommandEvent.get_events(),
+        *NewDataEvent.get_events(),
+        *ProfileEvent.get_events(),
+        *RecordEvent.get_events(),
+        *SessionEvent.get_events(),
+        *WarningEvent.get_events(),
     ]
 
     def __init__(self, *args: str, **kwargs: bool | str | int) -> None:
