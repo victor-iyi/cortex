@@ -8,7 +8,7 @@ This module contains the Headset class, which is used to interact with the Emoti
 
 import time as m_time
 from collections.abc import Callable, Mapping
-from typing import Any
+from typing import Any, ClassVar
 
 from cortex.api.events import (
     ErrorEvent,
@@ -34,7 +34,7 @@ class Headset(Cortex):
 
     """
 
-    _events_: list[str] = [
+    _events_: ClassVar[list[str]] = [
         *ErrorEvent.get_events(),
         *MarkerEvent.get_events(),
         *MentalCommandEvent.get_events(),
