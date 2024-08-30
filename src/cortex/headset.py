@@ -593,6 +593,30 @@ class Headset(Cortex):
                 self.emit('warn_cortex_stop_all_sub', data=session_id)
                 self.session_id = ''
 
+    def handle_stream_data(self, data: Mapping[str, Any]) -> None:
+        """Handle the stream data.
+
+        Args:
+            data (Mapping[str, Any]): The data to handle.
+
+        """
+        _stream_maps = {
+            'com': 'new_com_data',
+            'fac': 'new_fe_data',
+            'eeg': 'new_eeg_data',
+            'mot': 'new_mot_data',
+            'dev': 'new_dev_data',
+            'met': 'new_met_data',
+            'pow': 'new_pow_data',
+            'sys': 'new_sys_data',
+        }
+        for stream, event in _stream_maps.items():
+            if data.get(stream) is not None:
+                self.emit(event, stream_data(data, stream))
+                break
+        else:
+            logger.warning(f'Unknown data: {data}')
+
     def handle_result(self, response: Mapping[str, Any]) -> None:
         """Handle the result response.
 
@@ -638,32 +662,6 @@ class Headset(Cortex):
             req_id, self._handle_default
         )
         _handler(result)
-
-    def handle_stream_data(self, data: Mapping[str, Any]) -> None:
-        """Handle the stream data.
-
-        Args:
-            data (Mapping[str, Any]): The data to handle.
-
-        """
-        if data.get('com') is not None:
-            self.emit('new_com_data', stream_data(data, 'com'))
-        elif data.get('fac') is not None:
-            self.emit('new_fe_data', stream_data(data, 'fac'))
-        elif data.get('eeg') is not None:
-            self.emit('new_eeg_data', stream_data(data, 'eeg'))
-        elif data.get('mot') is not None:
-            self.emit('new_mot_data', stream_data(data, 'mot'))
-        elif data.get('dev') is not None:
-            self.emit('new_dev_data', stream_data(data, 'dev'))
-        elif data.get('met') is not None:
-            self.emit('new_met_data', stream_data(data, 'met'))
-        elif data.get('pow') is not None:
-            self.emit('new_pow_data', stream_data(data, 'pow'))
-        elif data.get('sys') is not None:
-            self.emit('new_sys_data', stream_data(data, 'sys'))
-        else:
-            logger.warning('Unknown data: {data}')
 
     def _handle_has_access_right(self, result: dict[str, Any]) -> None:
         access_granted = result['accessGranted']
