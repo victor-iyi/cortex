@@ -76,7 +76,7 @@ class Headset(Cortex):
 
         labels['labels'] = data_labels  # type: ignore[assignment]
         logger.debug(labels)
-        self.emit('new_data_labels', data=labels)
+        self.emit(NewDataEvent.DATA_LABELS, data=labels)
 
     def handle_error(self, response: Mapping[str, Any]) -> None:
         """Handle the error response.
@@ -90,7 +90,7 @@ class Headset(Cortex):
         logger.error(f'handle_error: Request ID: {request_id}')
         logger.debug(response)
 
-        self.emit('inform_error', error_data=response['error'])
+        self.emit(ErrorEvent.INFORM_ERROR, error_data=response['error'])
 
     def handle_warning(self, response: Mapping[str, Any]) -> None:
         """Handle the warning response.
@@ -123,7 +123,7 @@ class Headset(Cortex):
             session_id = message['sessionId']
             if session_id == self.session_id:
                 logger.warning('Stopping all streams...')
-                self.emit('warn_cortex_stop_all_sub', data=session_id)
+                self.emit(WarningEvent.CORTEX_STOP_ALL_SUB, data=session_id)
                 self.session_id = ''
 
     def handle_stream_data(self, data: Mapping[str, Any]) -> None:
@@ -134,14 +134,14 @@ class Headset(Cortex):
 
         """
         _stream_maps = {
-            'com': 'new_com_data',
-            'fac': 'new_fe_data',
-            'eeg': 'new_eeg_data',
-            'mot': 'new_mot_data',
-            'dev': 'new_dev_data',
-            'met': 'new_met_data',
-            'pow': 'new_pow_data',
-            'sys': 'new_sys_data',
+            'com': NewDataEvent.COM_DATA,
+            'fac': NewDataEvent.FE_DATA,
+            'eeg': NewDataEvent.EEG_DATA,
+            'mot': NewDataEvent.MOT_DATA,
+            'dev': NewDataEvent.DEV_DATA,
+            'met': NewDataEvent.MET_DATA,
+            'pow': NewDataEvent.POW_DATA,
+            'sys': NewDataEvent.SYS_DATA,
         }
         for stream, event in _stream_maps.items():
             if data.get(stream) is not None:
@@ -256,7 +256,7 @@ class Headset(Cortex):
     def _handle_create_session(self, result: dict[str, Any]) -> None:
         self.session_id = result['id']
         logger.info(f'Session created: {self.session_id}')
-        self.emit('create_session_done', data=self.session_id)
+        self.emit(SessionEvent.CREATED, data=self.session_id)
 
     def _handle_sub_request(self, result: dict[str, Any]) -> None:
         for stream in result['success']:
@@ -283,7 +283,7 @@ class Headset(Cortex):
 
     def _handle_query_profile(self, results: list[dict[str, Any]]) -> None:
         profile_list = [headset['name'] for headset in results]
-        self.emit('query_profile_done', data=profile_list)
+        self.emit(ProfileEvent.QUERIED, data=profile_list)
 
     def _handle_setup_profile(self, result: dict[str, Any]) -> None:
         action = result['action']
@@ -293,13 +293,13 @@ class Headset(Cortex):
                 self.setup_profile('load', profile_name=profile_name)
         elif action == 'load':
             logger.info('Profile loaded successfully.')
-            self.emit('load_unload_profile_done', isLoaded=True)
+            self.emit(ProfileEvent.LOADED_UNLOADED, isLoaded=True)
         elif action == 'unload':
             logger.info('Profile unloaded successfully.')
-            self.emit('load_unload_profile_done', isLoaded=False)
+            self.emit(ProfileEvent.LOADED_UNLOADED, isLoaded=False)
         elif action == 'save':
             logger.info('Profile saved successfully.')
-            self.emit('save_profile_done')
+            self.emit(ProfileEvent.SAVED)
 
     def _handle_get_current_profile(self, result: dict[str, Any]) -> None:
         name = result.get('name')
@@ -312,7 +312,7 @@ class Headset(Cortex):
             if name != self.profile_name:
                 logger.warning(f'Profile {name} is loaded for headset {self.headset_id}')
             elif loaded_by_this_app:
-                self.emit('load_unload_profile_done', isLoaded=True)
+                self.emit(ProfileEvent.LOADED_UNLOADED, isLoaded=True)
             else:
                 self.setup_profile('unload', profile_name=self.profile_name)
 
@@ -322,10 +322,10 @@ class Headset(Cortex):
 
     def _handle_create_record(self, result: dict[str, Any]) -> None:
         self.record_id = result['record']['uuid']
-        self.emit('create_record_done', data=result['record'])
+        self.emit(RecordEvent.CREATED, data=result['record'])
 
     def _handle_stop_record(self, result: dict[str, Any]) -> None:
-        self.emit('stop_record_done', data=result['record'])
+        self.emit(RecordEvent.STOPPED, data=result['record'])
 
     def _handle_export_record(self, result: dict[str, Any]) -> None:
         success_exports = [record['recordId'] for record in result['success']]
@@ -333,22 +333,22 @@ class Headset(Cortex):
             record_id = record['recordId']
             message = record['message']
             logger.error(f'Export failed for record {record_id}: {message}')
-        self.emit('export_record_done', data=success_exports)
+        self.emit(RecordEvent.EXPORTED, data=success_exports)
 
     def _handle_inject_marker(self, result: dict[str, Any]) -> None:
-        self.emit('inject_marker_done', data=result['marker'])
+        self.emit(MarkerEvent.INJECTED, data=result['marker'])
 
     def _handle_mental_command_active_action(self, result: dict[str, Any]) -> None:
-        self.emit('get_mc_active_action_done', data=result)
+        self.emit(MentalCommandEvent.GET_ACTIVE_ACTION, data=result)
 
     def _handle_mental_command_training_threshold(self, result: dict[str, Any]) -> None:
-        self.emit('mc_training_threshold_done', data=result)
+        self.emit(MentalCommandEvent.TRAINING_THRESHOLD, data=result)
 
     def _handle_mental_command_brain_map(self, result: dict[str, Any]) -> None:
-        self.emit('mc_brain_map_done', data=result)
+        self.emit(MentalCommandEvent.BRAIN_MAP, data=result)
 
     def _handle_mental_command_action_sensitive(self, result: dict[str, Any]) -> None:
-        self.emit('mc_action_sensitivity_done', data=result)
+        self.emit(MentalCommandEvent.ACTION_SENSITIVITY, data=result)
 
     def _handle_default(self, result: dict[str, Any]) -> None:
         logger.error('No handling for the result of response.')
