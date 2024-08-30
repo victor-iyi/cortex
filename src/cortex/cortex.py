@@ -20,10 +20,9 @@ import websocket
 from pydispatch import Dispatcher
 
 from cortex.api.auth import access, authorize, get_info
-from cortex.api.handler import stream_data
 from cortex.api.headset import make_connection, query_headset, subscription
 from cortex.api.session import create_session, update_session
-from cortex.consts import CA_CERTS, WarningCode
+from cortex.consts import CA_CERTS
 from cortex.logging import logger
 
 
@@ -149,80 +148,6 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """Handle the error."""
         if len(args) == 2:
             logger.error(f'on_error: {args[1]}')
-
-    def handle_error(self, response: Mapping[str, Any]) -> None:
-        """Handle the error response.
-
-        Args:
-            response (Mapping[str, Any]): The error response to handle.
-
-        """
-        request_id = response['id']
-
-        logger.error(f'handle_error: Request ID: {request_id}')
-        logger.debug(response)
-
-        self.emit('inform_error', error_data=response['error'])
-
-    def handle_warning(self, response: Mapping[str, Any]) -> None:
-        """Handle the warning response.
-
-        Args:
-            response (Mapping[str, Any]): The warning response to handle.
-
-        """
-        logger.debug('Handling warning response.')
-        logger.debug(response)
-
-        code = response['code']
-        message = response['message']
-
-        if code == WarningCode.ACCESS_RIGHT_GRANTED:
-            # Call authorize again.
-            logger.warning('Authorizing again...')
-            self.authorize()
-        elif code == WarningCode.HEADSET_CONNECTED:
-            # Query headset again, then create session.
-            logger.warning('Querying headset again...')
-            self.query_headset()
-        elif code == WarningCode.CORTEX_AUTO_UNLOAD_PROFILE:
-            # Unload the profile.
-            logger.warning('Setting profile name to empty...')
-            self.profile_name = ''
-        elif code == WarningCode.CORTEX_STOP_ALL_STREAMS:
-            logger.debug(message.get('behavior'))
-
-            session_id = message['sessionId']
-            if session_id == self.session_id:
-                logger.warning('Stopping all streams...')
-                self.emit('warn_cortex_stop_all_sub', data=session_id)
-                self.session_id = ''
-
-    def handle_stream_data(self, data: Mapping[str, Any]) -> None:
-        """Handle the stream data.
-
-        Args:
-            data (Mapping[str, Any]): The data to handle.
-
-        """
-        if data.get('com') is not None:
-            self.emit('new_com_data', stream_data(data, 'com'))
-        elif data.get('fac') is not None:
-            self.emit('new_fe_data', stream_data(data, 'fac'))
-        elif data.get('eeg') is not None:
-            self.emit('new_eeg_data', stream_data(data, 'eeg'))
-        elif data.get('mot') is not None:
-            self.emit('new_mot_data', stream_data(data, 'mot'))
-        elif data.get('dev') is not None:
-            self.emit('new_dev_data', stream_data(data, 'dev'))
-        elif data.get('met') is not None:
-            self.emit('new_met_data', stream_data(data, 'met'))
-        elif data.get('pow') is not None:
-            self.emit('new_pow_data', stream_data(data, 'pow'))
-        elif data.get('sys') is not None:
-            self.emit('new_sys_data', stream_data(data, 'sys'))
-        else:
-            logger.warning('Unknown data: {data}')
 
     def request_access(self) -> None:
         """Request user approval for the current application through [EMOTIV Launcher].
@@ -431,6 +356,34 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         logger.debug(_request)
 
         self.ws.send(json.dumps(_request, indent=4))
+
+    def extract_data_labels(self, stream_name: str, stream_cols: list[str]) -> None:
+        """Extract data labels from a data stream.
+
+        Args:
+            stream_name (str): The name of the stream.
+            stream_cols (list[str]): The list of columns that are part of this stream.
+
+        Read More:
+            [subscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/subscribe)
+
+        """
+        labels = {}
+        labels['streamName'] = stream_name
+
+        data_labels = []
+        if stream_name == 'eeg':
+            # remove MARKERS
+            data_labels = stream_cols[:-1]
+        elif stream_name == 'dev':
+            # get cq header column except battery, signal and battery percent
+            data_labels = stream_cols[2]  # type: ignore[assignment]
+        else:
+            data_labels = stream_cols
+
+        labels['labels'] = data_labels  # type: ignore[assignment]
+        logger.debug(labels)
+        self.emit('new_data_labels', data=labels)
 
     def set_headset(self, headset_id: str) -> None:
         """Set the headset ID.
