@@ -42,6 +42,33 @@ class Headset(Cortex):
 
     """
 
+    _events_ = [
+        'inform_error',
+        'create_session_done',
+        'query_profile_done',
+        'load_unload_profile_done',
+        'save_profile_done',
+        'get_mc_active_action_done',
+        'mc_brainmap_done',
+        'mc_action_sensitivity_done',
+        'mc_training_threshold_done',
+        'create_record_done',
+        'stop_record_done',
+        'warn_cortex_stop_all_sub',
+        'inject_marker_done',
+        'update_marker_done',
+        'export_record_done',
+        'new_data_labels',
+        'new_com_data',
+        'new_fe_data',
+        'new_eeg_data',
+        'new_mot_data',
+        'new_dev_data',
+        'new_met_data',
+        'new_pow_data',
+        'new_sys_data',
+    ]
+
     def __init__(self, *args: str, **kwargs: bool | str | int) -> None:
         """Initialize the Headset class."""
         super().__init__(*args, **kwargs)
