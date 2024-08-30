@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
-from cortex.api.headset import make_connection, query_headset, subscription
 from cortex.api.markers import inject_marker, update_marker
 from cortex.api.mental_command import action_sensitivity, active_action, brain_map, training_threshold
 from cortex.api.profile import current_profile, query_profile, setup_profile
@@ -39,94 +38,6 @@ class Headset(Cortex):
     def __init__(self, *args: str, **kwargs: bool | str | int) -> None:
         """Initialize the Headset class."""
         super().__init__(*args, **kwargs)
-
-    def connect(self, mappings: dict[str, str] | None = None, connection_type: str | None = None) -> None:
-        """Connect to the headset.
-
-        Args:
-            mappings (dict[str, str], optional): The mappings.
-            connection_type (str, optional): The connection type.
-
-        """
-        logger.info('--- Connecting to the headset ---')
-
-        _connection = make_connection(
-            command='connect', headset_id=self.headset_id, mappings=mappings, connection_type=connection_type
-        )
-
-        logger.debug(_connection)
-
-        self.ws.send(json.dumps(_connection, indent=4))
-
-    def disconnect(self, mappings: dict[str, str] | None = None, connection_type: str | None = None) -> None:
-        """Disconnect from the headset.
-
-        Args:
-            mappings (dict[str, str], optional): The mappings.
-            connection_type (str, optional): The connection type.
-
-        """
-        logger.info('--- Disconnecting from the headset ---')
-
-        _connection = make_connection(
-            command='disconnect', headset_id=self.headset_id, mappings=mappings, connection_type=connection_type
-        )
-
-        logger.debug(_connection)
-
-        self.ws.send(json.dumps(_connection, indent=4))
-
-    def query_headset(self) -> None:
-        """Query the headset."""
-        logger.info('--- Querying the headset ---')
-
-        _query = query_headset(headset_id=self.headset_id)
-
-        logger.debug(_query)
-
-        self.ws.send(json.dumps(_query, indent=4))
-
-    def subscribe(self, streams: list[str]) -> None:
-        """Subscribe to one or more data stream.
-
-        Args:
-            streams (list[str]): The data streams to subscribe to.
-
-        Read More:
-            [subscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/subscribe)
-
-        """
-        logger.info('--- Subscribing to the headset ---')
-
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
-
-        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='subscribe')
-
-        logger.debug(_request)
-
-        self.ws.send(json.dumps(_request, indent=4))
-
-    def unsubscribe(self, streams: list[str]) -> None:
-        """Unsubscribe from one or more data stream.
-
-        Args:
-            streams (list[str]): The data streams to unsubscribe from.
-
-        Read More:
-            [unsubscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/unsubscribe)
-
-        """
-        logger.info('--- Unsubscribing from the headset ---')
-
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
-
-        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='unsubscribe')
-
-        logger.debug(_request)
-
-        self.ws.send(json.dumps(_request, indent=4))
 
     def query_profile(self) -> None:
         """Query the profile."""

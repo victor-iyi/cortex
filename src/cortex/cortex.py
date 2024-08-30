@@ -21,6 +21,7 @@ from pydispatch import Dispatcher
 
 from cortex.api.auth import access, authorize, get_info
 from cortex.api.handler import stream_data
+from cortex.api.headset import make_connection, query_headset, subscription
 from cortex.api.session import create_session, update_session
 from cortex.consts import CA_CERTS, WarningCode
 from cortex.logging import logger
@@ -89,11 +90,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
 
         if not self.client_id:
-            raise ValueError(
-                'No CLIENT_ID. Add it to the environment or pass it as an argument.')
+            raise ValueError('No CLIENT_ID. Add it to the environment or pass it as an argument.')
         if not self.client_secret:
-            raise ValueError(
-                'No CLIENT_SECRET. Add it to the environment or pass it as an argument.')
+            raise ValueError('No CLIENT_SECRET. Add it to the environment or pass it as an argument.')
 
         if debug_mode:
             logger.setLevel(logging.DEBUG)
@@ -122,12 +121,10 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if CA_CERTS.exists():
             sslopt = {'ca_certs': CA_CERTS, 'cert_reqs': ssl.CERT_REQUIRED}
         else:
-            logger.warning(
-                'No certificate found. Please check the certificates folder.')
+            logger.warning('No certificate found. Please check the certificates folder.')
             sslopt = {'cert_reqs': ssl.CERT_NONE}
 
-        self._thread = threading.Thread(
-            target=self._ws.run_forever, name=thread_name, args=(None, sslopt))
+        self._thread = threading.Thread(target=self._ws.run_forever, name=thread_name, args=(None, sslopt))
         self._thread.start()
         self._thread.join()
 
@@ -242,8 +239,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access ---')
 
-        _access = access(client_id=self.client_id,
-                         client_secret=self.client_secret, method='requestAccess')
+        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='requestAccess')
 
         logger.debug(_access)
 
@@ -264,8 +260,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access right ---')
 
-        _access = access(client_id=self.client_id,
-                         client_secret=self.client_secret, method='hasAccessRight')
+        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='hasAccessRight')
 
         logger.debug(_access)
 
@@ -314,8 +309,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             logger.warning(f'Session already exists. {self.session_id}')
             return
 
-        _session = create_session(
-            auth=self.auth, headset_id=self.headset_id, status='active')
+        _session = create_session(auth=self.auth, headset_id=self.headset_id, status='active')
 
         logger.debug(_session)
 
@@ -329,8 +323,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         logger.info('--- Closing session ---')
-        _session = update_session(
-            auth=self.auth, session_id=self.session_id, status='close')
+        _session = update_session(auth=self.auth, session_id=self.session_id, status='close')
 
         logger.debug(_session)
 
@@ -351,18 +344,122 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         self.ws.send(json.dumps(_info, indent=4))
 
+    def connect(self, mappings: dict[str, str] | None = None, connection_type: str | None = None) -> None:
+        """Connect to the headset.
+
+        Args:
+            mappings (Mapping[str, str], optional): The mappings.
+            connection_type (str, optional): The connection type.
+
+        """
+        logger.info('--- Connecting to the headset ---')
+
+        _connection = make_connection(
+            command='connect', headset_id=self.headset_id, mappings=mappings, connection_type=connection_type
+        )
+
+        logger.debug(_connection)
+
+        self.ws.send(json.dumps(_connection, indent=4))
+
+    def disconnect(self, mappings: Mapping[str, str] | None = None, connection_type: str | None = None) -> None:
+        """Disconnect from the headset.
+
+        Args:
+            mappings (Mapping[str, str], optional): The mappings.
+            connection_type (str, optional): The connection type.
+
+        """
+        logger.info('--- Disconnecting from the headset ---')
+
+        _connection = make_connection(
+            command='disconnect', headset_id=self.headset_id, mappings=mappings, connection_type=connection_type
+        )
+
+        logger.debug(_connection)
+
+        self.ws.send(json.dumps(_connection, indent=4))
+
+    def query_headset(self) -> None:
+        """Query the headset."""
+        logger.info('--- Querying the headset ---')
+
+        _query = query_headset(headset_id=self.headset_id)
+
+        logger.debug(_query)
+
+        self.ws.send(json.dumps(_query, indent=4))
+
+    def subscribe(self, streams: list[str]) -> None:
+        """Subscribe to one or more data stream.
+
+        Args:
+            streams (list[str]): The data streams to subscribe to.
+
+        Read More:
+            [subscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/subscribe)
+
+        """
+        logger.info('--- Subscribing to the headset ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='subscribe')
+
+        logger.debug(_request)
+
+        self.ws.send(json.dumps(_request, indent=4))
+
+    def unsubscribe(self, streams: list[str]) -> None:
+        """Unsubscribe from one or more data stream.
+
+        Args:
+            streams (list[str]): The data streams to unsubscribe from.
+
+        Read More:
+            [unsubscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/unsubscribe)
+
+        """
+        logger.info('--- Unsubscribing from the headset ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='unsubscribe')
+
+        logger.debug(_request)
+
+        self.ws.send(json.dumps(_request, indent=4))
+
+    def set_headset(self, headset_id: str) -> None:
+        """Set the headset ID.
+
+        Args:
+            headset_id (str): The headset ID.
+
+        """
+        self.headset_id = headset_id
+
+    def set_profile(self, profile_name: str) -> None:
+        """Set the profile name.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
+        self.profile_name = profile_name
+
     @property
     def ws(self) -> websocket.WebSocketApp:
         """WebSocketApp: The WebSocketApp object."""
         if self._ws is None:
-            raise ValueError(
-                'Cortex is not initialized. Call `open()` to initialize it.')
+            raise ValueError('Cortex is not initialized. Call `open()` to initialize it.')
         return self._ws
 
     @property
     def auth(self) -> str:
         """str: The authorization token."""
         if self._auth is None:
-            raise ValueError(
-                'No authorization token. Call `authorize()` to generate it.')
+            raise ValueError('No authorization token. Call `authorize()` to generate it.')
         return self._auth
