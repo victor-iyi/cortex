@@ -53,6 +53,7 @@ class Headset(Cortex):
     def on_open(self, *args: Any, **kwargs: Any) -> None:
         """Handle the open event."""
         logger.info('Websocket opened.')
+        self._start()
 
     def on_close(self, *args: Any, **kwargs: Any) -> None:
         """Handle the close event."""
@@ -380,3 +381,30 @@ class Headset(Cortex):
     def _handle_default(self, result: dict[str, Any]) -> None:
         logger.error('No handling for the result of response.')
         logger.debug(result)
+
+    def _start(self) -> None:
+        """Start and prepare the headset.
+
+        Starting up the headset involves:
+            Step 1:
+                Check access right. If user has not granted for the application,
+                `requestAccess` will be called
+
+            Step 2:
+                Authorize: to generate a Cortex access token which is required
+                parameter of many APIs.
+
+            Step 3:
+                Connect a headset. If no wanted headet is set, the first headset in
+                the list will be connected.
+                If you use EPOC Flex headset, you should connect the headset with a
+                proper mappings via EMOTIV Launcher first.
+
+            Step 4:
+                Create a working session with the connected headset.
+
+        """
+        self.has_access_right()
+        self.authorize()
+        self.connect()
+        self.create_session()

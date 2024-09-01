@@ -27,7 +27,7 @@ def stream_data(data: Mapping[str, Any], key: Literal['com', 'fac', 'eeg', 'mot'
         },
         'eeg': {
             # FIXME(victor-iyi): Possible bug.
-            'eeg': data['eeg'].pop(),  # remove markers
+            'eeg': data['eeg'],  # remove markers
             'time': data['time'],
         },
         'mot': {'mot': data['mot'], 'time': data['time']},
