@@ -1,546 +1,181 @@
+"""Cortex API.
+
+This module provides a Python interface to the Emotiv Cortex API.
+
+"""
+
+# pylint: disable=unused-argument
+import datetime
 import json
+import logging
 import os
 import ssl
 import threading
-import time
-import warnings
-from datetime import datetime
+from abc import abstractmethod
+from collections.abc import Mapping
+from datetime import datetime as dt
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import websocket
 from pydispatch import Dispatcher
 
-# define request id
-QUERY_HEADSET_ID = 1
-CONNECT_HEADSET_ID = 2
-REQUEST_ACCESS_ID = 3
-AUTHORIZE_ID = 4
-CREATE_SESSION_ID = 5
-SUB_REQUEST_ID = 6
-SETUP_PROFILE_ID = 7
-QUERY_PROFILE_ID = 8
-TRAINING_ID = 9
-DISCONNECT_HEADSET_ID = 10
-CREATE_RECORD_REQUEST_ID = 11
-STOP_RECORD_REQUEST_ID = 12
-EXPORT_RECORD_ID = 13
-INJECT_MARKER_REQUEST_ID = 14
-SENSITIVITY_REQUEST_ID = 15
-MENTAL_COMMAND_ACTIVE_ACTION_ID = 16
-MENTAL_COMMAND_BRAIN_MAP_ID = 17
-MENTAL_COMMAND_TRAINING_THRESHOLD = 18
-SET_MENTAL_COMMAND_ACTIVE_ACTION_ID = 19
-HAS_ACCESS_RIGHT_ID = 20
-GET_CURRENT_PROFILE_ID = 21
-GET_CORTEX_INFO_ID = 22
-UPDATE_MARKER_REQUEST_ID = 23
-UNSUB_REQUEST_ID = 24
-
-# define error_code
-ERR_PROFILE_ACCESS_DENIED = -32046
-
-# define warning code
-CORTEX_STOP_ALL_STREAMS = 0
-CORTEX_CLOSE_SESSION = 1
-USER_LOGIN = 2
-USER_LOGOUT = 3
-ACCESS_RIGHT_GRANTED = 9
-ACCESS_RIGHT_REJECTED = 10
-PROFILE_LOADED = 13
-PROFILE_UNLOADED = 14
-CORTEX_AUTO_UNLOAD_PROFILE = 15
-EULA_ACCEPTED = 17
-DISKSPACE_LOW = 19
-DISKSPACE_CRITICAL = 20
-HEADSET_CANNOT_CONNECT_TIMEOUT = 102
-HEADSET_DISCONNECTED_TIMEOUT = 103
-HEADSET_CONNECTED = 104
-HEADSET_CANNOT_WORK_WITH_BTLE = 112
-HEADSET_CANNOT_CONNECT_DISABLE_MOTION = 113
+from cortex.api.auth import access, authorize, get_info
+from cortex.api.headset import make_connection, query_headset, subscription
+from cortex.api.markers import inject_marker, update_marker
+from cortex.api.mental_command import action_sensitivity, active_action, brain_map, training_threshold
+from cortex.api.profile import current_profile, query_profile, setup_profile
+from cortex.api.record import (
+    config_opt_out,
+    create_record,
+    delete_record,
+    download_record_data,
+    export_record,
+    query_records,
+    record_infos,
+    stop_record,
+    update_record,
+)
+from cortex.api.session import create_session, update_session
+from cortex.api.train import trained_signature_actions, training, training_time
+from cortex.api.types import RecordQuery
+from cortex.consts import CA_CERTS
+from cortex.logging import logger
 
 
-class Cortex(Dispatcher):
-    _events_ = [
-        'inform_error',
-        'create_session_done',
-        'query_profile_done',
-        'load_unload_profile_done',
-        'save_profile_done',
-        'get_mc_active_action_done',
-        'mc_brainmap_done',
-        'mc_action_sensitivity_done',
-        'mc_training_threshold_done',
-        'create_record_done',
-        'stop_record_done',
-        'warn_cortex_stop_all_sub',
-        'inject_marker_done',
-        'update_marker_done',
-        'export_record_done',
-        'new_data_labels',
-        'new_com_data',
-        'new_fe_data',
-        'new_eeg_data',
-        'new_mot_data',
-        'new_dev_data',
-        'new_met_data',
-        'new_pow_data',
-        'new_sys_data',
-    ]
+class InheritEventsMeta(type):
+    """Metaclass to inherit events from base classes."""
+
+    # pylint: disable=bad-mcs-classmethod-argument
+    def __new__(cls, name: str, bases: tuple[Any], class_dict: dict[str, Any]) -> 'InheritEventsMeta':
+        """Create a new class."""
+        # Combine events from all base classes
+        events: list[str] = []
+        for base in bases:
+            if hasattr(base, '_events_'):
+                events.extend(base._events_)
+        # Add current class events
+        if '_events_' in class_dict:
+            events.extend(class_dict['_events_'])
+        class_dict['_events_'] = events
+        return type.__new__(cls, name, bases, class_dict)
+
+
+class Cortex(Dispatcher, metaclass=InheritEventsMeta):
+    """The Cortex class.
+
+    This class provides a Python interface to the Emotiv Cortex API.
+
+    """
+
+    __events__: ClassVar[list[str]] = []
 
     def __init__(
         self,
-        client_id: str = '',
-        client_secret: str = '',
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        *,
         debug_mode: bool = False,
-        **kwargs: Any,
+        session_id: str | None = None,
+        headset_id: str | None = None,
+        profile_name: str | None = None,
+        record_id: str | None = None,
+        debit: int | None = None,
+        license: str | None = None,  # pylint: disable=redefined-builtin
     ) -> None:
+        """Initialize Cortex.
+
+        Args:
+            client_id (str): The client ID of your Cortex application.
+            client_secret (str): The client secret of your Cortex application.
+
+        Keyword Args:
+            debug_mode (bool, optional): Whether to enable debug mode.
+            session_id(str, optional): The session id.
+            headset_id(str, optional): The headset id.
+            profile_name(str, optional): The profile name.
+            record_id(str, optional): The record id.
+            debit (int, optional): The number of sessions to debit from the license,
+                so that it can be spent locally without having to authorize again.
+                You need to debit the license only if you want to *activate a session*.
+                The default is 0.
+            license (str, optional): A licnese id. In most cases, you don't need to
+                specify the license id. Cortex will find the appropriate
+                license based on the client id.
+                Default is None.
+
+        """
+        super().__init__()
         self.client_id = os.environ.get('CLIENT_ID', client_id)
         self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
 
         if not self.client_id:
-            raise ValueError(
-                'Empty CLIENT_ID. Make sure to add CLIENT_ID to your environment variables.',
-            )
-
+            raise ValueError('No CLIENT_ID. Add it to the environment or pass it as an argument.')
         if not self.client_secret:
-            raise ValueError(
-                'Empty CLIENT_SECRET. Make sure to add CLIENT_SECRET to your environment variables.',
-            )
+            raise ValueError('No CLIENT_SECRET. Add it to the environment or pass it as an argument.')
+
+        if debug_mode:
+            logger.setLevel(logging.DEBUG)
 
         self.debug = debug_mode
+        self.session_id = session_id
+        self.headset_id = headset_id
+        self.profile_name = profile_name
+        self.record_id = record_id
+        self.debit = debit
+        self.license = license
 
-        self.session_id: str = kwargs.get('session_id', '')
-        self.headset_id: str = kwargs.get('headset_id', '')
-        self.debit: int = kwargs.get('debit', 10)
-        self.license: str = kwargs.get('license', '')
+        self._ws: websocket.WebSocketApp | None = None
+        self._thread: threading.Thread | None = None
+        self._auth: str | None = None
 
     def open(self) -> None:
-        url = 'wss://localhost:6868'
-        # websocket.enableTrace(True)
-        self.ws = websocket.WebSocketApp(
-            url,
-            on_message=self.on_message,
-            on_open=self.on_open,
-            on_error=self.on_error,
-            on_close=self.on_close,
+        """Open a connection to Cortex."""
+        logger.info('Opening connection to Cortex.')
+        url: str = 'wss://localhost:6868'
+        self._ws = websocket.WebSocketApp(
+            url, on_open=self.on_open, on_message=self.on_message, on_error=self.on_error, on_close=self.on_close
         )
-        thread_name = f'WebsockThread:-{datetime.utcnow():%Y%m%d%H%M%S}'
+        thread_name = f'WebSocketThread-{dt.now(datetime.UTC):%Y%m%d%H%M%S}'
 
-        # As default, a Emotiv self-signed certificate is required.
-        # If you don't want to use the certificate,
-        # please replace by the below line  by sslopt={'cert_reqs': ssl.CERT_NONE}
-        ca_certs = Path(__file__).resolve().parent.parent / 'certificates/rootCA.pem'
-        if ca_certs.exists():
-            sslopt = {
-                'ca_certs': ca_certs,
-                'cert_reqs': ssl.CERT_REQUIRED,
-            }
+        sslopt: dict[str, Path | ssl.VerifyMode] = {}
+        if CA_CERTS.exists():
+            sslopt = {'ca_certs': CA_CERTS, 'cert_reqs': ssl.CERT_REQUIRED}
         else:
-            warnings.warn(
-                'No certificate file found. Please check the certificate folder.',
-            )
+            logger.warning('No certificate found. Please check the certificates folder.')
             sslopt = {'cert_reqs': ssl.CERT_NONE}
 
-        self.websock_thread = threading.Thread(
-            target=self.ws.run_forever,
-            args=(None, sslopt),
-            name=thread_name,
-        )
-        self.websock_thread.start()
-        self.websock_thread.join()
+        self._thread = threading.Thread(target=self._ws.run_forever, name=thread_name, args=(None, sslopt))
+        self._thread.start()
+        self._thread.join()
 
     def close(self) -> None:
+        """Close the connection to Cortex."""
         self.ws.close()
+        logger.info('Closed connection to Cortex.')
 
-    def set_wanted_headset(self, headset_id: str) -> None:
-        self.headset_id = headset_id
+    @abstractmethod
+    def on_message(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the message."""
 
-    def set_wanted_profile(self, profile_name: str) -> None:
-        self.profile_name = profile_name
-
+    @abstractmethod
     def on_open(self, *args: Any, **kwargs: Any) -> None:
-        print('websocket opened')
-        self.do_prepare_steps()
+        """Handle the open event."""
 
-    def on_error(self, *args: Any) -> None:
-        if len(args) == 2:
-            print(str(args[1]))
-
+    @abstractmethod
     def on_close(self, *args: Any, **kwargs: Any) -> None:
-        print('on_close')
-        print(args[1])
+        """Handle the close event."""
 
-    def handle_result(self, response: dict[str, Any]) -> None:  # noqa: C901
-        if self.debug:
-            print(response)
-
-        req_id = response['id']
-        result_dic = response['result']
-
-        # already has access.
-        if req_id == HAS_ACCESS_RIGHT_ID:
-            access_granted: bool = result_dic['accessGranted']
-            if access_granted:
-                # authorize
-                self.authorize()
-            else:
-                # request access
-                self.request_access()
-        # request access.
-        elif req_id == REQUEST_ACCESS_ID:
-            access_granted = result_dic['accessGranted']
-
-            if access_granted:
-                # authorize
-                self.authorize()
-            else:
-                # wait approve from Emotiv Launcher
-                msg = result_dic['message']
-                warnings.warn(msg)
-        # authorize.
-        elif req_id == AUTHORIZE_ID:
-            print('Authorize successfully.')
-            self.auth = result_dic['cortexToken']
-            # query headsets
-            self.query_headset()
-        # query headset.
-        elif req_id == QUERY_HEADSET_ID:
-            self.headset_list = result_dic
-            found_headset = False
-            headset_status = ''
-            for headset in self.headset_list:
-                hs_id = headset['id']
-                status = headset['status']
-                connected_by = headset['connectedBy']
-                print(f'headsetId: {hs_id}, status: {status}, connected_by: {connected_by}')
-                if not self.headset_id and self.headset_id == hs_id:
-                    found_headset = True
-                    headset_status = status
-
-            # no headset available.
-            if len(self.headset_list) == 0:
-                warnings.warn('No headset available. Please turn on a headset.')
-            # no headset found.
-            elif not self.headset_id:
-                # set first headset is default headset
-                self.headset_id = self.headset_list[0]['id']
-                # call query headet again
-                self.query_headset()
-            # headset found.
-            elif found_headset:
-                if headset_status == 'connected':
-                    # create session with the headset
-                    self.create_session()
-                elif headset_status == 'discovered':
-                    self.connect_headset(self.headset_id)
-                elif headset_status == 'connecting':
-                    # wait 3 seconds and query headset again
-                    time.sleep(3)
-                    self.query_headset()
-                else:
-                    warnings.warn(
-                        f'query_headset resp: Invalid connection status {headset_status}',
-                    )
-            elif not found_headset:
-                warnings.warn(
-                    f'Can not found the headset {self.headset_id}. Please make sure the id is correct.',
-                )
-
-        # create session.
-        elif req_id == CREATE_SESSION_ID:
-            self.session_id = result_dic['id']
-            print(f'The session {self.session_id} is created successfully.')
-            self.emit('create_session_done', data=self.session_id)
-
-        # subscribe to data stream.
-        elif req_id == SUB_REQUEST_ID:
-            # handle data label
-            for stream in result_dic['success']:
-                stream_name = stream['streamName']
-                stream_labels = stream['cols']
-                print(
-                    f'The data stream {stream_name} is subscribed successfully.',
-                )
-                # ignore com, fac and sys data label because they are handled in on_new_data
-                if stream_name != 'com' and stream_name != 'fac':
-                    self.extract_data_labels(stream_name, stream_labels)
-
-            for stream in result_dic['failure']:
-                stream_name = stream['streamName']
-                stream_msg = stream['message']
-                print(
-                    f'The data stream {stream_name} is subscribed unsuccessfully. Because: {stream_msg}',
-                )
-
-        # unsubscribe to data stream.
-        elif req_id == UNSUB_REQUEST_ID:
-            for stream in result_dic['success']:
-                stream_name = stream['streamName']
-                print(
-                    f'The data stream {stream_name} is unsubscribed successfully.',
-                )
-
-            for stream in result_dic['failure']:
-                stream_name = stream['streamName']
-                stream_msg = stream['message']
-                print(
-                    f'The data stream {stream_name} is unsubscribed unsuccessfully. Because: {stream_msg}',
-                )
-
-        # Query profile.
-        elif req_id == QUERY_PROFILE_ID:
-            profile_list = []
-            for headset in result_dic:
-                name = headset['name']
-                profile_list.append(name)
-            self.emit('query_profile_done', data=profile_list)
-
-        # Setup profile.
-        elif req_id == SETUP_PROFILE_ID:
-            action = result_dic['action']
-            if action == 'create':
-                profile_name = result_dic['name']
-                if profile_name == self.profile_name:
-                    # load profile
-                    self.setup_profile(profile_name, 'load')
-            elif action == 'load':
-                print('load profile successfully')
-                self.emit('load_unload_profile_done', isLoaded=True)
-            elif action == 'unload':
-                self.emit('load_unload_profile_done', isLoaded=False)
-            elif action == 'save':
-                self.emit('save_profile_done')
-
-        # Get current profile.
-        elif req_id == GET_CURRENT_PROFILE_ID:
-            print(result_dic)
-            name = result_dic['name']
-            if name is None:
-                # no profile loaded with the headset
-                print(
-                    f'get_current_profile: no profile loaded with the headset {self.headset_id}',
-                )
-                self.setup_profile(self.profile_name, 'load')
-            else:
-                loaded_by_this_app = result_dic['loadedByThisApp']
-                print(
-                    f'get current profile response: {name}, loadedByThisApp: {loaded_by_this_app}',
-                )
-                if name != self.profile_name:
-                    warnings.warn(
-                        f'There is profile {name} is loaded for headset {self.headset_id}',
-                    )
-                elif loaded_by_this_app:
-                    self.emit('load_unload_profile_done', isLoaded=True)
-                else:
-                    self.setup_profile(self.profile_name, 'unload')
-                    # warnings.warn('The profile ' + name + ' is loaded by other applications')
-
-        elif req_id == DISCONNECT_HEADSET_ID:
-            print(f'Disconnect headset {self.headset_id}')
-            self.headset_id = ''
-        elif req_id == MENTAL_COMMAND_ACTIVE_ACTION_ID:
-            self.emit('get_mc_active_action_done', data=result_dic)
-        elif req_id == MENTAL_COMMAND_TRAINING_THRESHOLD:
-            self.emit('mc_training_threshold_done', data=result_dic)
-        elif req_id == MENTAL_COMMAND_BRAIN_MAP_ID:
-            self.emit('mc_brainmap_done', data=result_dic)
-        elif req_id == SENSITIVITY_REQUEST_ID:
-            self.emit('mc_action_sensitivity_done', data=result_dic)
-        elif req_id == CREATE_RECORD_REQUEST_ID:
-            self.record_id = result_dic['record']['uuid']
-            self.emit('create_record_done', data=result_dic['record'])
-        elif req_id == STOP_RECORD_REQUEST_ID:
-            self.emit('stop_record_done', data=result_dic['record'])
-        elif req_id == EXPORT_RECORD_ID:
-            # handle data lable
-            success_export = []
-            for record in result_dic['success']:
-                record_id = record['recordId']
-                success_export.append(record_id)
-
-            for record in result_dic['failure']:
-                record_id = record['recordId']
-                failure_msg = record['message']
-                print(
-                    f'export_record resp failure cases: {record_id}: {failure_msg}',
-                )
-
-            self.emit('export_record_done', data=success_export)
-        elif req_id == INJECT_MARKER_REQUEST_ID:
-            self.emit('inject_marker_done', data=result_dic['marker'])
-        elif req_id == INJECT_MARKER_REQUEST_ID:
-            self.emit('update_marker_done', data=result_dic['marker'])
-        else:
-            print(f'No handling for response of request {req_id}')
-
-    def handle_error(self, recv_dic: dict[str, Any]) -> None:
-        req_id = recv_dic['id']
-        print(f'handle_error: request Id {req_id}')
-        self.emit('inform_error', error_data=recv_dic['error'])
-
-    def handle_warning(self, warning_resp: dict[str, Any]) -> None:
-        if self.debug:
-            print(warning_resp)
-        warning_code = warning_resp['code']
-        warning_msg = warning_resp['message']
-        if warning_code == ACCESS_RIGHT_GRANTED:
-            # call authorize again
-            self.authorize()
-        elif warning_code == HEADSET_CONNECTED:
-            # query headset again then create session
-            self.query_headset()
-        elif warning_code == CORTEX_AUTO_UNLOAD_PROFILE:
-            self.profile_name = ''
-        elif warning_code == CORTEX_STOP_ALL_STREAMS:
-            # print(warning_msg['behavior'])
-            session_id = warning_msg['sessionId']
-            if session_id == self.session_id:
-                self.emit('warn_cortex_stop_all_sub', data=session_id)
-                self.session_id = ''
-
-    def handle_stream_data(self, result_dic: dict[str, Any]) -> None:
-        if result_dic.get('com') is not None:
-            com_data = {}
-            com_data['action'] = result_dic['com'][0]
-            com_data['power'] = result_dic['com'][1]
-            com_data['time'] = result_dic['time']
-            self.emit('new_com_data', data=com_data)
-
-        elif result_dic.get('fac') is not None:
-            fe_data = {}
-            fe_data['eyeAct'] = result_dic['fac'][0]  # eye action
-            fe_data['uAct'] = result_dic['fac'][1]  # upper action
-            fe_data['uPow'] = result_dic['fac'][2]  # upper action power
-            fe_data['lAct'] = result_dic['fac'][3]  # lower action
-            fe_data['lPow'] = result_dic['fac'][4]  # lower action power
-            fe_data['time'] = result_dic['time']
-            self.emit('new_fe_data', data=fe_data)
-
-        elif result_dic.get('eeg') is not None:
-            eeg_data = {}
-            eeg_data['eeg'] = result_dic['eeg']
-            eeg_data['eeg'].pop()  # remove markers
-            eeg_data['time'] = result_dic['time']
-            self.emit('new_eeg_data', data=eeg_data)
-
-        elif result_dic.get('mot') is not None:
-            mot_data = {}
-            mot_data['mot'] = result_dic['mot']
-            mot_data['time'] = result_dic['time']
-            self.emit('new_mot_data', data=mot_data)
-
-        elif result_dic.get('dev') is not None:
-            dev_data = {}
-            dev_data['signal'] = result_dic['dev'][1]
-            dev_data['dev'] = result_dic['dev'][2]
-            dev_data['batteryPercent'] = result_dic['dev'][3]
-            dev_data['time'] = result_dic['time']
-            self.emit('new_dev_data', data=dev_data)
-
-        elif result_dic.get('met') is not None:
-            met_data = {}
-            met_data['met'] = result_dic['met']
-            met_data['time'] = result_dic['time']
-            self.emit('new_met_data', data=met_data)
-
-        elif result_dic.get('pow') is not None:
-            pow_data = {}
-            pow_data['pow'] = result_dic['pow']
-            pow_data['time'] = result_dic['time']
-            self.emit('new_pow_data', data=pow_data)
-
-        elif result_dic.get('sys') is not None:
-            sys_data = result_dic['sys']
-            self.emit('new_sys_data', data=sys_data)
-
-        else:
-            print(result_dic)
-
-    def on_message(self, *args: Any) -> None:
-        recv_dic = json.loads(args[1])
-        if 'sid' in recv_dic:
-            self.handle_stream_data(recv_dic)
-        elif 'result' in recv_dic:
-            self.handle_result(recv_dic)
-        elif 'error' in recv_dic:
-            self.handle_error(recv_dic)
-        elif 'warning' in recv_dic:
-            self.handle_warning(recv_dic['warning'])
-        else:
-            raise KeyError
-
-    def query_headset(self) -> None:
-        """Shows details of any headsets connected to the device via USB
-        dongle, USB cable, or Bluetooth.
-
-        You can query a specific headset by its id, or you can specify a wildcard
-        for partial matching.
-
-        Read More:
-            [queryHeadsets](https://emotiv.gitbook.io/cortex-api/headset/queryheadsets)
-
-        """
-        print('query headset --------------------------------')
-        query_headset_request = {
-            'jsonrpc': '2.0',
-            'id': QUERY_HEADSET_ID,
-            'method': 'queryHeadsets',
-            'params': {},
-        }
-        if self.debug:
-            print(
-                'queryHeadsets request\n',
-                json.dumps(query_headset_request, indent=4),
-            )
-
-        self.ws.send(json.dumps(query_headset_request, indent=4))
-
-    def connect_headset(self, headset_id: str) -> None:
-        """Connect to a headset.
-
-        It can also refresh the list of available Bluetooth headsets returned by
-        `queryHeadsets`. Please note that connecting and disconnecting a headset
-        can take a few seconds. Before you call `createSession` on a headset,
-        make sure that Cortex is connected to this headset. You can use
-        `queryHeadsets` to check the connection status of the headset.
-
-        Args:
-            headset_id (str): The id of the headset to connect to.
-
-        See Also:
-            `query_headset`
-            `create_session`
-
-        Read More:
-            [controlDevice](https://emotiv.gitbook.io/cortex-api/headset/controldevice)
-
-        """
-        print('connect headset --------------------------------')
-        connect_headset_request = {
-            'jsonrpc': '2.0',
-            'id': CONNECT_HEADSET_ID,
-            'method': 'controlDevice',
-            'params': {
-                'command': 'connect',
-                'headset': headset_id,
-            },
-        }
-        if self.debug:
-            print(
-                'controlDevice request\n',
-                json.dumps(connect_headset_request, indent=4),
-            )
-
-        self.ws.send(json.dumps(connect_headset_request, indent=4))
+    @abstractmethod
+    def on_error(self, *args: Any, **kwargs: Any) -> None:
+        """Handle the error."""
 
     def request_access(self) -> None:
-        """Request user approval for the current application through [EMOTIV
-        Launcher].
+        """Request user approval for the current application through [EMOTIV Launcher].
 
-        When your application calls this method for the first time, [EMOTIV Launcher]
-        displays a message to approve your application.
+        Notes:
+            When your application calls this method for the first time,
+            [EMOTIV Launcher] displays a message to approve your application.
 
         [Emotiv Launcher]: https://emotiv.gitbook.io/emotiv-launcher/
 
@@ -548,662 +183,726 @@ class Cortex(Dispatcher):
             [requestAccess](https://emotiv.gitbook.io/cortex-api/authentication/requestaccess)
 
         """
-        print('request access --------------------------------')
-        request_access_request = {
-            'jsonrpc': '2.0',
-            'method': 'requestAccess',
-            'params': {
-                'clientId': self.client_id,
-                'clientSecret': self.client_secret,
-            },
-            'id': REQUEST_ACCESS_ID,
-        }
+        logger.info('--- Requesting access ---')
 
-        self.ws.send(json.dumps(request_access_request, indent=4))
+        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='requestAccess')
+
+        logger.debug(_access)
+
+        self.ws.send(json.dumps(_access, indent=4))
 
     def has_access_right(self) -> None:
-        """Check if your application has been granted access rights in [EMOTIV
-        Launcher].
+        """Request user approval for the current application through [EMOTIV Launcher].
+
+        Notes:
+            When your application calls this method for the first time,
+            [EMOTIV Launcher] displays a message to approve your application.
 
         [Emotiv Launcher]: https://emotiv.gitbook.io/emotiv-launcher/
 
-        See Also:
-            `request_access`
-
         Read More:
-            [hasAccessRight](https://emotiv.gitbook.io/cortex-api/authentication/hasaccessright)
+            [requestAccess](https://emotiv.gitbook.io/cortex-api/authentication/requestaccess)
 
         """
-        print('check has access right --------------------------------')
-        has_access_request = {
-            'jsonrpc': '2.0',
-            'method': 'hasAccessRight',
-            'params': {
-                'clientId': self.client_id,
-                'clientSecret': self.client_secret,
-            },
-            'id': HAS_ACCESS_RIGHT_ID,
-        }
-        self.ws.send(json.dumps(has_access_request, indent=4))
+        logger.info('--- Requesting access right ---')
+
+        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='hasAccessRight')
+
+        logger.debug(_access)
+
+        self.ws.send(json.dumps(_access, indent=4))
 
     def authorize(self) -> None:
         """This method is to generate a Cortex access token.
 
-        Most of the methods of the Cortex API require this token as a parameter.
-        Application can specify the license key and the amount of sessions to be
-        debited from the license and use them locally.
+        Notes:
+            Most of the methods of the Cortex API require this token as a
+            parameter. Application can specify the license key and the amount
+            of sessions to be debited from the license and use them locally.
 
         Read More:
             [authorize](https://emotiv.gitbook.io/cortex-api/authentication/authorize)
 
         """
-        print('authorize --------------------------------')
-        authorize_request = {
-            'jsonrpc': '2.0',
-            'method': 'authorize',
-            'params': {
-                'clientId': self.client_id,
-                'clientSecret': self.client_secret,
-                'license': self.license,
-                'debit': self.debit,
-            },
-            'id': AUTHORIZE_ID,
-        }
+        logger.info('--- Authorizing application ---')
 
-        if self.debug:
-            print('auth request \n', json.dumps(authorize_request, indent=4))
+        _authorize = authorize(
+            client_id=self.client_id, client_secret=self.client_secret, license=self.license, debit=self.debit
+        )
 
-        self.ws.send(json.dumps(authorize_request))
+        logger.debug(_authorize)
+
+        self.ws.send(json.dumps(_authorize, indent=4))
 
     def create_session(self) -> None:
-        """Open a session with an EMOTIV headset.
+        """Open a session with an Emotiv headset.
 
-        To open a session with a headset, the status of the headset must be
-        "connected". If the status is "discovered", then you must call `controlDevice`
-        to connect the headset.
-        You cannot open a session with a headset connected by a USB cable.
-        You can use `queryHeadsets` to check the status and connection type of the headset.
+        Notes:
+            To open a session with a headset, the status of the headset must be
+            "connected". If the status is "discovered", then you must call
+            `controlDevice` to connect the headset.
+            You cannot open a session with a headset connected by a USB cable.
+            You can use `queryHeadsets` to check the status and connection type
+            of the headset.
 
         Read More:
             [createSession](https://emotiv.gitbook.io/cortex-api/session/createsession)
 
         """
-        if self.session_id != '':
-            warnings.warn(f'There is existed session {self.session_id}')
+        logger.info('--- Creating session ---')
+
+        if self.session_id is not None:
+            logger.warning(f'Session already exists. {self.session_id}')
             return
 
-        print('create session --------------------------------')
-        create_session_request = {
-            'jsonrpc': '2.0',
-            'id': CREATE_SESSION_ID,
-            'method': 'createSession',
-            'params': {
-                'cortexToken': self.auth,
-                'headset': self.headset_id,
-                'status': 'active',
-            },
-        }
+        _session = create_session(auth=self.auth, headset_id=self.headset_id, status='active')
 
-        if self.debug:
-            print(
-                'create session request\n',
-                json.dumps(create_session_request, indent=4),
-            )
+        logger.debug(_session)
 
-        self.ws.send(json.dumps(create_session_request))
+        self.ws.send(json.dumps(_session, indent=4))
 
     def close_session(self) -> None:
-        """Close a session with an EMOTIV headset.
+        """Close a session with an Emotiv headset.
 
         Read More:
-            [updateSession](https://emotiv.gitbook.io/cortex-api/session/updatesession)
+            [updateSession](https://emotiv.gitbook.io/cortex-api/session/updateSession)
 
         """
-        print('close session --------------------------------')
-        close_session_request = {
-            'jsonrpc': '2.0',
-            'id': CREATE_SESSION_ID,
-            'method': 'updateSession',
-            'params': {
-                'cortexToken': self.auth,
-                'session': self.session_id,
-                'status': 'close',
-            },
-        }
+        logger.info('--- Closing session ---')
+        _session = update_session(auth=self.auth, session_id=self.session_id, status='close')
 
-        self.ws.send(json.dumps(close_session_request))
+        logger.debug(_session)
+
+        self.ws.send(json.dumps(_session, indent=4))
 
     def get_cortex_info(self) -> None:
-        """Return information about the Cortex service, like its version and
-        build number.
+        """Return info about the Cortex service, like it's version and build number.
 
         Read More:
             [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)
 
         """
-        print('get cortex version --------------------------------')
-        get_cortex_info_request = {
-            'jsonrpc': '2.0',
-            'method': 'getCortexInfo',
-            'id': GET_CORTEX_INFO_ID,
-        }
+        logger.info('--- Getting Cortex info ---')
 
-        self.ws.send(json.dumps(get_cortex_info_request))
+        _info = get_info()
 
-    def do_prepare_steps(self) -> None:
-        """Prepare steps include:
+        logger.debug(_info)
 
-        Step 1:
-          Check access right. If user has not granted for the application,
-          `requestAccess` will be called
+        self.ws.send(json.dumps(_info, indent=4))
 
-        Step 2:
-          Authorize: to generate a Cortex access token which is required
-          parameter of many APIs.
+    def connect(self, mappings: dict[str, str] | None = None, connection_type: str | None = None) -> None:
+        """Connect to the headset.
 
-        Step 3:
-          Connect a headset. If no wanted headet is set, the first headset in
-          the list will be connected.
-          If you use EPOC Flex headset, you should connect the headset with a
-          proper mappings via EMOTIV Launcher first.
-
-        Step 4:
-          Create a working session with the connected headset.
-
-        Returns:
-          None
+        Args:
+            mappings (Mapping[str, str], optional): The mappings.
+            connection_type (str, optional): The connection type.
 
         """
-        print('do_prepare_steps--------------------------------')
-        # check access right
-        self.has_access_right()
+        logger.info('--- Connecting to the headset ---')
 
-    def disconnect_headset(self) -> None:
-        """Disconnect a headset.
+        _connection = make_connection(
+            command='connect', headset_id=self.headset_id, mappings=mappings, connection_type=connection_type
+        )
 
-        Read More:
-            [controlDevice](https://emotiv.gitbook.io/cortex-api/headset/controldevice)
+        logger.debug(_connection)
+
+        self.ws.send(json.dumps(_connection, indent=4))
+
+    def disconnect(self, mappings: Mapping[str, str] | None = None, connection_type: str | None = None) -> None:
+        """Disconnect from the headset.
+
+        Args:
+            mappings (Mapping[str, str], optional): The mappings.
+            connection_type (str, optional): The connection type.
 
         """
-        print('disconnect headset --------------------------------')
-        disconnect_headset_request = {
-            'jsonrpc': '2.0',
-            'id': DISCONNECT_HEADSET_ID,
-            'method': 'controlDevice',
-            'params': {
-                'command': 'disconnect',
-                'headset': self.headset_id,
-            },
-        }
+        logger.info('--- Disconnecting from the headset ---')
 
-        self.ws.send(json.dumps(disconnect_headset_request))
+        _connection = make_connection(
+            command='disconnect', headset_id=self.headset_id, mappings=mappings, connection_type=connection_type
+        )
 
-    def sub_request(self, streams: list[str]) -> None:
+        logger.debug(_connection)
+
+        self.ws.send(json.dumps(_connection, indent=4))
+
+    def query_headset(self) -> None:
+        """Query the headset."""
+        logger.info('--- Querying the headset ---')
+
+        _query = query_headset(headset_id=self.headset_id)
+
+        logger.debug(_query)
+
+        self.ws.send(json.dumps(_query, indent=4))
+
+    def subscribe(self, streams: list[str]) -> None:
         """Subscribe to one or more data stream.
 
         Args:
-            streams (list[str]): list of data stream you wan to subscribe to.
+            streams (list[str]): The data streams to subscribe to.
 
         Read More:
             [subscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/subscribe)
 
         """
-        print('subscribe request --------------------------------')
-        sub_request_json = {
-            'jsonrpc': '2.0',
-            'method': 'subscribe',
-            'params': {
-                'cortexToken': self.auth,
-                'session': self.session_id,
-                'streams': streams,
-            },
-            'id': SUB_REQUEST_ID,
-        }
-        if self.debug:
-            print(
-                'subscribe request\n',
-                json.dumps(sub_request_json, indent=4),
-            )
+        logger.info('--- Subscribing to the headset ---')
 
-        self.ws.send(json.dumps(sub_request_json))
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
 
-    def unsub_request(self, streams: list[str]) -> None:
-        """Unsubscribe to one or more data stream.
+        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='subscribe')
+
+        logger.debug(_request)
+
+        self.ws.send(json.dumps(_request, indent=4))
+
+    def unsubscribe(self, streams: list[str]) -> None:
+        """Unsubscribe from one or more data stream.
 
         Args:
-            streams (list[str]): list of data stream you wan to unsubscribe to.
+            streams (list[str]): The data streams to unsubscribe from.
 
         Read More:
             [unsubscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/unsubscribe)
 
         """
-        print('unsubscribe request --------------------------------')
-        unsub_request_json = {
-            'jsonrpc': '2.0',
-            'method': 'unsubscribe',
-            'params': {
-                'cortexToken': self.auth,
-                'session': self.session_id,
-                'streams': streams,
-            },
-            'id': UNSUB_REQUEST_ID,
-        }
-        if self.debug:
-            print(
-                'unsubscribe request\n',
-                json.dumps(unsub_request_json, indent=4),
-            )
+        logger.info('--- Unsubscribing from the headset ---')
 
-        self.ws.send(json.dumps(unsub_request_json))
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
 
-    def extract_data_labels(self, stream_name: str, stream_cols: list[str]) -> None:
-        """Extract data labels from a data stream.
+        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='unsubscribe')
 
-        Args:
-            stream_name (str): The name of the stream.
-            stream_cols (list[str]): The list of columns that are part of this stream.
+        logger.debug(_request)
 
-        Read More:
-            [subscribe](https://emotiv.gitbook.io/cortex-api/data-subscription/subscribe)
-
-        """
-        labels = {}
-        labels['streamName'] = stream_name
-
-        data_labels = []
-        if stream_name == 'eeg':
-            # remove MARKERS
-            data_labels = stream_cols[:-1]
-        elif stream_name == 'dev':
-            # get cq header column except battery, signal and battery percent
-            data_labels = stream_cols[2]  # type: ignore[assignment]
-        else:
-            data_labels = stream_cols
-
-        labels['labels'] = data_labels  # type: ignore[assignment]
-        print(labels)
-        self.emit('new_data_labels', data=labels)
+        self.ws.send(json.dumps(_request, indent=4))
 
     def query_profile(self) -> None:
-        print('query profile --------------------------------')
-        query_profile_json = {
-            'jsonrpc': '2.0',
-            'method': 'queryProfile',
-            'params': {
-                'cortexToken': self.auth,
-            },
-            'id': QUERY_PROFILE_ID,
-        }
+        """Query the profile."""
+        logger.info('--- Querying the profile ---')
 
-        if self.debug:
-            print(
-                'query profile request\n',
-                json.dumps(query_profile_json, indent=4),
-            )
-            print('\n')
+        _query = query_profile(auth=self.auth)
 
-        self.ws.send(json.dumps(query_profile_json))
+        logger.debug(_query)
+
+        self.ws.send(json.dumps(_query, indent=4))
 
     def get_current_profile(self) -> None:
-        print('get current profile:')
-        get_profile_json = {
-            'jsonrpc': '2.0',
-            'method': 'getCurrentProfile',
-            'params': {
-                'cortexToken': self.auth,
-                'headset': self.headset_id,
-            },
-            'id': GET_CURRENT_PROFILE_ID,
-        }
+        """Get the current profile."""
+        logger.info('--- Getting the current profile ---')
 
-        if self.debug:
-            print(
-                'get current profile json:\n',
-                json.dumps(get_profile_json, indent=4),
-            )
-            print('\n')
+        if not self.headset_id:
+            raise ValueError('No headset ID. Please connect to the headset first.')
 
-        self.ws.send(json.dumps(get_profile_json))
+        _profile = current_profile(auth=self.auth, headset_id=self.headset_id)
+
+        logger.debug(_profile)
+
+        self.ws.send(json.dumps(_profile, indent=4))
 
     def setup_profile(
         self,
-        profile_name: str,
         status: Literal['create', 'load', 'unload', 'save', 'rename', 'delete'],
+        profile_name: str,
+        *,
+        new_profile_name: str | None = None,
     ) -> None:
-        print('setup profile: ' + status + ' -------------------------------- ')
-        setup_profile_json = {
-            'jsonrpc': '2.0',
-            'method': 'setupProfile',
-            'params': {
-                'cortexToken': self.auth,
-                'headset': self.headset_id,
-                'profile': profile_name,
-                'status': status,
-            },
-            'id': SETUP_PROFILE_ID,
-        }
+        """Setup a profile.
 
-        if self.debug:
-            print(
-                'setup profile json:\n',
-                json.dumps(setup_profile_json, indent=4),
-            )
-            print('\n')
+        Args:
+            status (Literal['create', 'load', 'unload', 'save', 'rename', 'delete']): The status of the profile.
+            profile_name (str): The profile name.
 
-        self.ws.send(json.dumps(setup_profile_json))
+        Keyword Args:
+            new_profile_name (str, optional): The new profile name.
+                Only if the status is "rename".
+
+        """
+        logger.info(f'--- {status.title()} the profile: {profile_name} ---')
+
+        # Update self.profile_name if the status is 'create' or 'rename'.
+        if status == 'create':
+            self.profile_name = profile_name
+        elif status == 'rename' and new_profile_name is not None:
+            self.profile_name = new_profile_name
+
+        _profile = setup_profile(
+            auth=self.auth,
+            status=status,
+            profile_name=profile_name,
+            headset_id=self.headset_id,
+            new_profile_name=new_profile_name,
+        )
+
+        logger.debug(_profile)
+
+        self.ws.send(json.dumps(_profile, indent=4))
+
+    def create_record(self, title: str, **kwargs: str | list[str] | int) -> None:  # noqa: D417
+        """Create a record.
+
+        Args:
+            title (str): The title of the record.
+
+        Keyword Args:
+            description (str): The description of the record.
+            subject_name (str): The name of the subject.
+            tags (list[str]): The tags of the record.
+            experiment_id (int): The experiment ID.
+
+        """
+        if len(title) == 0:
+            logger.warning('Empty record title. Please fill the record title.')
+            # close socket.
+            self.close()
+            return
+
+        logger.info(f'--- Creating a record: {title} ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _record = create_record(auth=self.auth, session_id=self.session_id, title=title, **kwargs)
+
+        logger.debug(_record)
+
+        self.ws.send(json.dumps(_record, indent=4))
+
+    def stop_record(self) -> None:
+        """Stop the record."""
+        logger.info('--- Stopping the record ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _record = stop_record(auth=self.auth, session_id=self.session_id)
+
+        logger.debug(_record)
+
+        self.ws.send(json.dumps(_record, indent=4))
+
+    def update_record(self, record_id: str, **kwargs: str | list[str]) -> None:  # noqa: D417
+        """Update a record.
+
+        Args:
+            record_id (str): The record ID.
+
+        Keyword Args:
+            title (str): The title of the record.
+            description (str): The description of the record.
+            tags (list[str]): The tags of the record.
+
+        """
+        logger.info(f'--- Updating a record {record_id} ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _record = update_record(auth=self.auth, record_id=record_id, **kwargs)
+
+        logger.debug(_record)
+
+        self.ws.send(json.dumps(_record, indent=4))
+
+    def delete_record(self, records: list[str]) -> None:
+        """Delete one or more records.
+
+        Args:
+            records (list[str]): The record IDs.
+
+        """
+        logger.info('--- Deleting records ---')
+
+        _record = delete_record(auth=self.auth, records=records)
+
+        logger.debug(_record)
+
+        self.ws.send(json.dumps(_record, indent=4))
+
+    def export_record(  # noqa: D417
+        self,
+        record_ids: list[str],
+        folder: str | Path,
+        stream_types: list[str],
+        # pylint: disable-next=redefined-builtin,implicit-str-concat
+        format: Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV'],
+        **kwargs: str | list[str] | bool,
+    ) -> None:
+        """Export one or more records.
+
+        Args:
+            record_ids (list[str]): The record IDs.
+            folder (str | Path): The folder to save the records.
+            stream_types (list[str]): The stream types.
+            format (Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV']): The format.
+
+        Keyword Args:
+            version (Literal['V1', 'V2']): The version of the CSV format.
+                 If the format is "EDF", then you must omit this parameter.
+                 If the format is "CSV", then this parameter must be "V1" or "V2".
+            license_ids (list[str], optional): The default value is an empty list,
+                 which means that you can only export the records created by your app.
+            include_demographics (bool, optional): If `true` the the exported JSON
+                 file will include the demographic data of the user.
+            include_survey (bool, optional): If `true` the the exported JSON file
+                 will include the survey data of the record.
+            include_marker_extra_infos (bool, optional): If `true` the the markers of
+                 the records will be exported to a CSV file.
+            include_deprecated_pm (bool, optional): If `true` then deprecated performance
+                 metrics (i.e. Focus) will be exported.
+
+        """
+        if len(str(folder)) == 0:
+            logger.warning('Invalid folder path. Please set a writeable destination folder for exporting data.')
+            # close socket.
+            self.close()
+            return
+
+        logger.info('--- Exporting records ---')
+
+        _export = export_record(
+            auth=self.auth,
+            record_ids=record_ids,
+            folder=str(folder),
+            stream_types=stream_types,
+            format=format,
+            **kwargs,
+        )
+
+        logger.debug(_export)
+
+        self.ws.send(json.dumps(_export, indent=4))
+
+    def query_records(  # noqa: D417
+        self, query: RecordQuery, order_by: list[dict[str, Literal['ASC', 'DESC']]], **kwargs: int | bool
+    ) -> None:
+        """Query records.
+
+        Args:
+            query (RecordQuery): The query parameters.
+            order_by (list[dict[str, Literal['ASC', 'DESC']]]): The order by parameters.
+
+        Keyword Args:
+            limit (int): The maximum number of records to return.
+            offset (int): The number of records to skip.
+            include_markers (bool): If `true` the the markers of the records will be included.
+            include_sync_status_info (bool): If `true` the the sync status of the records will be included.
+
+        """
+        logger.info('--- Querying records ---')
+
+        _query = query_records(auth=self.auth, query=query, order_by=order_by, **kwargs)
+
+        logger.debug(_query)
+
+        self.ws.send(json.dumps(_query, indent=4))
+
+    def get_record_info(self, record_ids: list[str]) -> None:
+        """Get the record information.
+
+        Args:
+            record_ids (list[str]): The record IDs.
+
+        """
+        logger.info('--- Getting record information ---')
+
+        record = record_infos(auth=self.auth, record_ids=record_ids)
+
+        # If debug mode is enabled, print the record.
+        logger.debug('Getting record information.')
+        logger.debug(record)
+
+        self.ws.send(json.dumps(record, indent=4))
+
+    def set_config_opt_out(self, opt_out: bool) -> None:
+        """Set the config opt out.
+
+        Args:
+            opt_out (bool): The opt out status.
+
+        """
+        logger.info('--- Setting the config opt out ---')
+
+        _config = config_opt_out(auth=self.auth, status='set', new_opt_out=opt_out)
+
+        logger.debug(_config)
+
+        self.ws.send(json.dumps(_config, indent=4))
+
+    def get_config_opt_out(self) -> None:
+        """Get the config opt out."""
+        logger.info('--- Getting the config opt out ---')
+
+        _config = config_opt_out(auth=self.auth, status='get')
+
+        logger.debug(_config)
+
+        self.ws.send(json.dumps(_config, indent=4))
+
+    def download_record_data(self, record_ids: list[str]) -> None:
+        """Download the record data.
+
+        Args:
+            record_ids (list[str]): The record IDs.
+
+        """
+        logger.info('--- Downloading record data ---')
+
+        _download = download_record_data(auth=self.auth, record_ids=record_ids)
+
+        logger.debug(_download)
+
+        self.ws.send(json.dumps(_download, indent=4))
+
+    def inject_marker(self, time: int, value: str | int, label: str, **kwargs: str | Any) -> None:  # noqa: D417
+        """Inject a marker.
+
+        Args:
+            time (int): The time in milliseconds.
+            value (str | int): The marker value.
+            label (str): The marker label.
+
+        Keyword Args:
+            port (str): The marker port.
+            extras (Mapping[str, Any]): Additional parameters.
+
+        """
+        logger.info('--- Injecting a marker ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _marker = inject_marker(
+            auth=self.auth, session_id=self.session_id, time=time, value=value, label=label, **kwargs
+        )
+
+        logger.debug(_marker)
+
+        self.ws.send(json.dumps(_marker, indent=4))
+
+    def update_marker(self, marker_id: str, time: int, **kwargs: str | Any) -> None:  # noqa: D417
+        """Update a marker.
+
+        Args:
+            marker_id (str): The marker ID.
+            time (int): The time in milliseconds.
+
+        Keyword Args:
+            value (str | int): The marker value.
+            label (str): The marker label.
+            port (str): The marker port.
+            extras (Mapping[str, Any]): Additional parameters.
+
+        """
+        logger.info('--- Updating a marker ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _marker = update_marker(auth=self.auth, session_id=self.session_id, marker_id=marker_id, time=time, **kwargs)
+
+        logger.debug(_marker)
+
+        self.ws.send(json.dumps(_marker, indent=4))
 
     def train_request(
         self,
         detection: Literal['mentalCommand', 'facialExpression'],
-        action: str,
         status: Literal['start', 'accept', 'reject', 'reset', 'erase'],
+        action: str,
     ) -> None:
-        print('train request --------------------------------')
-        train_request_json = {
-            'jsonrpc': '2.0',
-            'method': 'training',
-            'params': {
-                'cortexToken': self.auth,
-                'detection': detection,
-                'session': self.session_id,
-                'action': action,
-                'status': status,
-            },
-            'id': TRAINING_ID,
-        }
-        if self.debug:
-            print(
-                'training request:\n',
-                json.dumps(train_request_json, indent=4),
-            )
-            print('\n')
+        """Send a training request.
 
-        self.ws.send(json.dumps(train_request_json))
+        Args:
+            detection (Literal['mentalCommand', 'facialExpression']): The detection type.
+            status (Literal['start', 'accept', 'reject', 'reset', 'erase']): The status.
+            action (str): The action to train.
 
-    def create_record(self, title: str, **kwargs: Any) -> None:
-        print('create record --------------------------------')
+        """
+        logger.info('--- Sending a training request ---')
 
-        if len(title) == 0:
-            warnings.warn(
-                'Empty record_title. Please fill the record_title before running script.',
-            )
-            # close socket
-            self.close()
-            return
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
 
-        params_val = {
-            'cortexToken': self.auth,
-            'session': self.session_id,
-            'title': title,
-        }
+        _training = training(
+            auth=self.auth, session_id=self.session_id, detection=detection, status=status, action=action
+        )
 
-        for key, value in kwargs.items():
-            params_val.update({key: value})
+        logger.debug(_training)
 
-        create_record_request = {
-            'jsonrpc': '2.0',
-            'method': 'createRecord',
-            'params': params_val,
-            'id': CREATE_RECORD_REQUEST_ID,
-        }
-        if self.debug:
-            print(
-                'create record request:\n',
-                json.dumps(create_record_request, indent=4),
-            )
+        self.ws.send(json.dumps(_training, indent=4))
 
-        self.ws.send(json.dumps(create_record_request))
+    def training_signature_action(self, detection: Literal['mentalCommand', 'facialExpression'], **kwargs: str) -> None:  # noqa: D417
+        """Get the list of trained actions of a profile.
 
-    def stop_record(self) -> None:
-        print('stop record --------------------------------')
-        stop_record_request = {
-            'jsonrpc': '2.0',
-            'method': 'stopRecord',
-            'params': {
-                'cortexToken': self.auth,
-                'session': self.session_id,
-            },
-            'id': STOP_RECORD_REQUEST_ID,
-        }
-        if self.debug:
-            print(
-                'stop record request:\n',
-                json.dumps(stop_record_request, indent=4),
-            )
-        self.ws.send(json.dumps(stop_record_request))
+        Args:
+            detection (Literal['mentalCommand', 'facialExpression']): The detection type.
 
-    def export_record(
-        self,
-        folder: str,
-        stream_types: list[str],
-        export_format: Literal['EDF', 'CSV'],
-        record_ids: list[str],
-        version: Literal['v2', 'v1'],
-        **kwargs: Any,
-    ) -> None:
-        print('export record --------------------------------: ')
-        # validate destination folder
-        if len(folder) == 0:
-            warnings.warn(
-                'Invalid folder parameter. Please set a writable destination folder for exporting data.',
-            )
-            # close socket
-            self.close()
-            return
+        Keyword Args:
+            profile_name (str): The profile name.
+            session_id (str): The session ID.
 
-        params_val = {
-            'cortexToken': self.auth,
-            'folder': folder,
-            'format': export_format,
-            'streamTypes': stream_types,
-            'recordIds': record_ids,
-        }
+        """
+        logger.info('--- Getting the list of trained actions ---')
 
-        if export_format == 'CSV':
-            params_val.update({'version': version})
+        _training = trained_signature_actions(auth=self.auth, detection=detection, **kwargs)
 
-        for key, value in kwargs.items():
-            params_val.update({key: value})
+        logger.debug(_training)
 
-        export_record_request = {
-            'jsonrpc': '2.0',
-            'id': EXPORT_RECORD_ID,
-            'method': 'exportRecord',
-            'params': params_val,
-        }
+        self.ws.send(json.dumps(_training, indent=4))
 
-        if self.debug:
-            print(
-                'export record request \n',
-                json.dumps(export_record_request, indent=4),
-            )
+    def training_time(self, detection: Literal['mentalCommand', 'facialExpression']) -> None:
+        """Get the training time.
 
-        self.ws.send(json.dumps(export_record_request))
+        Args:
+            detection (Literal['mentalCommand', 'facialExpression']): The detection type.
 
-    def inject_marker_request(
-        self,
-        time: int,
-        value: str | int,
-        label: str,
-        **kwargs: Any,
-    ) -> None:
-        print('inject marker --------------------------------')
-        params_val = {
-            'cortexToken': self.auth,
-            'session': self.session_id,
-            'time': time,
-            'value': value,
-            'label': label,
-        }
+        """
+        logger.info('--- Getting the training time ---')
 
-        for key, value in kwargs.items():
-            params_val.update({key: value})
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
 
-        inject_marker_request = {
-            'jsonrpc': '2.0',
-            'id': INJECT_MARKER_REQUEST_ID,
-            'method': 'injectMarker',
-            'params': params_val,
-        }
-        if self.debug:
-            print(
-                'inject marker request\n',
-                json.dumps(inject_marker_request, indent=4),
-            )
-        self.ws.send(json.dumps(inject_marker_request))
+        _training = training_time(auth=self.auth, session_id=self.session_id, detection=detection)
 
-    def update_marker_request(
-        self,
-        markerId: str,
-        time: int,
-        **kwargs: Any,
-    ) -> None:
-        print('update marker --------------------------------')
-        params_val = {
-            'cortexToken': self.auth,
-            'session': self.session_id,
-            'markerId': markerId,
-            'time': time,
-        }
+        logger.debug(_training)
 
-        for key, value in kwargs.items():
-            params_val.update({key: value})
+        self.ws.send(json.dumps(_training, indent=4))
 
-        update_marker_request = {
-            'jsonrpc': '2.0',
-            'id': UPDATE_MARKER_REQUEST_ID,
-            'method': 'updateMarker',
-            'params': params_val,
-        }
-        if self.debug:
-            print(
-                'update marker request\n',
-                json.dumps(update_marker_request, indent=4),
-            )
-        self.ws.send(json.dumps(update_marker_request))
+    def get_mental_command_action_sensitive(self, profile_name: str) -> None:
+        """Get the mental command action sensitivity.
 
-    def get_mental_command_action_sensitivity(self, profile_name: str) -> None:
-        print('get mental command sensitivity ------------------')
-        sensitivity_request = {
-            'id': SENSITIVITY_REQUEST_ID,
-            'jsonrpc': '2.0',
-            'method': 'mentalCommandActionSensitivity',
-            'params': {
-                'cortexToken': self.auth,
-                'profile': profile_name,
-                'status': 'get',
-            },
-        }
-        if self.debug:
-            print(
-                'get mental command sensitivity \n',
-                json.dumps(sensitivity_request, indent=4),
-            )
+        Args:
+            profile_name (str): The profile name.
 
-        self.ws.send(json.dumps(sensitivity_request))
+        """
+        logger.info('--- Getting mental command action sensitivity ---')
 
-    def set_mental_command_action_sensitivity(
-        self,
-        profile_name: str,
-        values: list[int],
-    ) -> None:
-        print('set mental command sensitivity ------------------')
-        sensitivity_request = {
-            'id': SENSITIVITY_REQUEST_ID,
-            'jsonrpc': '2.0',
-            'method': 'mentalCommandActionSensitivity',
-            'params': {
-                'cortexToken': self.auth,
-                'profile': profile_name,
-                'session': self.session_id,
-                'status': 'set',
-                'values': values,
-            },
-        }
-        if self.debug:
-            print(
-                'set mental command sensitivity \n',
-                json.dumps(sensitivity_request, indent=4),
-            )
+        _sensitivity = action_sensitivity(auth=self.auth, profile_name=profile_name, status='get')
 
-        self.ws.send(json.dumps(sensitivity_request))
+        logger.debug(_sensitivity)
+
+        self.ws.send(json.dumps(_sensitivity, indent=4))
+
+    def set_mental_command_action_sensitive(self, profile_name: str, values: list[int]) -> None:
+        """Set the mental command action sensitivity.
+
+        Args:
+            profile_name (str): The profile name.
+            values (list[int]): The sensitivity values.
+
+        """
+        logger.info('--- Setting mental command action sensitivity ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _sensitivity = action_sensitivity(
+            auth=self.auth, profile_name=profile_name, session_id=self.session_id, values=values, status='set'
+        )
+
+        logger.debug(_sensitivity)
+
+        self.ws.send(json.dumps(_sensitivity, indent=4))
 
     def get_mental_command_active_action(self, profile_name: str) -> None:
-        print('get mental command active action ------------------')
-        command_active_request = {
-            'id': MENTAL_COMMAND_ACTIVE_ACTION_ID,
-            'jsonrpc': '2.0',
-            'method': 'mentalCommandActiveAction',
-            'params': {
-                'cortexToken': self.auth,
-                'profile': profile_name,
-                'status': 'get',
-            },
-        }
-        if self.debug:
-            print(
-                'get mental command active action \n',
-                json.dumps(command_active_request, indent=4),
-            )
+        """Get the active mental command action.
 
-        self.ws.send(json.dumps(command_active_request))
+        Args:
+            profile_name (str): The profile name.
+
+        """
+        logger.info('--- Getting mental command active action ---')
+
+        _action = active_action(auth=self.auth, status='get', profile_name=profile_name)
+
+        logger.debug(_action)
+
+        self.ws.send(json.dumps(_action, indent=4))
 
     def set_mental_command_active_action(self, actions: list[str]) -> None:
-        print('set mental command active action ------------------')
-        command_active_request = {
-            'id': SET_MENTAL_COMMAND_ACTIVE_ACTION_ID,
-            'jsonrpc': '2.0',
-            'method': 'mentalCommandActiveAction',
-            'params': {
-                'cortexToken': self.auth,
-                'session': self.session_id,
-                'status': 'set',
-                'actions': actions,
-            },
-        }
+        """Set the active mental command action.
 
-        if self.debug:
-            print(
-                'set mental command active action \n',
-                json.dumps(command_active_request, indent=4),
-            )
+        Args:
+            actions (list[str]): The actions.
 
-        self.ws.send(json.dumps(command_active_request))
+        """
+        logger.info('--- Setting mental command active action ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _action = active_action(auth=self.auth, status='set', session_id=self.session_id, actions=actions)
+
+        logger.debug(_action)
+
+        self.ws.send(json.dumps(_action, indent=4))
 
     def get_mental_command_brain_map(self, profile_name: str) -> None:
-        print('get mental command brain map ------------------')
-        brain_map_request = {
-            'id': MENTAL_COMMAND_BRAIN_MAP_ID,
-            'jsonrpc': '2.0',
-            'method': 'mentalCommandBrainMap',
-            'params': {
-                'cortexToken': self.auth,
-                'profile': profile_name,
-                'session': self.session_id,
-            },
-        }
-        if self.debug:
-            print(
-                'get mental command brain map \n',
-                json.dumps(brain_map_request, indent=4),
-            )
-        self.ws.send(json.dumps(brain_map_request))
+        """Get the mental command brain map.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
+        logger.info('--- Getting mental command brain map ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _brain_map = brain_map(auth=self.auth, session_id=self.session_id, profile_name=profile_name)
+
+        logger.debug(_brain_map)
+
+        self.ws.send(json.dumps(_brain_map, indent=4))
 
     def get_mental_command_training_threshold(self, profile_name: str) -> None:
-        print('get mental command training threshold -------------')
-        training_threshold_request = {
-            'id': MENTAL_COMMAND_TRAINING_THRESHOLD,
-            'jsonrpc': '2.0',
-            'method': 'mentalCommandTrainingThreshold',
-            'params': {
-                'cortexToken': self.auth,
-                'profile': profile_name,
-                'session': self.session_id,
-            },
-        }
-        if self.debug:
-            print(
-                'get mental command training threshold \n',
-                json.dumps(training_threshold_request, indent=4),
-            )
-        self.ws.send(json.dumps(training_threshold_request))
+        """Get the mental command training threshold.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
+        logger.info('--- Getting mental command training threshold ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
+        _threshold = training_threshold(auth=self.auth, profile_name=profile_name, session_id=self.session_id)
+
+        logger.debug(_threshold)
+
+        self.ws.send(json.dumps(_threshold, indent=4))
+
+    def set_headset(self, headset_id: str) -> None:
+        """Set the headset ID.
+
+        Args:
+            headset_id (str): The headset ID.
+
+        """
+        self.headset_id = headset_id
+
+    def set_profile(self, profile_name: str) -> None:
+        """Set the profile name.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
+        self.profile_name = profile_name
+
+    @property
+    def ws(self) -> websocket.WebSocketApp:
+        """WebSocketApp: The WebSocketApp object."""
+        if self._ws is None:
+            raise ValueError('Cortex is not initialized. Call `open()` to initialize it.')
+        return self._ws
+
+    @property
+    def auth(self) -> str:
+        """str: The authorization token."""
+        if self._auth is None:
+            raise ValueError('No authorization token. Call `authorize()` to generate it.')
+        return self._auth

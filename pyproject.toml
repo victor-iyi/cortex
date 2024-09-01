@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "cortex"
-version = "0.1.0"
-description = "Cortex is an API for communicating with your emotiv EEG device."
+version = "0.2.6"
+description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
 authors = ["Victor I. Afolabi <javafolabi@gmail.com>"]
@@ -34,42 +34,28 @@ packages = [{ include = "cortex", from = "src" }]
 python = "^3.11"
 
 # WebSocket client for Python with low level API options.
-websocket-client = "^1.5.1"
-
+websocket-client = "^1.8.0"
 # Lightweight Event Handling.
-python-dispatch = "^0.2.1"
+python-dispatch = "^0.2.2"
+# Render rich text, progress bars, syntax highlighting and more to the terminal
+rich = "^13.8.0"
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-# Automatically format Python code to PEP 8 style guide.
-autopep8 = "^2.0.1"
 # Optional static typing for Python.
-mypy = "^1.0.1"
+mypy = "^1.11.2"
 # Managing and maintaining pre-commit hooks.
-pre-commit = "^3.1.0"
-# # The modular source checker.
-# flake8 = "^6.0.0"
-# Generic viirtualenv management and test cli tool.
-tox = "^4.4.6"
+pre-commit = "^3.8.0"
 # Formats docstring to follow PEP 257.
-docformatter = { version = "^1.5.1", extras = ["tomli"] }
-# Python style guide checker.
-pydocstyle = { version = "^6.3.0", extras = ["tomli"] }
+docformatter = { version = "^1.7.5", extras = ["tomli"] }
 # Fast Python linter and code formatter.
-ruff = "^0.6.2"
+ruff = "^0.6.3"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.autopep8]
-recursive = true
-# in-place = true
-diff = true
-max_line_length = 120
-agressive = 3
 
 # Docformatter.
 [tool.docformatter]
@@ -77,27 +63,8 @@ in-place = true
 recursive = true
 blank = true
 close-quotes-on-newline = true
-
-[tool.pydocstyle]
-convention = "google"
-add_ignore = [
-  # Missing docstring in public module.
-  "D100",
-  # Missing docstring in public class.
-  "D101",
-  # FIXME: Missing docstring in public method.
-  "D102",
-  # Missing docstring in public package.
-  "D104",
-  # FIXME: Missing docstring in __init__
-  "D107",
-  # No blank line allowed after function docstring.
-  "D202",
-  # 1 blank line required between summary line and description.
-  "D205",
-  # First line should end with a period, question mark, or exclamation point.
-  "D415",
-]
+wrap-summaries = 120
+wrap-descriptions = 120
 
 # Style hinting.
 [tool.mypy]
@@ -114,42 +81,62 @@ implicit_reexport = false
 no_implicit_optional = true
 show_error_codes = true
 show_column_numbers = true
-# show_error_content = true
 warn_unused_configs = true
 warn_unused_ignores = true
-# warn_redundant_cast = true
 warn_return_any = true
 warn_unreachable = true
 disallow_subclassing_any = false
 disallow_untyped_decorators = false
-# plugins = [
-#   "numpy.typing.mypy_plugin",
-# ]
 
-# [[tool.mypy.overrides]]
-# module = [
-#   "tests.*",
-#   "examples.*",
-# ]
-# disallow_untyped_defs = true
-
-# Pyright Type Checking.
 [tool.pyright]
-reportOptionalCall = "none"
+reportArgumentType = "none"
 reportGeneralTypeIssues = "none"
+reportOptionalCall = "none"
 reportOptionalMemberAccess = "none"
+reportUnboundVariable = "none"
 
 [tool.ruff]
+fix = true
 line-length = 120
+show-fixes = true
+extend-exclude = ["tests", "src/cortex/deprecated/*.py"]
 
+[tool.ruff.format]
+quote-style = "single"
+skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
 select = [
   # pycodestyle
   "E",
+  # pydocstyle
+  "D",
   # pyupgrade
   "UP",
 ]
 
-[tool.ruff.format]
-quote-style = "single"
+extend-select = [
+  # pydocstyle
+  # One-line docstring should fit on one line.
+  "D200",
+  # Multi-line docstring summary should start at the first line.
+  "D212",
+  # Use triple double quotes """.
+  "D300",
+  # First word of the first line should be capitalized: {} -> {}.
+  "D403",
+  # First line should end with a period, question mark, or exclamation point
+  "D415",
+]
+
+ignore = [
+  # pydocstyle
+  # Missing docstring in public package.
+  "D104",
+]
+
+logger-objects = ["cortex.logging.logger"]
+typing-modules = ["cortex.api.types"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

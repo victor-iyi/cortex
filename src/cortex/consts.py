@@ -1,33 +1,12 @@
+"""Constants used by the Cortex API."""
+
 from enum import IntEnum
+from pathlib import Path
+from typing import Final
 
-
-class RequestID(IntEnum):
-    """Request IDs."""
-
-    QUERY_HEADSET = 1
-    CONNECT_HEADSET = 2
-    REQUEST_ACCESS = 3
-    AUTHORIZE = 4
-    CREATE_SESSION = 5
-    SUB_REQUEST = 6
-    SETUP_PROFILE = 7
-    QUERY_PROFILE = 8
-    TRAINING = 9
-    DISCONNECT_HEADSET = 10
-    CREATE_RECORD_REQUEST = 11
-    STOP_RECORD_REQUEST = 12
-    EXPORT_RECORD = 13
-    INJECT_MARKER_REQUEST = 14
-    SENSITIVITY_REQUEST = 15
-    MENTAL_COMMAND_ACTIVE_ACTION = 16
-    MENTAL_COMMAND_BRAIN_MAP = 17
-    MENTAL_COMMAND_TRAINING_THRESHOLD = 18
-    SET_MENTAL_COMMAND_ACTIVE_ACTION = 19
-    HAS_ACCESS_RIGHT = 20
-    GET_CURRENT_PROFILE = 21
-    GET_CORTEX_INFO = 22
-    UPDATE_MARKER_REQUEST = 23
-    UNSUB_REQUEST = 24
+# An Emotiv self-signed certificate is used to establish a secure connection to Cortex.
+CERTS_DIR: Final[Path] = Path(__file__).resolve().parent.parent.parent / 'certificates'
+CA_CERTS: Final[Path] = CERTS_DIR / 'rootCA.pem'
 
 
 class ErrorCode(IntEnum):
