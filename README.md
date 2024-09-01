@@ -14,7 +14,7 @@
 
 To run the existing example you will need to do a few things.
 
-1. You will need an EMOTIV headset. You can purchase a headset in our [online store][emotiv]
+1. You will need an EMOTIV headset. You can purchase a headset in an [online store][emotiv]
 
 2. Next, [download and install][developer] the Cortex service. Please note that
 currently, the Cortex service is only available for Windows and macOS.
