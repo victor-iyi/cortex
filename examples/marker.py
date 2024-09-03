@@ -282,8 +282,12 @@ class Marker:
 
 def main() -> None:
     """Inject marker during a recording."""
-    client_id = ''
-    client_secret = ''
+    import os
+
+    # Please fill your application client ID and client secret.
+    client_id = os.getenv('EMOTIV_CLIENT_ID') or ''
+    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or ''
+
     marker = Marker(client_id=client_id, client_secret=client_secret)
 
     # Input params for `create_record`. Please see `on_create_session_done` for more detail.

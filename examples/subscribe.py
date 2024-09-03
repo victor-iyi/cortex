@@ -224,8 +224,11 @@ class Subscribe:
 
 def main() -> None:
     """Start subscribing to the data streams."""
-    client_id = 'your-client-id'
-    client_secret = 'your-client-secret'
+    import os
+
+    # Please fill your application client ID and client secret.
+    client_id = os.getenv('EMOTIV_CLIENT_ID') or ''
+    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or ''
 
     subscribe = Subscribe(client_id, client_secret)
 

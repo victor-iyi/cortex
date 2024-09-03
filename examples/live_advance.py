@@ -273,8 +273,12 @@ class LiveAdvance:
 
 def main() -> None:
     """Start training the mental command training."""
-    client_id = 'your-client-id'
-    client_secret = 'your-client-secret'
+    import os
+
+    # Please fill your application client ID and client secret.
+    client_id = os.getenv('EMOTIV_CLIENT_ID') or ''
+    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or ''
+
     live_advance = LiveAdvance(client_id, client_secret)
 
     trained_profile_name = ''  # The profile name you want to train.
