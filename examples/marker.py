@@ -92,10 +92,11 @@ class Marker:
         self.marker_value: str = ''
         self.marker_label: str = ''
         self.number_markers: int = 10
-        self.record_export_folder: str = ''
-        self.record_export_data_types: list[str] = []
-        self.record_export_format: str = 'CSV'
-        self.record_export_version: str = 'V2'
+        self.export_folder: str = ''
+        self.export_stream_types: list[str] = []
+        self.export_record_ids: list[str] = []
+        self.export_format: str = 'CSV'
+        self.export_version: str = 'V2'
 
     def start(self, number_markers: int = 10, headset_id: str = '') -> None:
         """Start injecting markers during a recording.
@@ -155,7 +156,7 @@ class Marker:
         logger.debug(f'Add marker: {self.number_markers} will be injected each second automatically.')
 
         for m in range(self.number_markers):
-            marker_time = time.time() * 1000
+            marker_time = int(time.time() * 1000)
             logger.debug(f'Inject marker: {m + 1} at {marker_time}')
 
             marker_label = f'{self.marker_label}_{m + 1}'
@@ -255,7 +256,7 @@ class Marker:
             folder=self.export_folder,
             stream_types=self.export_stream_types,
             format=self.export_format,
-            record_ids=self.record_ids,
+            record_ids=self.export_record_ids,
             version=self.export_version,
         )
 
@@ -294,10 +295,10 @@ def main() -> None:
     marker.marker_label = 'test label'  # required param and cannot be empty.
 
     # Input params for `export_record`. Please see `on_warn_cortex_stop_all_sub` for more detail.
-    marker.record_export_folder = '.'  # required param and cannot be empty.
-    marker.record_export_data_types = ['EEG', 'MOTION', 'PM', 'BP']
-    marker.record_export_format = 'CSV'
-    marker.record_export_version = 'V2'
+    marker.export_folder = '.'  # required param and cannot be empty.
+    marker.export_stream_types = ['EEG', 'MOTION', 'PM', 'BP']
+    marker.export_format = 'CSV'
+    marker.export_version = 'V2'
 
     marker_numbers = 10
     marker.start(marker_numbers)

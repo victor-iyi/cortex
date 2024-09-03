@@ -63,6 +63,7 @@ class Record:
             Handle the export of a record.
         on_inform_error(*args: Any, **kwargs: Any) -> None:
             Handle the error information.
+
     """
 
     def __init__(self, client_id: str, client_secret: str, **kwargs: Any) -> None:

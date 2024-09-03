@@ -12,7 +12,6 @@ Result:
 
 """
 # pylint: disable=unused-argument
-# noqa: E501
 
 from typing import Any
 
