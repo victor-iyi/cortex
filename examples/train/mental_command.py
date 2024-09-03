@@ -32,11 +32,49 @@ class TrainEvent(StrEnum):
 
 
 class MentalCommandTrainer:
-    """Train the BCI API to control mental command."""
+    """Train the BCI API to control mental command.
+
+    Attributes:
+        headset (Headset): The headset object to interact with the BCI API.
+        action_idx (int): The index of the action in the actions list.
+        actions (list[str]): The list of facial expressions to be trained.
+        profile_name (str): The profile name to be trained.
+        profile_lists (list[str]): The list of profile names.
+
+    Methods:
+        start: Start training the BCI API.
+        subscribe_data: Subscribe to the data streams.
+        load_profile: Load the profile to be trained.
+        unload_profile: Unload the profile after training.
+        save_profile: Save the profile after training.
+        get_active_action: Get the active action of the profile.
+        get_brain_map: Get the brain map of the profile.
+        get_training_threshold: Get the training threshold of the profile.
+        train_mc_action: Train the mental command action.
+
+    Callback Methods:
+        on_create_session_done: Callback method when the session is created.
+        on_query_profile_done: Callback method when the profile is queried.
+        on_load_unload_profile_done: Callback method when the profile is loaded or unloaded.
+        on_save_profile_done: Callback method when the profile is saved.
+        on_new_sys_data: Callback method when new sys data is received.
+        on_new_data_labels: Callback method when new data labels are received.
+        on_inform_error: Callback method when an error is received.
+
+    """
 
     def __init__(self, client_id: str, client_secret: str, **kwargs: Any) -> None:
         """Initialize the mental command training."""
         self._headset = Headset(client_id=client_id, client_secret=client_secret, debug_mode=True, **kwargs)
+
+        # Bind the callback methods.
+        self._headset.bind(create_session_done=self.on_create_session_done)
+        self._headset.bind(query_profile_done=self.on_query_profile_done)
+        self._headset.bind(load_unload_profile_done=self.on_load_unload_profile_done)
+        self._headset.bind(save_profile_done=self.on_save_profile_done)
+        self._headset.bind(new_sys_data=self.on_new_sys_data)
+        self._headset.bind(new_data_labels=self.on_new_data_labels)
+        self._headset.bind(inform_error=self.on_inform_error)
 
         self.action_idx: int = 0
         self.actions: list[str] = []
@@ -44,9 +82,9 @@ class MentalCommandTrainer:
         self.profile_lists: list[str] = []
 
     def start(self, profile_name: str, actions: list[str], headset_id: str = '') -> None:
-        """Start training the BCI AI.
+        """Start training the mental command training.
 
-        The training process follows these workflow steps:
+        To start the training process, follow these workflow steps:
             1. Check access right -> authorize -> connect headset -> create session.
             2. Query profile -> get current profile -> load/create profile -> subscribe sys
             3. Start and accept MC action training in the action list one by one.
@@ -250,6 +288,11 @@ class MentalCommandTrainer:
             # Subscribe sys event sucessful.
             # Start training.
             self.train_mc_action(status='start')
+
+    @property
+    def headset(self) -> Headset:
+        """The headset object to connect to the BCI API."""
+        return self._headset
 
 
 def main() -> None:

@@ -32,11 +32,46 @@ class TrainEvent(StrEnum):
 
 
 class FacialExpressionTrainer:
-    """Train the BCI API to detect facial expressions."""
+    """Train the BCI API to detect facial expressions.
+
+    Attributes:
+        headset: The headset object to connect to the BCI API.
+        action_idx (int): The index of the facial expression action.
+        actions (list[str]): The list of facial expressions to be trained.
+        profile_name (str): The profile name to be trained.
+        profile_lists (list[str]): The list of profiles.
+
+    Methods:
+        start: Start training the BCI API.
+        subscribe_data: Subscribe to the data streams.
+        load_profile: Load the profile to be trained.
+        unload_profile: Unload the profile after training.
+        save_profile: Save the profile after training.
+        train_fe_action: Train the facial expression action.
+
+    Callback Methods:
+        on_create_session_done: Callback method when the session is created.
+        on_query_profile_done: Callback method when the profile is queried.
+        on_load_unload_profile_done: Callback method when the profile is loaded or unloaded.
+        on_save_profile_done: Callback method when the profile is saved.
+        on_inform_error: Callback method when an error is received.
+        on_new_sys_data: Callback method when new sys data is received.
+        on_new_data_labels: Callback method when new data labels are received.
+
+    """
 
     def __init__(self, client_id: str, client_secret: str, **kwargs: Any) -> None:
         """Initialize the facial expression training."""
         self._headset = Headset(client_id=client_id, client_secret=client_secret, debug_mode=True, **kwargs)
+
+        # Bind callback methods.
+        self._headset.bind(create_session_done=self.on_create_session_done)
+        self._headset.bind(query_profile_done=self.on_query_profile_done)
+        self._headset.bind(load_unload_profile_done=self.on_load_unload_profile_done)
+        self._headset.bind(save_profile_done=self.on_save_profile_done)
+        self._headset.bind(new_data_labels=self.on_new_data_labels)
+        self._headset.bind(new_sys_data=self.on_new_sys_data)
+        self._headset.bind(inform_error=self.on_inform_error)
 
         self.action_idx: int = 0
         self.actions: list[str] = []
@@ -44,7 +79,7 @@ class FacialExpressionTrainer:
         self.profile_lists: list[str] = []
 
     def start(self, profile_name: str, actions: list[str], headset_id: str = '') -> None:
-        """Start training the BCI AI.
+        """Start training the BCI API.
 
         The training process follows these workflow steps:
             1. Check access right -> authorize -> connect headset -> create session.
@@ -217,6 +252,11 @@ class FacialExpressionTrainer:
             # Subscribe sys event sucessful.
             # Start training.
             self.train_fe_action(status='start')
+
+    @property
+    def headset(self) -> Headset:
+        """The headset object to connect to the BCI API."""
+        return self._headset
 
 
 def main() -> None:
