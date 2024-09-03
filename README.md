@@ -5,7 +5,7 @@
 [![formatter | docformatter](https://img.shields.io/badge/%20formatter-docformatter-fedcba.svg)](https://github.com/PyCQA/docformatter)
 [![style | google](https://img.shields.io/badge/%20style-google-3666d6.svg)](https://google.github.io/styleguide/pyguide.html#s3.8-comments-and-docstrings)
 
-`cortex` is an API for communicating with your emotiv EEG device via websockets.
+`cortex` is an API for communicating with your Emotiv EEG device via websockets.
 
 [![Emotiv Insight Headset](images/insight-2021.png)][insight]
 *Source: [Emotiv][insight]*
