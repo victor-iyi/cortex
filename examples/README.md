@@ -65,7 +65,7 @@ and Band Power.
 action in live mode.
 - For more details, please refer to the [documentation][advanced-bci].
 
-[`live_advance.py`]: ./live_advance.py
+[`live_advance.py`]: ./train/live_advance.py
 [advanced-bci]: https://emotiv.gitbook.io/cortex-api/advanced-bci
 
 ### Create record and export to file
