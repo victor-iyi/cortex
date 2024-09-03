@@ -31,11 +31,11 @@ class TrainEvent(StrEnum):
     REJECTED = 'FE_Rejected'
 
 
-class Train:
-    """Train the BCI AI to detect facial expressions."""
+class FacialExpressionTrainer:
+    """Train the BCI API to detect facial expressions."""
 
     def __init__(self, client_id: str, client_secret: str, **kwargs: Any) -> None:
-        """Initialize the BCI AI training."""
+        """Initialize the facial expression training."""
         self._headset = Headset(client_id=client_id, client_secret=client_secret, debug_mode=True, **kwargs)
 
         self.action_idx: int = 0
@@ -176,6 +176,18 @@ class Train:
         logger.info(f'Profile {self.profile_name} is saved.')
         self.unload_profile(self.profile_name)
 
+    def on_inform_error(self, *args: Any, **kwargs: Any) -> None:
+        """Callback method when an error is received."""
+        error_data = kwargs.get('error_data', {})
+        logger.error(error_data)
+
+        code = error_data['code']
+        message = error_data['message']
+
+        if code == ErrorCode.ERR_PROFILE_ACCESS_DENIED:
+            logger.error(f'{message}. Disconnect headset to fix this issue for next use.')
+            self._headset.disconnect()
+
     def on_new_sys_data(self, *args: Any, **kwargs: Any) -> None:
         """Callback method when new sys data is received."""
         logger.debug('------- on_new_sys_data -------')
@@ -206,18 +218,6 @@ class Train:
             # Start training.
             self.train_fe_action(status='start')
 
-    def on_inform_error(self, *args: Any, **kwargs: Any) -> None:
-        """Callback method when an error is received."""
-        error_data = kwargs.get('error_data', {})
-        logger.error(error_data)
-
-        code = error_data['code']
-        message = error_data['message']
-
-        if code == ErrorCode.ERR_PROFILE_ACCESS_DENIED:
-            logger.error(f'{message}. Disconnect headset to fix this issue for next use.')
-            self._headset.disconnect()
-
 
 def main() -> None:
     """Main function to start the training."""
@@ -226,14 +226,14 @@ def main() -> None:
     client_secret = ''
 
     # Initialize training.
-    train = Train(client_id=client_id, client_secret=client_secret)
+    trainer = FacialExpressionTrainer(client_id=client_id, client_secret=client_secret)
 
     # Name of training profile.
     profile_name = ''  # set your profile name. If the profile doesn't exist, it will be created.
 
     # List of actions to be trained.
     actions = ['neutral', 'surprise', 'smile']
-    train.start(profile_name=profile_name, actions=actions)
+    trainer.start(profile_name=profile_name, actions=actions)
 
 
 if __name__ == '__main__':
