@@ -7,7 +7,6 @@ from cortex.api.events import (
     ProfileEvent,
     RecordEvent,
     SessionEvent,
-    TrainingEvent,
     WarningEvent,
 )
 from cortex.api.facial_expression import signature_type, threshold
@@ -54,7 +53,7 @@ from cortex.api.response import (
     SubjectObject,
 )
 from cortex.api.session import create_session, update_session, query_session
-from cortex.api.subject import create_subject, delete_record, query_subjects, update_subject, get_demographic_attr
+from cortex.api.subject import create_subject, delete_subject, query_subject, update_subject, get_demographic_attr
 from cortex.api.train import training, trained_signature_actions, training_time
 from cortex.api.types import (
     Attribute,
@@ -102,7 +101,6 @@ __all__ = [
     'ProfileEvent',
     'RecordEvent',
     'SessionEvent',
-    'TrainingEvent',
     'WarningEvent',
     # Facial Expression.
     'signature_type',
@@ -164,8 +162,8 @@ __all__ = [
     'query_session',
     # Subject.
     'create_subject',
-    'delete_record',
-    'query_subjects',
+    'delete_subject',
+    'query_subject',
     'update_subject',
     'get_demographic_attr',
     # Train.

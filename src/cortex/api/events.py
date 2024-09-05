@@ -1,5 +1,6 @@
 """Events for the Cortex API."""
 
+from __future__ import annotations
 from enum import StrEnum
 
 
@@ -17,7 +18,7 @@ class Event(StrEnum):
         return [str(value) for value in cls.__members__.values()]
 
     @classmethod
-    def get_event(cls, event: str) -> 'Event' | None:
+    def get_event(cls, event: str) -> Event | None:
         """Get an event.
 
         Args:
@@ -66,10 +67,10 @@ class MarkerEvent(Event):
 class MentalCommandEvent(Event):
     """Mental command events."""
 
-    ACTION_SENSITIVITY = 'action_sensitivity_done'
+    ACTION_SENSITIVITY = 'mc_action_sensitivity_done'
     BRAIN_MAP = 'brain_map_done'
-    GET_ACTIVE_ACTION = 'get_active_action_done'
-    SET_ACTIVE_ACTION = 'set_active_action_done'
+    GET_ACTIVE_ACTION = 'get_mc_active_action_done'
+    SET_ACTIVE_ACTION = 'set_mc_active_action_done'
     TRAINING_THRESHOLD = 'training_threshold_done'
 
 

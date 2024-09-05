@@ -106,8 +106,8 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         super().__init__()
-        self.client_id = os.environ.get('CLIENT_ID', client_id)
-        self.client_secret = os.environ.get('CLIENT_SECRET', client_secret)
+        self.client_id = os.environ.get('EMOTIV_CLIENT_ID', client_id)
+        self.client_secret = os.environ.get('EMOTIV_CLIENT_SECRET', client_secret)
 
         if not self.client_id:
             raise ValueError('No CLIENT_ID. Add it to the environment or pass it as an argument.')
@@ -140,7 +140,8 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         sslopt: dict[str, Path | ssl.VerifyMode] = {}
         if CA_CERTS.exists():
-            sslopt = {'ca_certs': CA_CERTS, 'cert_reqs': ssl.CERT_REQUIRED}
+            # sslopt = {'ca_certs': CA_CERTS, 'cert_reqs': ssl.CERT_REQUIRED}
+            sslopt = {'cert_reqs': ssl.CERT_NONE}
         else:
             logger.warning('No certificate found. Please check the certificates folder.')
             sslopt = {'cert_reqs': ssl.CERT_NONE}

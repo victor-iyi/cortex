@@ -82,7 +82,7 @@ class Marker:
         self._headset.bind(create_record_done=self.on_create_record_done)
         self._headset.bind(stop_record_done=self.on_stop_record_done)
         self._headset.bind(warn_cortex_stop_all_sub=self.on_warn_cortex_stop_all_sub)
-        self._headset.bind(inject_marker=self.on_inject_marker)
+        self._headset.bind(inject_marker_done=self.on_inject_marker_done)
         self._headset.bind(export_record_done=self.on_export_record_done)
         self._headset.bind(inform_error=self.on_inform_error)
 
@@ -115,6 +115,8 @@ class Marker:
 
         if headset_id != '':
             self._headset.set_headset(headset_id)
+
+        self._headset.open()
 
     def create_record(self, record_title: str, **kwargs: Any) -> None:
         """Create a record.
@@ -231,7 +233,7 @@ class Marker:
         logger.debug(f'Stop record ({marker_id}): {marker_type} at {start_time}')
         self._headset.disconnect()
 
-    def on_inject_marker(self, *args: Any, **kwargs: Any) -> None:
+    def on_inject_marker_done(self, *args: Any, **kwargs: Any) -> None:
         """Handle the injection of a marker."""
         logger.debug('------------- inject marker -------------')
 
@@ -285,10 +287,10 @@ def main() -> None:
     import os
 
     # Please fill your application client ID and client secret.
-    client_id = os.getenv('EMOTIV_CLIENT_ID') or ''
-    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or ''
+    client_id = os.getenv('EMOTIV_CLIENT_ID') or '<your-client-id>'
+    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or '<your-client-secret>'
 
-    marker = Marker(client_id=client_id, client_secret=client_secret)
+    marker = Marker(client_id=client_id, client_secret=client_secret, debug_mode=True)
 
     # Input params for `create_record`. Please see `on_create_session_done` for more detail.
     marker.record_title = ''  # required param and cannot be empty.

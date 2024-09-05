@@ -276,12 +276,12 @@ def main() -> None:
     import os
 
     # Please fill your application client ID and client secret.
-    client_id = os.getenv('EMOTIV_CLIENT_ID') or ''
-    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or ''
+    client_id = os.getenv('EMOTIV_CLIENT_ID') or '<your-client-id>'
+    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or '<your-client-secret>'
 
     live_advance = LiveAdvance(client_id, client_secret)
 
-    trained_profile_name = ''  # The profile name you want to train.
+    trained_profile_name = 'test'  # The profile name you want to train.
     live_advance.start(profile_name=trained_profile_name)
 
 
