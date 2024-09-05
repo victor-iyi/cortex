@@ -140,6 +140,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         sslopt: dict[str, Path | ssl.VerifyMode] = {}
         if CA_CERTS.exists():
+            # TODO(victor-iyi): Uncomment this line when a valid CA_CERTS is available.
             # sslopt = {'ca_certs': CA_CERTS, 'cert_reqs': ssl.CERT_REQUIRED}
             sslopt = {'cert_reqs': ssl.CERT_NONE}
         else:

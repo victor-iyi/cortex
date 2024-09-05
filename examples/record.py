@@ -233,7 +233,7 @@ def main() -> None:
     """Main function to start the record."""
     import os
 
-    # Please fill your application client ID and client secret.
+    # TODO: Please fill your application client ID and client secret.
     client_id = os.getenv('EMOTIV_CLIENT_ID') or '<your-client-id>'
     client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or '<your-client-secret>'
 
