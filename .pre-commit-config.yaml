@@ -10,6 +10,7 @@ repos:
       - id: detect-private-key
       - id: double-quote-string-fixer
       - id: check-merge-conflict
+      - id: name-tests-test
       - id: trailing-whitespace
 
   - repo: https://github.com/pre-commit/pygrep-hooks

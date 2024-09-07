@@ -53,6 +53,11 @@ docformatter = { version = "^1.7.5", extras = ["tomli"] }
 # Fast Python linter and code formatter.
 ruff = "^0.6.3"
 
+
+[tool.poetry.group.test.dependencies]
+# Simple powerful testing with Python.
+pytest = "^8.3.2"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -99,7 +104,7 @@ reportUnboundVariable = "none"
 fix = true
 line-length = 120
 show-fixes = true
-extend-exclude = ["tests", "src/cortex/deprecated/*.py"]
+extend-exclude = ["src/cortex/deprecated/*.py"]
 
 [tool.ruff.format]
 quote-style = "single"
