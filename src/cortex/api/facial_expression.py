@@ -32,21 +32,28 @@ def signature_type(
         FacialExpressionRequest: The facial expression signature type.
 
     """
-    assert status in ['set', 'get'], 'status must be either "set" or "get".'
+    assert status in {'set', 'get'}, 'status must be either "set" or "get".'
+
+    # Either profile_name or session_id must be provided, not both at the same time.
+    assert (
+        profile_name is not None and session_id is None or profile_name is None and session_id is not None
+    ), 'Either profile_name or session_id must be provided, not both at the same time.'
 
     _params = {'cortexToken': auth, 'status': status}
+
     if profile_name is not None:
         _params['profile'] = profile_name
-
-    if session_id is not None:
+    elif session_id is not None:
         _params['session'] = session_id
+    else:
+        raise ValueError('Either profile_name or session_id must be provided.')
 
     if signature is not None:
-        assert signature in [
+        assert signature in {
             'set',
             'universal',
             'trained',
-        ], 'signature must be either "set", "universal", or "trained".'
+        }, 'signature must be either "set", "universal", or "trained".'
         _params['signature'] = signature
 
     _signature = {
@@ -94,15 +101,23 @@ def threshold(
     """
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
+    # Either profile_name or session_id must be provided, not both at the same time.
+    assert (
+        profile_name is not None and session_id is None or profile_name is None and session_id is not None
+    ), 'Either profile_name or session_id must be provided, not both at the same time.'
+
     _params = {'cortexToken': auth, 'status': status, 'action': action}
+
     if profile_name is not None:
         _params['profile'] = profile_name
-
-    if session_id is not None:
+    elif session_id is not None:
         _params['session'] = session_id
+    else:
+        raise ValueError('Either profile_name or session_id must be provided.')
 
     if value is not None and status == 'set':
-        assert 0 <= value <= 1000, 'value must be between 0 and 1000.'
+        if not 0 <= value <= 1000:
+            raise ValueError('value must be between 0 and 1000.')
         _params['value'] = value  # type: ignore[assignment]
 
     _threshold = {
