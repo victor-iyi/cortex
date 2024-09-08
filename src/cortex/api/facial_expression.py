@@ -45,8 +45,6 @@ def signature_type(
         _params['profile'] = profile_name
     elif session_id is not None:
         _params['session'] = session_id
-    else:
-        raise ValueError('Either profile_name or session_id must be provided.')
 
     if signature is not None:
         assert signature in {
@@ -112,8 +110,6 @@ def threshold(
         _params['profile'] = profile_name
     elif session_id is not None:
         _params['session'] = session_id
-    else:
-        raise ValueError('Either profile_name or session_id must be provided.')
 
     if value is not None and status == 'set':
         if not 0 <= value <= 1000:

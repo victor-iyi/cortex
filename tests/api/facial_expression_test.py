@@ -70,7 +70,7 @@ def test_threshold(response_template: ResponseTemplate) -> None:
         # This should raise AssertionError: profile_name & session_id are provided.
         threshold(AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, session_id=SESSION_ID, value=10)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='value must be between 0 and 1000.'):
         # This should raise ValueError: value is not between 0 and 1000.
         threshold(AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, value=1001)
 
