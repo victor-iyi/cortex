@@ -4,6 +4,143 @@ from collections.abc import Mapping
 from typing import Literal, TypedDict
 
 
+class AssesObject(TypedDict):
+    """The information about the auth access."""
+
+    # True, if the user has already approved your application
+    # False, if the user declined your application, or didn't approve it yet
+    accessGranted: bool
+
+    # The message to show to the user when asking for approval.
+    message: str
+
+
+class AuthorizeObject(TypedDict):
+    """The information about the authorization."""
+
+    # The Cortex token of the user.
+    cortexToken: str
+
+    # Contains a message and the URL to accept the EULA.
+    warning: Mapping[str, str | int]
+
+
+class CortexInfoObject(TypedDict):
+    """The information about the Cortex API."""
+
+    # The date and time the Cortex binary was built (ISO datetime).
+    buildDate: str
+
+    # The interval build number.
+    buildNumber: str
+
+    # The version of Cortex. It should have the format "2.y.z"
+    version: str
+
+
+class UserLoginObject(TypedDict):
+    """The information about the user login."""
+
+    # The EmotiveID of the user.
+    username: str
+
+    # The ID of current OS account.
+    currentOSUId: str
+
+    # The name of the currentOSUId.
+    currentOSUsername: str
+
+    # The ID of the OS account used to login to Emotiv Launcher.
+    loggedInOSUId: str
+
+    # The name of the loggedInOSUId.
+    loggedInOSUsername: str
+
+    # When the user logged in the last time (ISO datetime).
+    lastLoginTime: str
+
+
+class LicenseAgreementObject(TypedDict):
+    """The information about the license agreement."""
+
+    # True if the user has accepted the license agreement.
+    accepted: bool
+
+    # The URL to the license agreement.
+    licenseUrl: str
+
+
+class _DeviceInfo(TypedDict):
+    """The information about the device."""
+
+    deviceLimit: int
+    devicesPerSeat: int
+    sessionLimit: Mapping[str, int | None]
+
+
+class LicenseObject(TypedDict):
+    """The information about the license."""
+
+    applications: list[str]
+    billingFrom: str
+    billingTo: str
+    deviceInfo: _DeviceInfo
+    expired: bool
+    extenderLimit: int
+    hardLimitTime: str
+    isCommercial: bool
+    licneseId: str
+    licenseName: str
+    localQuota: int
+    maxDebit: int | None
+    scopes: list[str]
+    seatCount: int
+    sessionCount: int
+    softLimitTime: str
+    totalDebit: int
+    totalRegisteredDevices: int
+    validFrom: str
+    validTo: str
+
+
+class LicneseInfoObject(TypedDict):
+    """The information about the license."""
+
+    # True, if Cortex was able to get the license information from the EMOTIV cloud
+    # False, if Cortex got the license information for its local cache
+    isOnline: bool
+
+    # An object containing all the information about the current license
+    license: LicenseObject
+
+
+class UserInfoObject(TypedDict):
+    """The information about the user."""
+
+    # The EmotivID of the user.
+    username: str
+
+    # The first name of the user.
+    firstName: str
+
+    # The last name of the user.
+    lastName: str
+
+    # An object that contain information about the EULA agreement
+    licenseAgreement: LicenseAgreementObject
+
+
+class FESignatureTypeObject(TypedDict):
+    """The information about the facial expression signature type."""
+
+    # The current signature used by the profile. Can be "universal" or "trained".
+    currentSig: str
+
+    # The signatures you can use with the profile.
+    # The "universal" one is always available, but the "trained" one requires some training.
+    availableSigs: list[str]
+
+
 class FlexMapping(TypedDict):
     """The mapping of the EEG channels of an EPOC Flex device."""
 
@@ -14,7 +151,7 @@ class FlexMapping(TypedDict):
     mappings: Mapping[str, str]
 
 
-class SettingsObject(TypedDict, total=False):
+class SettingsObject(TypedDict):
     """The configuration of the EEG and motion data of a headset."""
 
     # Can be "EPOC", "EPOCPLUS", or "EPOCFLEX"
@@ -33,7 +170,7 @@ class SettingsObject(TypedDict, total=False):
     memsRes: int
 
 
-class HeadsetObject(TypedDict, total=False):
+class HeadsetObject(TypedDict):
     """The information about a headset."""
 
     # The id of this headset.
@@ -71,7 +208,7 @@ class HeadsetObject(TypedDict, total=False):
     customName: str
 
 
-class SessionObject(TypedDict, total=False):
+class SessionObject(TypedDict):
     """The information about a session."""
 
     # The id of this session.
@@ -112,7 +249,7 @@ class SessionObject(TypedDict, total=False):
     headset: HeadsetObject
 
 
-class MarkerObject(TypedDict, total=False):
+class MarkerObject(TypedDict):
     """The information about a marker."""
 
     # The id of the marker.
@@ -152,7 +289,7 @@ class DemographicAttribute(TypedDict):
     value: str
 
 
-class SubjectObject(TypedDict, total=False):
+class SubjectObject(TypedDict):
     """The information about a subject."""
 
     # The name of the subject
