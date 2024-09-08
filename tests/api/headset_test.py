@@ -168,30 +168,10 @@ def test_update_headset(response_template: ResponseTemplate) -> None:
 
     with pytest.raises(ValueError):
         # EPOC headset only supports 128Hz EEG rate.
-        assert update_headset(
-            AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOC', eegRate=256, memsRate=0)
-        ) == response_template(
-            id=HeadsetID.UPDATE_HEADSET,
-            method='updateHeadset',
-            params={
-                'cortexToken': AUTH_TOKEN,
-                'headset': HEADSET_ID,
-                'setting': Setting(mode='EPOC', eegRate=256, memsRate=0),
-            },
-        )
+        update_headset(AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOC', eegRate=256, memsRate=0))
 
         # EPOC headset only supports 0Hz MEMS rate.
-        assert update_headset(
-            AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOC', eegRate=128, memsRate=32)
-        ) == response_template(
-            id=HeadsetID.UPDATE_HEADSET,
-            method='updateHeadset',
-            params={
-                'cortexToken': AUTH_TOKEN,
-                'headset': HEADSET_ID,
-                'setting': Setting(mode='EPOC', eegRate=128, memsRate=32),
-            },
-        )
+        update_headset(AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOC', eegRate=128, memsRate=32))
 
     assert update_headset(
         AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOCPLUS', eegRate=128, memsRate=32)
@@ -219,30 +199,10 @@ def test_update_headset(response_template: ResponseTemplate) -> None:
 
     with pytest.raises(ValueError):
         # EPOCPLUS headset only supports 0Hz, 32Hz, 64Hz, or 128Hz MEMS rate.
-        assert update_headset(
-            AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOCPLUS', eegRate=256, memsRate=16)
-        ) == response_template(
-            id=HeadsetID.UPDATE_HEADSET,
-            method='updateHeadset',
-            params={
-                'cortexToken': AUTH_TOKEN,
-                'headset': HEADSET_ID,
-                'setting': Setting(mode='EPOCPLUS', eegRate=256, memsRate=16),
-            },
-        )
+        update_headset(AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOCPLUS', eegRate=256, memsRate=16))
 
         # EPOCPLUS headset only supports 128Hz or 256Hz EEG rate.
-        assert update_headset(
-            AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOCPLUS', eegRate=64, memsRate=128)
-        ) == response_template(
-            id=HeadsetID.UPDATE_HEADSET,
-            method='updateHeadset',
-            params={
-                'cortexToken': AUTH_TOKEN,
-                'headset': HEADSET_ID,
-                'setting': Setting(mode='EPOCPLUS', eegRate=64, memsRate=128),
-            },
-        )
+        update_headset(AUTH_TOKEN, HEADSET_ID, Setting(mode='EPOCPLUS', eegRate=64, memsRate=128))
 
 
 def test_update_custom_info(response_template: ResponseTemplate) -> None:
@@ -260,11 +220,7 @@ def test_update_custom_info(response_template: ResponseTemplate) -> None:
 
     # headband_position must be either "back" or "top".
     with pytest.raises(ValueError):
-        assert update_custom_info(AUTH_TOKEN, HEADSET_ID, 'front') == response_template(
-            id=HeadsetID.UPDATE_CUSTOM_INFO,
-            method='updateHeadsetCustomInfo',
-            params={'cortexToken': AUTH_TOKEN, 'headsetId': HEADSET_ID, 'headbandPosition': 'front'},
-        )
+        update_custom_info(AUTH_TOKEN, HEADSET_ID, 'front')
 
 
 def test_sync_with_clock(response_template: ResponseTemplate) -> None:

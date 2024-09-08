@@ -26,17 +26,13 @@ def test_signature_type(response_template: ResponseTemplate) -> None:
     # Either profile_name or session_id must be provided, not both at the same time.
     with pytest.raises((AssertionError, ValueError)):
         # This should raise AssertionError: status must be either "set" or "get".
-        assert signature_type(AUTH_TOKEN, 'post', profile_name=PROFILE_NAME) == response_template(id=_id, method=method)
+        signature_type(AUTH_TOKEN, 'post', profile_name=PROFILE_NAME)
 
         # This should raise AssertionError: profile_name & session_id are provided.
-        assert signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, session_id=SESSION_ID) == response_template(
-            id=_id, method=method
-        )
+        signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
         # This should raise AssertionError: signature must be either "set", "universal", or "trained".
-        assert signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, signature='invalid') == response_template(
-            id=_id, method=method
-        )
+        signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, signature='invalid')
 
     # status is 'set'.
     assert signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, signature='set') == response_template(
@@ -70,19 +66,13 @@ def test_threshold(response_template: ResponseTemplate) -> None:
 
     with pytest.raises(AssertionError):
         # This should raise AssertionError: status must be either "set" or "get".
-        assert threshold(
-            AUTH_TOKEN, status='post', action='smile', profile_name=PROFILE_NAME, value=10
-        ) == response_template(id=_id, method=method)
+        threshold(AUTH_TOKEN, status='post', action='smile', profile_name=PROFILE_NAME, value=10)
         # This should raise AssertionError: profile_name & session_id are provided.
-        assert threshold(
-            AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, session_id=SESSION_ID, value=10
-        ) == response_template(id=_id, method=method)
+        threshold(AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, session_id=SESSION_ID, value=10)
 
     with pytest.raises(ValueError):
         # This should raise ValueError: value is not between 0 and 1000.
-        assert threshold(
-            AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, value=1001
-        ) == response_template(id=_id, method=method)
+        threshold(AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, value=1001)
 
     # status is 'set'.
     assert threshold(
