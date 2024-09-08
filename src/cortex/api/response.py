@@ -38,6 +38,16 @@ class CortexInfoObject(TypedDict):
     version: str
 
 
+class FlexMapping(TypedDict):
+    """The mapping of the EEG channels of an EPOC Flex device."""
+
+    # Describe which EEG channel is mapped to which physical connector
+    # of EPOC Flex device. The keys are the names of the connectors, the
+    # values are the names of the EEG channels.
+    # Example: {"CMS": "TP8", "DRL": "P6", "RM": "TP10", "RN": "P4", "RO": "P8"}
+    mappings: Mapping[str, str]
+
+
 class UserLoginObject(TypedDict):
     """The information about the user login."""
 
@@ -141,16 +151,6 @@ class FESignatureTypeObject(TypedDict):
     availableSigs: list[str]
 
 
-class FlexMapping(TypedDict):
-    """The mapping of the EEG channels of an EPOC Flex device."""
-
-    # Describe which EEG channel is mapped to which physical connector
-    # of EPOC Flex device. The keys are the names of the connectors, the
-    # values are the names of the EEG channels.
-    # Example: {"CMS": "TP8", "DRL": "P6", "RM": "TP10", "RN": "P4", "RO": "P8"}
-    mappings: Mapping[str, str]
-
-
 class SettingsObject(TypedDict):
     """The configuration of the EEG and motion data of a headset."""
 
@@ -206,6 +206,23 @@ class HeadsetObject(TypedDict):
 
     # The custom name of the headset. The user can set it in EMOTIV App.
     customName: str
+
+
+class QueryProfileObject(TypedDict):
+    """The information about the query profile."""
+
+    # The unique ID of this profile.
+    uuid: str
+
+    # The name of the profile.
+    name: str
+    # If a headset is created before v3.6.5, the profile will become read-only when upgrading to v3.6.5
+    readOnly: bool
+
+    # The list of EEG channels of a headset with which this profile can be loaded.
+    # For example, if eegChannels of a profile is ["AF3","T7","Pz","T8","AF4"],
+    # this profile can be loaded for Insight headset.
+    eegChannels: list[str]
 
 
 class SessionObject(TypedDict):

@@ -91,7 +91,13 @@ def setup_profile(
         'save',
         'rename',
         'delete',
-    ], 'Status must be one of create, load, unload, save, rename, delete.'
+    ], 'status must be one of create, load, unload, save, rename, delete.'
+
+    if status == 'rename' and new_profile_name is None:
+        raise ValueError('new_profile_name must be provided when status is "rename".')
+
+    if status in ('create', 'load', 'unload', 'save') and headset_id is None:
+        raise ValueError('headset_id must be provided when status is "create", "load", "unload", or "save".')
 
     _params = {'cortexToken': auth, 'status': status, 'profile': profile_name}
 
@@ -143,6 +149,11 @@ def detection_info(detection: Literal['mentalCommand', 'facialExpression']) -> B
         BaseRequest: The detection information.
 
     """
+    assert detection in [
+        'mentalCommand',
+        'facialExpression',
+    ], 'detection must be either "mentalCommand" or "facialExpression".'
+
     _detection = {
         'id': ProfileID.DETECTION_INFO,
         'jsonrpc': '2.0',
