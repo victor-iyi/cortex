@@ -1,6 +1,7 @@
 """Test for facial expression."""
 
-from typing import Any, Final
+from collections.abc import Callable
+from typing import Any, Final, TypeAlias
 
 import pytest
 
@@ -13,15 +14,11 @@ AUTH_TOKEN: Final[str] = '<AUTH-TOKEN>'
 PROFILE_NAME: Final[str] = '<PROFILE-NAME>'
 SESSION_ID: Final[str] = '<SESSION-ID>'
 
-
-def response_template(id: int, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Template structure for the API."""
-    if params is None:
-        return {'id': id, 'jsonrpc': '2.0', 'method': method}
-    return {'id': id, 'jsonrpc': '2.0', 'method': method, 'params': params}
+# Type aliases.
+ResponseTemplate: TypeAlias = Callable[..., dict[str, Any]]
 
 
-def test_signature_type() -> None:
+def test_signature_type(response_template: ResponseTemplate) -> None:
     """Test setting the facial expression signature type."""
     _id = FacialExpressionID.SIGNATURE_TYPE
     method = 'facialExpressionSignatureType'
@@ -66,7 +63,7 @@ def test_signature_type() -> None:
     )
 
 
-def test_threshold() -> None:
+def test_threshold(response_template: ResponseTemplate) -> None:
     """Test setting the facial expression threshold."""
     _id = FacialExpressionID.THRESHOLD
     method = 'facialExpressionThreshold'
