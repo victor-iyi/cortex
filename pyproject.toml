@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cortex"
-version = "0.3.0"
+version = "0.3.1"
 description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
@@ -57,7 +57,9 @@ ruff = "^0.6.3"
 [tool.poetry.group.test.dependencies]
 # Simple powerful testing with Python.
 pytest = "^8.3.2"
+# Plugin for generating Markdown reports for pytest results.
 pytest-md = "^0.2.0"
+# A pytest plugin that adds emojis to your test result report.
 pytest-emoji = "^0.2.0"
 
 [build-system]
