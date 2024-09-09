@@ -66,6 +66,12 @@ jobs:
         run: poetry install --no-interaction --no-root --with test
 
       #----------------------------------------------
+      # install your root project, if required
+      #----------------------------------------------
+      - name: Install library
+        run: poetry install --no-interaction --with dev,test
+
+      #----------------------------------------------
       #     run tests and genenrate summaries
       #----------------------------------------------
       - uses: pavelzw/pytest-action@v2
