@@ -73,6 +73,6 @@ jobs:
           emoji: true
           verbose: true
           job-summary: true
-          click-to-exapnd: true
+          click-to-expand: true
           custom-pytest: poetry run pytest tests
           report-title: "Test Report for Python ${{ matrix.python-version }} on ${{ matrix.os }}"
