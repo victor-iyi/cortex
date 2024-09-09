@@ -57,6 +57,8 @@ ruff = "^0.6.3"
 [tool.poetry.group.test.dependencies]
 # Simple powerful testing with Python.
 pytest = "^8.3.2"
+pytest-md = "^0.2.0"
+pytest-emoji = "^0.2.0"
 
 [build-system]
 requires = ["poetry-core"]
