@@ -1,21 +1,24 @@
-name: CI
+name: pytest
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "develop"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "develop"]
 
 jobs:
   build:
+    name: Run tests for Python ${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         os: [ "ubuntu-latest", "macos-latest" ]
         python-version: ["3.11", "3.12"]
 
     steps:
+      - uses: szenius/set-timezone@v1.2
+        with:
+          timezoneLinux: "Europe/Berlin"
       #----------------------------------------------
       #       check-out repo and set-up python
       #----------------------------------------------
@@ -60,26 +63,22 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies with poetry
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with dev
+        run: poetry install --no-interaction --no-root --with test
 
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
       - name: Install library
-        run: poetry install --no-interaction --with dev
+        run: poetry install --no-interaction --with dev,test
 
-      # - name: Run Ruff
-      #   run: ruff check --output-format=github .
-
-  ruff:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ "ubuntu-latest", "macos-latest" ]
-        python-version: ["3.11", "3.12"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: chartboost/ruff-action@v1
+      #----------------------------------------------
+      #     run tests and genenrate summaries
+      #----------------------------------------------
+      - uses: pavelzw/pytest-action@v2
         with:
-          args: check --output-format=github .
-          src:  ./src
+          emoji: true
+          verbose: true
+          job-summary: true
+          click-to-expand: true
+          custom-pytest: poetry run pytest tests
+          report-title: "Test Report for Python ${{ matrix.python-version }} on ${{ matrix.os }}"

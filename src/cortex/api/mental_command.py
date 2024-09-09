@@ -50,13 +50,17 @@ def active_action(
 
     _params = {'cortexToken': auth, 'status': status}
 
-    if profile_name is not None:
+    # Either profile_name or session_id must be provided, not both at the same time.
+    if profile_name is not None and session_id is None:
         _params['profile'] = profile_name
-    elif session_id is not None:
+    elif session_id is not None and profile_name is None:
         _params['session'] = session_id
+    else:
+        raise ValueError('Either profile_name or session_id must be provided, not both at the same time.')
 
     if actions is not None and status == 'set':
-        assert len(actions) <= 4, 'You can have at most 4 actions.'
+        if len(actions) > 4:
+            raise ValueError('You can have at most 4 actions.')
         _params['actions'] = actions
 
     _action = {
@@ -69,13 +73,15 @@ def active_action(
     return _action
 
 
-def brain_map(auth: str, session_id: str, profile_name: str) -> BaseRequest:
+def brain_map(auth: str, *, session_id: str | None = None, profile_name: str | None = None) -> BaseRequest:
     """Map the profile name to the corresponding mental command brain.
 
     Args:
         auth (str): The Cortex authentication token.
-        session_id (str): The session
-        profile_name (str): The name of the profile.
+
+    Keyword Args:
+        session_id (str, optional): The session
+        profile_name (str, optional): The name of the profile.
 
     Read More:
         [mentalCommandBrainMap](https://emotiv.gitbook.io/cortex-api/advanced-bci/mentalcommandbrainmap)
@@ -84,11 +90,22 @@ def brain_map(auth: str, session_id: str, profile_name: str) -> BaseRequest:
         BaseRequest: The mental command brain map.
 
     """
+    # Either profile_name or session_id must be provided, not both at the same time.
+    assert (
+        profile_name is not None and session_id is None or profile_name is None and session_id is not None
+    ), 'Either profile_name or session_id must be provided, not both at the same time.'
+    _params = {'cortexToken': auth}
+
+    if profile_name is not None:
+        _params['profile'] = profile_name
+    elif session_id is not None:
+        _params['session'] = session_id
+
     _brain_map = {
         'id': MentalCommandID.BRAIN_MAP,
         'jsonrpc': '2.0',
         'method': 'mentalCommandBrainMap',
-        'params': {'cortexToken': auth, 'profile': profile_name, 'session': session_id},
+        'params': _params,
     }
     return _brain_map
 
@@ -113,6 +130,10 @@ def get_skill_rating(
         BaseRequest: The skill rating of the mental command action.
 
     """
+    assert (
+        profile_name is not None and session_id is None or profile_name is None and session_id is not None
+    ), 'Either profile_name or session_id must be provided, not both at the same time.'
+
     _params = {'cortexToken': auth}
 
     if profile_name is not None:
@@ -151,6 +172,10 @@ def training_threshold(auth: str, *, profile_name: str | None = None, session_id
             The training threshold for mental commands.
 
     """
+    assert (
+        profile_name is not None and session_id is None or profile_name is None and session_id is not None
+    ), 'Either profile_name or session_id must be provided, not both at the same time.'
+
     _params = {'cortexToken': auth}
 
     if profile_name is not None:
@@ -202,6 +227,11 @@ def action_sensitivity(
     """
     assert status in ['set', 'get'], 'status must be either "set" or "get".'
 
+    # Either profile_name or session_id must be provided, not both at the same time.
+    assert (
+        profile_name is not None and session_id is None or profile_name is None and session_id is not None
+    ), 'Either profile_name or session_id must be provided, not both at the same time.'
+
     _params = {'cortexToken': auth, 'status': status}
 
     if profile_name is not None:
@@ -210,8 +240,10 @@ def action_sensitivity(
         _params['session'] = session_id
 
     if values is not None and status == 'set':
-        assert all(1 <= value <= 10 for value in values), 'values must be between 1 and 10.'
-        _params['values'] = values
+        if all(1 <= value <= 10 for value in values):
+            _params['values'] = values
+        else:
+            raise ValueError('values must be between 1 and 10.')
 
     sensitivity = {
         'id': MentalCommandID.ACTION_SENSITIVITY,

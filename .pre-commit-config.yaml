@@ -10,6 +10,7 @@ repos:
       - id: detect-private-key
       - id: double-quote-string-fixer
       - id: check-merge-conflict
+      - id: name-tests-test
       - id: trailing-whitespace
 
   - repo: https://github.com/pre-commit/pygrep-hooks
@@ -32,7 +33,7 @@ repos:
         args: ["--in-place", "--config", "./pyproject.toml"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.2
+    rev: v0.6.4
     hooks:
       # Run the linter
       - id: ruff

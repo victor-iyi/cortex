@@ -62,6 +62,7 @@ def create_subject(
         _params['dateOfBirth'] = date_of_birth
 
     if sex is not None:
+        assert sex in {'M', 'F', 'U'}, 'sex must be either "M", "F", or "U".'
         _params['sex'] = sex
 
     if country_code is not None:
@@ -119,6 +120,7 @@ def update_subject(
         _params['dateOfBirth'] = date_of_birth
 
     if sex is not None:
+        assert sex in {'M', 'F', 'U'}, 'sex must be either "M", "F", or "U".'
         _params['sex'] = sex
 
     if country_code is not None:
@@ -194,7 +196,9 @@ def query_subject(
     if limit is not None:
         _params['limit'] = limit
 
-    if offset is not None:
+    if offset is not None and limit is not None:
+        if limit < offset:
+            raise ValueError('offset must be less than limit.')
         _params['offset'] = offset
 
     _subject = {'id': SubjectsID.QUERY, 'jsonrpc': '2.0', 'method': 'querySubjects', 'params': _params}

@@ -181,3 +181,63 @@ class SubjectObject(TypedDict, total=False):
 
     # A list of demographic attribute objects.
     attributes: list[DemographicAttribute]
+
+
+class RecordsObject(TypedDict, total=False):
+    """The information about a record."""
+
+    # The id of this record.
+    uuid: str
+
+    # The id of the user this record belongs to. It is a GUID, it is not the EmotivID of the user.
+    ownerId: str
+
+    # The id of the application that created this record.
+    applicationId: str
+
+    # The version of the application that created this record.
+    applicationVersion: str
+
+    # The title of the record.
+    title: str
+
+    # The description of the record.
+    description: str
+
+    # The tags associated with this record.
+    tags: list[str]
+
+    # The experiment id associated with this record.
+    experimentId: int
+
+    # When this record was created. (ISO datetime)
+    startTime: str
+
+    # When this record was stopped. (ISO datetime)
+    endTime: str
+
+    # The id of the license used by this record.
+    licenseId: str
+
+    # List of the data streams the license has access to.
+    # The scope "eeg" gives access to the raw EEG data.
+    # The scope "pm" gives access to the 2 hertz performance metrics.
+    licneseScope: list[str]
+
+    # This object has a single field "subjectName".
+    # It is the subject name used to create this record.
+    # You can use querySubjects to get more information about the subject.
+    # If the record was created without a subject name, then the field "subjectName" contains the EmotivID of the user.
+    subject: SubjectObject
+
+    # If true then this record will not be uploaded to the EMOTIV cloud.
+    # If false then it will be uploaded.
+    localOnly: bool
+
+    # If the headset is an EPOC X, then this field tells you the position of the
+    # headband of this headset during this record. Can be "back" or "top".
+    # If the headset is not an EPOC X, then this field is null.
+    headsetPosition: Literal['back', 'top']
+
+    # The markers added to this record.
+    markers: list[MarkerObject] | None

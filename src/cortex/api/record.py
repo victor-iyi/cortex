@@ -177,8 +177,8 @@ def export_record(
     record_ids: list[str],
     folder: str,
     stream_types: list[str],
-    # pylint: disable-next=redefined-builtin,implicit-str-concat
-    format: Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV'],
+    # pylint: disable-next=redefined-builtin
+    format: Literal['EDF', 'EDFPLUS', 'BDFPLUS', 'CSV'],
     *,
     version: Literal['V1', 'V2'] | None = None,
     license_ids: list[str] | None = None,
@@ -219,6 +219,13 @@ def export_record(
         ExportRecordRequest: The record export status.
 
     """
+    assert format in [
+        'EDF',
+        'EDFPLUS',
+        'BDFPLUS',
+        'CSV',
+    ], 'format must be either "EDF", "EDFPLUS", "BDFPLUS", or "CSV".'
+
     _params = {
         'cortexToken': auth,
         'recordIds': record_ids,
@@ -288,7 +295,9 @@ def query_records(
     if limit is not None:
         _params['limit'] = limit
 
-    if offset is not None:
+    if offset is not None and limit is not None:
+        if limit < offset:
+            raise ValueError('The offset must be less than the limit.')
         _params['offset'] = offset
 
     if include_markers:

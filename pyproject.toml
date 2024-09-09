@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cortex"
-version = "0.2.6"
+version = "0.3.1"
 description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
@@ -53,6 +53,15 @@ docformatter = { version = "^1.7.5", extras = ["tomli"] }
 # Fast Python linter and code formatter.
 ruff = "^0.6.3"
 
+
+[tool.poetry.group.test.dependencies]
+# Simple powerful testing with Python.
+pytest = "^8.3.2"
+# Plugin for generating Markdown reports for pytest results.
+pytest-md = "^0.2.0"
+# A pytest plugin that adds emojis to your test result report.
+pytest-emoji = "^0.2.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -99,7 +108,7 @@ reportUnboundVariable = "none"
 fix = true
 line-length = 120
 show-fixes = true
-extend-exclude = ["tests", "src/cortex/deprecated/*.py"]
+extend-exclude = ["src/cortex/deprecated/*.py"]
 
 [tool.ruff.format]
 quote-style = "single"

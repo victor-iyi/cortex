@@ -5,6 +5,7 @@ from typing import Any, Literal, TypeAlias, TypedDict
 
 # A dict with fields "from" and "to".
 Interval = TypedDict('Interval', {'from': str, 'to': str})
+ConnectionType: TypeAlias = Literal['bluetooth', 'usb cable', 'dongle']
 
 
 class Attribute(TypedDict):
@@ -42,7 +43,7 @@ class RecordQuery(TypedDict, total=False):
     duration: Interval
 
 
-class Setting(TypedDict, total=False):
+class Setting(TypedDict):
     """Headset setting."""
 
     # In "EPOC" mode, the EEG resolution is 14 bits.

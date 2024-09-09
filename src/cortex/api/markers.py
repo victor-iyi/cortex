@@ -58,6 +58,15 @@ def inject_marker(
         MarkerRequest: The marker injection status.
 
     """
+    if not isinstance(value, (str, int)):
+        raise TypeError('value must be either a string or an integer.')
+
+    if isinstance(value, str) and not value.isdigit():
+        raise ValueError('value must be an integer if it is a string.')
+
+    if isinstance(value, int) and value < 0:
+        raise ValueError('value must be a positive integer.')
+
     _params = {'cortexToken': auth, 'session': session_id, 'time': time, 'value': value, 'label': label}
 
     if port is not None:

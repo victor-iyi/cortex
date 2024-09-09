@@ -21,6 +21,7 @@ from cortex.api.id import HeadsetID
 from cortex.api.types import (
     BaseRequest,
     ConnectHeadsetRequest,
+    ConnectionType,
     Setting,
     SubscriptionRequest,
     SyncWithClockRequest,
@@ -33,7 +34,7 @@ def make_connection(
     *,
     headset_id: str | None = None,
     mappings: dict[str, str] | None = None,
-    connection_type: str | None = None,
+    connection_type: ConnectionType | None = None,
 ) -> ConnectHeadsetRequest:
     """Connect, refresh, or disconnect from the headset.
 
@@ -45,8 +46,9 @@ def make_connection(
 
     Keyword Args:
         headset_id (str, optional): The headset ID.
-        mappings (dict[str, str], optional): The mappings.
-        connection_type (str, optional): The connection type.
+        mappings (dict[str, str], optional): The mappings (Only if you want to connect Epoc Flex headset).
+        connection_type (ConnectionType, optinoal): The connection type.
+            Connection type can be one of "bluetooth", "dongle" or "usb cable".
 
     Returns:
         ConnectHeadsetRequest: The headset connection status.
@@ -61,13 +63,20 @@ def make_connection(
     else:
         raise ValueError('command must be either "connect", "disconnect", or "refresh".')
 
-    if headset_id is not None:
+    if headset_id is not None and command != 'refresh':
         _params['headset'] = headset_id
 
-    if mappings is not None:
+    # Provide mappings only if headset is EPOC FLEX and command is connect.
+    if (
+        headset_id is not None
+        and headset_id.upper().startswith('EPOCFLEX')
+        and mappings is not None
+        and command == 'connect'
+    ):
         _params['mappings'] = mappings
 
-    if connection_type is not None:
+    # Omit connection_type if command is 'refresh'.
+    if connection_type is not None and command != 'refresh':
         _params['connectionType'] = connection_type
 
     _request = {'id': _id, 'jsonrpc': '2.0', 'method': 'controlDevice', 'params': _params}
@@ -75,7 +84,7 @@ def make_connection(
     return _request
 
 
-def query_headset(headset_id: str | None = None) -> BaseRequest:
+def query_headset(headset_id: str | None = None, *, include_flex_mappings: bool = False) -> BaseRequest:
     """Query the headset.
 
     Notes:
@@ -85,14 +94,23 @@ def query_headset(headset_id: str | None = None) -> BaseRequest:
     Read More:
         [queryHeadsets](https://emotiv.gitbook.io/cortex-api/headset/queryheadsets)
 
+    Args:
+        headset_id (str, optional): The headset ID or wildcard.
+
+    Keyword Args:
+        include_flex_mappings (bool, optional): Include the mappings of EPOCFLEX headset.
+
     Returns:
         BaseRequest: The headset query status.
 
     """
+    _params = {}
     if headset_id is not None:
-        _params = {'id': headset_id}
-    else:
-        _params = {}
+        _params['id'] = headset_id
+
+    if include_flex_mappings:
+        _params['includeFlexMappings'] = include_flex_mappings
+
     _query = {'id': HeadsetID.QUERY_HEADSET, 'jsonrpc': '2.0', 'method': 'queryHeadsets', 'params': _params}
 
     return _query
@@ -113,11 +131,23 @@ def update_headset(auth: str, headset_id: str, settings: Setting) -> UpdateHeads
         UpdateHeadsetRequest: The headset update status.
 
     """
+    if settings['mode'] == 'EPOC' and settings['eegRate'] != 128:
+        raise ValueError('EPOC headset only supports 128Hz EEG rate.')
+
+    if settings['mode'] == 'EPOC' and settings['memsRate'] != 0:
+        raise ValueError('EPOC headset only supports 0Hz MEMS rate.')
+
+    if settings['mode'] == 'EPOCPLUS' and settings['eegRate'] not in (128, 256):
+        raise ValueError('EPOCPLUS headset only supports 128Hz or 256Hz EEG rate.')
+
+    if settings['mode'] == 'EPOCPLUS' and settings['memsRate'] not in (0, 32, 64, 128):
+        raise ValueError('EPOCPLUS headset only supports 0Hz, 32Hz, 64Hz, or 128Hz MEMS rate.')
+
     _request = {
         'id': HeadsetID.UPDATE_HEADSET,
         'jsonrpc': '2.0',
         'method': 'updateHeadset',
-        'params': {'cortexToken': auth, 'headsetId': headset_id, 'setting': settings},
+        'params': {'cortexToken': auth, 'headset': headset_id, 'setting': settings},
     }
 
     return _request
@@ -138,6 +168,9 @@ def update_custom_info(auth: str, headset_id: str, headband_position: Literal['b
         BaseRequest: The headset custom information status.
 
     """
+    if headband_position not in ('back', 'top'):
+        raise ValueError('headband_position must be either "back" or "top".')
+
     _request = {
         'id': HeadsetID.UPDATE_CUSTOM_INFO,
         'jsonrpc': '2.0',

@@ -115,7 +115,6 @@ class FacialExpressionTrainer:
             'com': Mental Command
             'fac': Facial Expression
             'sys': Training Event
-            # TODO: Add more data streams and their meaning.
 
         Args:
             streams (list[str]): The list of data streams to be subscribed.
@@ -263,15 +262,15 @@ def main() -> None:
     """Main function to start the training."""
     import os
 
-    # Please fill your application client ID and client secret.
-    client_id = os.getenv('EMOTIV_CLIENT_ID') or ''
-    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or ''
+    # TODO: Please fill your application client ID and client secret.
+    client_id = os.getenv('EMOTIV_CLIENT_ID') or '<your-client-id>'
+    client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or '<your-client-secret>'
 
     # Initialize training.
     trainer = FacialExpressionTrainer(client_id=client_id, client_secret=client_secret)
 
     # Name of training profile.
-    profile_name = ''  # set your profile name. If the profile doesn't exist, it will be created.
+    profile_name = 'test'  # TODO: set your profile name. If the profile doesn't exist, it will be created.
 
     # List of actions to be trained.
     actions = ['neutral', 'surprise', 'smile']
