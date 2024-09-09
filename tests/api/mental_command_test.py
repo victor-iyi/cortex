@@ -10,25 +10,25 @@ from cortex.api.id import MentalCommandID
 import pytest
 
 # Constants.
-AUTH_TOKEN: Final[str] = '<AUTH-TOKEN>'
-PROFILE_NAME: Final[str] = '<PROFILE-NAME>'
-SESSION_ID: Final[str] = '<SESSION-ID>'
+AUTH_TOKEN: Final[str] = 'xxx'
+PROFILE_NAME: Final[str] = 'cortex-v2-example'
+SESSION_ID: Final[str] = 'f3a35fd0-9163-4cc4-ab30-4ed224369f91'
 
 # Type aliases.
-ResponseTemplate: TypeAlias = Callable[..., dict[str, Any]]
+APIRequest: TypeAlias = Callable[..., dict[str, Any]]
 
 
-def test_get_active_action(response_template: ResponseTemplate) -> None:
+def test_get_active_action(api_request: APIRequest) -> None:
     """Test getting the active mental command action."""
     actions = ['neutral', 'push', 'pull']
 
-    assert active_action(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME) == response_template(
+    assert active_action(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME) == api_request(
         id=MentalCommandID.GET_ACTIVE_ACTION,
         method='mentalCommandActiveAction',
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'profile': PROFILE_NAME},
     )
 
-    assert active_action(AUTH_TOKEN, 'get', session_id=SESSION_ID) == response_template(
+    assert active_action(AUTH_TOKEN, 'get', session_id=SESSION_ID) == api_request(
         id=MentalCommandID.GET_ACTIVE_ACTION,
         method='mentalCommandActiveAction',
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'session': SESSION_ID},
@@ -43,24 +43,24 @@ def test_get_active_action(response_template: ResponseTemplate) -> None:
         active_action(AUTH_TOKEN, 'get')
         active_action(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
-    assert active_action(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, actions=actions) == response_template(
+    assert active_action(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, actions=actions) == api_request(
         id=MentalCommandID.GET_ACTIVE_ACTION,
         method='mentalCommandActiveAction',
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'profile': PROFILE_NAME},
     )
 
 
-def test_set_active_action(response_template: ResponseTemplate) -> None:
+def test_set_active_action(api_request: APIRequest) -> None:
     """Test setting the active mental command action."""
     actions = ['neutral', 'push', 'pull']
 
-    assert active_action(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME) == response_template(
+    assert active_action(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME) == api_request(
         id=MentalCommandID.SET_ACTIVE_ACTION,
         method='mentalCommandActiveAction',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'profile': PROFILE_NAME},
     )
 
-    assert active_action(AUTH_TOKEN, 'set', session_id=SESSION_ID) == response_template(
+    assert active_action(AUTH_TOKEN, 'set', session_id=SESSION_ID) == api_request(
         id=MentalCommandID.SET_ACTIVE_ACTION,
         method='mentalCommandActiveAction',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'session': SESSION_ID},
@@ -78,27 +78,27 @@ def test_set_active_action(response_template: ResponseTemplate) -> None:
     with pytest.raises(ValueError, match='You can have at most 4 actions.'):
         active_action(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, actions=['neutral', 'push', 'pull', 'lift', 'drop'])
 
-    assert active_action(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, actions=actions) == response_template(
+    assert active_action(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, actions=actions) == api_request(
         id=MentalCommandID.SET_ACTIVE_ACTION,
         method='mentalCommandActiveAction',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'profile': PROFILE_NAME, 'actions': actions},
     )
-    assert active_action(AUTH_TOKEN, 'set', session_id=SESSION_ID, actions=actions) == response_template(
+    assert active_action(AUTH_TOKEN, 'set', session_id=SESSION_ID, actions=actions) == api_request(
         id=MentalCommandID.SET_ACTIVE_ACTION,
         method='mentalCommandActiveAction',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'session': SESSION_ID, 'actions': actions},
     )
 
 
-def test_brain_map(response_template: ResponseTemplate) -> None:
+def test_brain_map(api_request: APIRequest) -> None:
     """Test mapping the profile name to the corresponding mental command brain."""
-    assert brain_map(AUTH_TOKEN, profile_name=PROFILE_NAME) == response_template(
+    assert brain_map(AUTH_TOKEN, profile_name=PROFILE_NAME) == api_request(
         id=MentalCommandID.BRAIN_MAP,
         method='mentalCommandBrainMap',
         params={'cortexToken': AUTH_TOKEN, 'profile': PROFILE_NAME},
     )
 
-    assert brain_map(AUTH_TOKEN, session_id=SESSION_ID) == response_template(
+    assert brain_map(AUTH_TOKEN, session_id=SESSION_ID) == api_request(
         id=MentalCommandID.BRAIN_MAP,
         method='mentalCommandBrainMap',
         params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID},
@@ -112,15 +112,15 @@ def test_brain_map(response_template: ResponseTemplate) -> None:
         brain_map(AUTH_TOKEN, profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
 
-def test_getting_skill_rating(response_template: ResponseTemplate) -> None:
+def test_getting_skill_rating(api_request: APIRequest) -> None:
     """Test getting the skill rating."""
-    assert get_skill_rating(AUTH_TOKEN, profile_name=PROFILE_NAME) == response_template(
+    assert get_skill_rating(AUTH_TOKEN, profile_name=PROFILE_NAME) == api_request(
         id=MentalCommandID.SKILL_RATING,
         method='mentalCommandGetSkillRating',
         params={'cortexToken': AUTH_TOKEN, 'profile': PROFILE_NAME},
     )
 
-    assert get_skill_rating(AUTH_TOKEN, session_id=SESSION_ID) == response_template(
+    assert get_skill_rating(AUTH_TOKEN, session_id=SESSION_ID) == api_request(
         id=MentalCommandID.SKILL_RATING,
         method='mentalCommandGetSkillRating',
         params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID},
@@ -133,27 +133,27 @@ def test_getting_skill_rating(response_template: ResponseTemplate) -> None:
 
         get_skill_rating(AUTH_TOKEN, profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
-    assert get_skill_rating(AUTH_TOKEN, session_id=SESSION_ID, action='push') == response_template(
+    assert get_skill_rating(AUTH_TOKEN, session_id=SESSION_ID, action='push') == api_request(
         id=MentalCommandID.SKILL_RATING,
         method='mentalCommandGetSkillRating',
         params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID, 'action': 'push'},
     )
-    assert get_skill_rating(AUTH_TOKEN, profile_name=PROFILE_NAME, action='pull') == response_template(
+    assert get_skill_rating(AUTH_TOKEN, profile_name=PROFILE_NAME, action='pull') == api_request(
         id=MentalCommandID.SKILL_RATING,
         method='mentalCommandGetSkillRating',
         params={'cortexToken': AUTH_TOKEN, 'profile': PROFILE_NAME, 'action': 'pull'},
     )
 
 
-def test_training_threshold(response_template: ResponseTemplate) -> None:
+def test_training_threshold(api_request: APIRequest) -> None:
     """Test getting the training threshold."""
-    assert training_threshold(AUTH_TOKEN, profile_name=PROFILE_NAME) == response_template(
+    assert training_threshold(AUTH_TOKEN, profile_name=PROFILE_NAME) == api_request(
         id=MentalCommandID.TRAINING_THRESHOLD,
         method='mentalCommandTrainingThreshold',
         params={'cortexToken': AUTH_TOKEN, 'profile': PROFILE_NAME},
     )
 
-    assert training_threshold(AUTH_TOKEN, session_id=SESSION_ID) == response_template(
+    assert training_threshold(AUTH_TOKEN, session_id=SESSION_ID) == api_request(
         id=MentalCommandID.TRAINING_THRESHOLD,
         method='mentalCommandTrainingThreshold',
         params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID},
@@ -167,17 +167,17 @@ def test_training_threshold(response_template: ResponseTemplate) -> None:
         training_threshold(AUTH_TOKEN, profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
 
-def test_get_action_sensitivity(response_template: ResponseTemplate) -> None:
+def test_get_action_sensitivity(api_request: APIRequest) -> None:
     """Test getting the action sensitivity."""
     values = [1, 2, 3, 4, 5]
 
-    assert action_sensitivity(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME) == response_template(
+    assert action_sensitivity(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME) == api_request(
         id=MentalCommandID.ACTION_SENSITIVITY,
         method='mentalCommandActionSensitivity',
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'profile': PROFILE_NAME},
     )
 
-    assert action_sensitivity(AUTH_TOKEN, 'get', session_id=SESSION_ID) == response_template(
+    assert action_sensitivity(AUTH_TOKEN, 'get', session_id=SESSION_ID) == api_request(
         id=MentalCommandID.ACTION_SENSITIVITY,
         method='mentalCommandActionSensitivity',
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'session': SESSION_ID},
@@ -194,29 +194,29 @@ def test_get_action_sensitivity(response_template: ResponseTemplate) -> None:
         action_sensitivity(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
         action_sensitivity(AUTH_TOKEN, 'invalid', session_id=SESSION_ID)
 
-    assert action_sensitivity(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, values=values) == response_template(
+    assert action_sensitivity(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, values=values) == api_request(
         id=MentalCommandID.ACTION_SENSITIVITY,
         method='mentalCommandActionSensitivity',
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'profile': PROFILE_NAME},
     )
-    assert action_sensitivity(AUTH_TOKEN, 'get', session_id=SESSION_ID, values=values) == response_template(
+    assert action_sensitivity(AUTH_TOKEN, 'get', session_id=SESSION_ID, values=values) == api_request(
         id=MentalCommandID.ACTION_SENSITIVITY,
         method='mentalCommandActionSensitivity',
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'session': SESSION_ID},
     )
 
 
-def test_set_action_sensitivity(response_template: ResponseTemplate) -> None:
+def test_set_action_sensitivity(api_request: APIRequest) -> None:
     """Test setting the action sensitivity."""
     values = [1, 2, 3, 4, 5]
 
-    assert action_sensitivity(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME) == response_template(
+    assert action_sensitivity(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME) == api_request(
         id=MentalCommandID.ACTION_SENSITIVITY,
         method='mentalCommandActionSensitivity',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'profile': PROFILE_NAME},
     )
 
-    assert action_sensitivity(AUTH_TOKEN, 'set', session_id=SESSION_ID) == response_template(
+    assert action_sensitivity(AUTH_TOKEN, 'set', session_id=SESSION_ID) == api_request(
         id=MentalCommandID.ACTION_SENSITIVITY,
         method='mentalCommandActionSensitivity',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'session': SESSION_ID},
@@ -233,12 +233,12 @@ def test_set_action_sensitivity(response_template: ResponseTemplate) -> None:
         action_sensitivity(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
         action_sensitivity(AUTH_TOKEN, 'invalid', session_id=SESSION_ID)
 
-    assert action_sensitivity(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, values=values) == response_template(
+    assert action_sensitivity(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, values=values) == api_request(
         id=MentalCommandID.ACTION_SENSITIVITY,
         method='mentalCommandActionSensitivity',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'profile': PROFILE_NAME, 'values': values},
     )
-    assert action_sensitivity(AUTH_TOKEN, 'set', session_id=SESSION_ID, values=values) == response_template(
+    assert action_sensitivity(AUTH_TOKEN, 'set', session_id=SESSION_ID, values=values) == api_request(
         id=MentalCommandID.ACTION_SENSITIVITY,
         method='mentalCommandActionSensitivity',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'session': SESSION_ID, 'values': values},

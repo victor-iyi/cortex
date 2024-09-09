@@ -15,12 +15,12 @@ SESSION_ID: Final[str] = 'f3a35fd0-9163-4cc4-ab30-4ed224369f91'
 PROFILE_NAME: Final[str] = 'cortex-v2-example'
 
 # Type aliases.
-ResponseTemplate: TypeAlias = Callable[..., dict[str, Any]]
+APIRequest: TypeAlias = Callable[..., dict[str, Any]]
 
 
-def test_training(response_template: ResponseTemplate) -> None:
+def test_training(api_request: APIRequest) -> None:
     """Test training."""
-    assert training(AUTH_TOKEN, SESSION_ID, 'facialExpression', 'start', 'smile') == response_template(
+    assert training(AUTH_TOKEN, SESSION_ID, 'facialExpression', 'start', 'smile') == api_request(
         id=TrainingID.TRAINING,
         method='training',
         params={
@@ -33,7 +33,7 @@ def test_training(response_template: ResponseTemplate) -> None:
     )
 
     for status in ['start', 'accept', 'reject', 'reset', 'erase']:
-        assert training(AUTH_TOKEN, SESSION_ID, 'facialExpression', status, 'smile') == response_template(
+        assert training(AUTH_TOKEN, SESSION_ID, 'facialExpression', status, 'smile') == api_request(
             id=TrainingID.TRAINING,
             method='training',
             params={
@@ -46,7 +46,7 @@ def test_training(response_template: ResponseTemplate) -> None:
         )
 
     for status in ['start', 'accept', 'reject', 'reset', 'erase']:
-        assert training(AUTH_TOKEN, SESSION_ID, 'mentalCommand', status, 'push') == response_template(
+        assert training(AUTH_TOKEN, SESSION_ID, 'mentalCommand', status, 'push') == api_request(
             id=TrainingID.TRAINING,
             method='training',
             params={
@@ -64,15 +64,15 @@ def test_training(response_template: ResponseTemplate) -> None:
         training(AUTH_TOKEN, SESSION_ID, 'facialExpression', 'invalid', 'smile')
 
 
-def test_trained_signature_actions(response_template: ResponseTemplate) -> None:
+def test_trained_signature_actions(api_request: APIRequest) -> None:
     """Test trained_signature_actions."""
-    assert trained_signature_actions(AUTH_TOKEN, 'facialExpression', profile_name=PROFILE_NAME) == response_template(
+    assert trained_signature_actions(AUTH_TOKEN, 'facialExpression', profile_name=PROFILE_NAME) == api_request(
         id=TrainingID.SIGNATURE_ACTIONS,
         method='getTrainedSignatureActions',
         params={'cortexToken': AUTH_TOKEN, 'detection': 'facialExpression', 'profile': PROFILE_NAME},
     )
 
-    assert trained_signature_actions(AUTH_TOKEN, 'facialExpression', session_id=SESSION_ID) == response_template(
+    assert trained_signature_actions(AUTH_TOKEN, 'facialExpression', session_id=SESSION_ID) == api_request(
         id=TrainingID.SIGNATURE_ACTIONS,
         method='getTrainedSignatureActions',
         params={'cortexToken': AUTH_TOKEN, 'detection': 'facialExpression', 'session': SESSION_ID},
@@ -88,15 +88,15 @@ def test_trained_signature_actions(response_template: ResponseTemplate) -> None:
         trained_signature_actions(AUTH_TOKEN, 'facialExpression', profile_name='profile', session_id=SESSION_ID)
 
 
-def test_training_time(response_template: ResponseTemplate) -> None:
+def test_training_time(api_request: APIRequest) -> None:
     """Test training_time."""
-    assert training_time(AUTH_TOKEN, 'facialExpression', SESSION_ID) == response_template(
+    assert training_time(AUTH_TOKEN, 'facialExpression', SESSION_ID) == api_request(
         id=TrainingID.TRAINING_TIME,
         method='getTrainingTime',
         params={'cortexToken': AUTH_TOKEN, 'detection': 'facialExpression', 'session': SESSION_ID},
     )
 
-    assert training_time(AUTH_TOKEN, 'mentalCommand', SESSION_ID) == response_template(
+    assert training_time(AUTH_TOKEN, 'mentalCommand', SESSION_ID) == api_request(
         id=TrainingID.TRAINING_TIME,
         method='getTrainingTime',
         params={'cortexToken': AUTH_TOKEN, 'detection': 'mentalCommand', 'session': SESSION_ID},

@@ -1,6 +1,5 @@
 """Tests for the handler module."""
 
-from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 import pytest
 from cortex.api.handler import stream_data

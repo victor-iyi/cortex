@@ -10,15 +10,15 @@ from cortex.api.id import FacialExpressionID
 
 
 # Constants.
-AUTH_TOKEN: Final[str] = '<AUTH-TOKEN>'
-PROFILE_NAME: Final[str] = '<PROFILE-NAME>'
-SESSION_ID: Final[str] = '<SESSION-ID>'
+AUTH_TOKEN: Final[str] = 'xxx'
+PROFILE_NAME: Final[str] = 'cortex-v2-example'
+SESSION_ID: Final[str] = 'f3a35fd0-9163-4cc4-ab30-4ed224369f91'
 
 # Type aliases.
-ResponseTemplate: TypeAlias = Callable[..., dict[str, Any]]
+APIRequest: TypeAlias = Callable[..., dict[str, Any]]
 
 
-def test_signature_type(response_template: ResponseTemplate) -> None:
+def test_signature_type(api_request: APIRequest) -> None:
     """Test setting the facial expression signature type."""
     _id = FacialExpressionID.SIGNATURE_TYPE
     method = 'facialExpressionSignatureType'
@@ -38,31 +38,31 @@ def test_signature_type(response_template: ResponseTemplate) -> None:
         signature_type(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, signature='invalid')
 
     # status is 'set'.
-    assert signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, signature='set') == response_template(
+    assert signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, signature='set') == api_request(
         id=_id,
         method=method,
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'profile': PROFILE_NAME, 'signature': 'set'},
     )
-    assert signature_type(AUTH_TOKEN, 'set', session_id=SESSION_ID, signature='set') == response_template(
+    assert signature_type(AUTH_TOKEN, 'set', session_id=SESSION_ID, signature='set') == api_request(
         id=_id,
         method=method,
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'session': SESSION_ID, 'signature': 'set'},
     )
 
     # status is 'get'.
-    assert signature_type(AUTH_TOKEN, 'get', session_id=SESSION_ID, signature='universal') == response_template(
+    assert signature_type(AUTH_TOKEN, 'get', session_id=SESSION_ID, signature='universal') == api_request(
         id=_id,
         method=method,
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'session': SESSION_ID, 'signature': 'universal'},
     )
-    assert signature_type(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, signature='trained') == response_template(
+    assert signature_type(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, signature='trained') == api_request(
         id=_id,
         method=method,
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'profile': PROFILE_NAME, 'signature': 'trained'},
     )
 
 
-def test_threshold(response_template: ResponseTemplate) -> None:
+def test_threshold(api_request: APIRequest) -> None:
     """Test setting the facial expression threshold."""
     _id = FacialExpressionID.THRESHOLD
     method = 'facialExpressionThreshold'
@@ -78,28 +78,26 @@ def test_threshold(response_template: ResponseTemplate) -> None:
         threshold(AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, value=1001)
 
     # status is 'set'.
-    assert threshold(
-        AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, value=10
-    ) == response_template(
+    assert threshold(AUTH_TOKEN, status='set', action='smile', profile_name=PROFILE_NAME, value=10) == api_request(
         id=_id,
         method=method,
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'action': 'smile', 'profile': PROFILE_NAME, 'value': 10},
     )
 
-    assert threshold(AUTH_TOKEN, status='set', action='smile', session_id=SESSION_ID, value=10) == response_template(
+    assert threshold(AUTH_TOKEN, status='set', action='smile', session_id=SESSION_ID, value=10) == api_request(
         id=_id,
         method=method,
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'action': 'smile', 'session': SESSION_ID, 'value': 10},
     )
 
     # status is 'get'.
-    assert threshold(AUTH_TOKEN, status='get', action='smile', profile_name=PROFILE_NAME) == response_template(
+    assert threshold(AUTH_TOKEN, status='get', action='smile', profile_name=PROFILE_NAME) == api_request(
         id=_id,
         method=method,
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'action': 'smile', 'profile': PROFILE_NAME},
     )
 
-    assert threshold(AUTH_TOKEN, status='get', action='smile', session_id=SESSION_ID) == response_template(
+    assert threshold(AUTH_TOKEN, status='get', action='smile', session_id=SESSION_ID) == api_request(
         id=_id,
         method=method,
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'action': 'smile', 'session': SESSION_ID},

@@ -10,13 +10,13 @@ from cortex.api.id import SubjectsID
 from cortex.api.types import Attribute, SubjectQuery
 
 # Constants.
-AUTH_TOKEN: Final[str] = '<AUTH-TOKEN>'
+AUTH_TOKEN: Final[str] = 'xxx'
 
 # Type aliases.
-ResponseTemplate: TypeAlias = Callable[..., dict[str, Any]]
+APIRequest: TypeAlias = Callable[..., dict[str, Any]]
 
 
-def test_create_subject(response_template: ResponseTemplate) -> None:
+def test_create_subject(api_request: APIRequest) -> None:
     """Test creating a subject."""
     subject_name = 'Subject name'
     date_of_birth = '1990-12-25'
@@ -25,13 +25,13 @@ def test_create_subject(response_template: ResponseTemplate) -> None:
     city = 'Los Angeles'
     attributes = [Attribute(name='age', value='20')]
 
-    assert create_subject(AUTH_TOKEN, subject_name) == response_template(
+    assert create_subject(AUTH_TOKEN, subject_name) == api_request(
         id=SubjectsID.CREATE, method='createSubject', params={'cortexToken': AUTH_TOKEN, 'subjectName': subject_name}
     )
 
     assert create_subject(
         AUTH_TOKEN, subject_name, date_of_birth=date_of_birth, country_code=country_code, attributes=attributes
-    ) == response_template(
+    ) == api_request(
         id=SubjectsID.CREATE,
         method='createSubject',
         params={
@@ -52,7 +52,7 @@ def test_create_subject(response_template: ResponseTemplate) -> None:
         state=state,
         city=city,
         attributes=attributes,
-    ) == response_template(
+    ) == api_request(
         id=SubjectsID.CREATE,
         method='createSubject',
         params={
@@ -71,7 +71,7 @@ def test_create_subject(response_template: ResponseTemplate) -> None:
         create_subject(AUTH_TOKEN, subject_name, sex='invalid')
 
 
-def test_update_subject(response_template: ResponseTemplate) -> None:
+def test_update_subject(api_request: APIRequest) -> None:
     """Test updating a subject."""
     subject_name = 'Subject name'
     date_of_birth = '1990-12-25'
@@ -80,7 +80,7 @@ def test_update_subject(response_template: ResponseTemplate) -> None:
     city = 'Los Angeles'
     attributes = [Attribute(name='age', value='20')]
 
-    assert update_subject(AUTH_TOKEN, subject_name) == response_template(
+    assert update_subject(AUTH_TOKEN, subject_name) == api_request(
         id=SubjectsID.UPDATE, method='updateSubject', params={'cortexToken': AUTH_TOKEN, 'subjectName': subject_name}
     )
 
@@ -93,7 +93,7 @@ def test_update_subject(response_template: ResponseTemplate) -> None:
         state=state,
         city=city,
         attributes=attributes,
-    ) == response_template(
+    ) == api_request(
         id=SubjectsID.UPDATE,
         method='updateSubject',
         params={
@@ -108,23 +108,23 @@ def test_update_subject(response_template: ResponseTemplate) -> None:
         },
     )
 
-    assert update_subject(AUTH_TOKEN, subject_name, date_of_birth=date_of_birth) == response_template(
+    assert update_subject(AUTH_TOKEN, subject_name, date_of_birth=date_of_birth) == api_request(
         id=SubjectsID.UPDATE,
         method='updateSubject',
         params={'cortexToken': AUTH_TOKEN, 'subjectName': subject_name, 'dateOfBirth': date_of_birth},
     )
 
 
-def test_delete_subject(response_template: ResponseTemplate) -> None:
+def test_delete_subject(api_request: APIRequest) -> None:
     """Test deleting a subject."""
     subject_name = 'Subject name'
 
-    assert delete_subject(AUTH_TOKEN, subject_name) == response_template(
+    assert delete_subject(AUTH_TOKEN, subject_name) == api_request(
         id=SubjectsID.DELETE, method='deleteSubjects', params={'cortexToken': AUTH_TOKEN, 'subjectName': subject_name}
     )
 
 
-def test_query_subject(response_template: ResponseTemplate) -> None:
+def test_query_subject(api_request: APIRequest) -> None:
     """Test querying a subject."""
     query = SubjectQuery(
         date_of_birth={'from': '1990-12-25', 'to': '1995-12-25'},
@@ -134,25 +134,25 @@ def test_query_subject(response_template: ResponseTemplate) -> None:
     )
     order_by = [{'subjectName': 'ASC'}]
 
-    assert query_subject(AUTH_TOKEN, query, order_by) == response_template(
+    assert query_subject(AUTH_TOKEN, query, order_by) == api_request(
         id=SubjectsID.QUERY,
         method='querySubjects',
         params={'cortexToken': AUTH_TOKEN, 'query': query, 'orderBy': order_by},
     )
 
-    assert query_subject(AUTH_TOKEN, query, order_by, limit=1000) == response_template(
+    assert query_subject(AUTH_TOKEN, query, order_by, limit=1000) == api_request(
         id=SubjectsID.QUERY,
         method='querySubjects',
         params={'cortexToken': AUTH_TOKEN, 'query': query, 'orderBy': order_by, 'limit': 1000},
     )
 
-    assert query_subject(AUTH_TOKEN, query, order_by, offset=3) == response_template(
+    assert query_subject(AUTH_TOKEN, query, order_by, offset=3) == api_request(
         id=SubjectsID.QUERY,
         method='querySubjects',
         params={'cortexToken': AUTH_TOKEN, 'query': query, 'orderBy': order_by},
     )
 
-    assert query_subject(AUTH_TOKEN, query, order_by, limit=1000, offset=10) == response_template(
+    assert query_subject(AUTH_TOKEN, query, order_by, limit=1000, offset=10) == api_request(
         id=SubjectsID.QUERY,
         method='querySubjects',
         params={'cortexToken': AUTH_TOKEN, 'query': query, 'orderBy': order_by, 'limit': 1000, 'offset': 10},
@@ -162,8 +162,8 @@ def test_query_subject(response_template: ResponseTemplate) -> None:
         query_subject(AUTH_TOKEN, query, order_by, limit=2, offset=3)
 
 
-def test_demographic_attr(response_template: ResponseTemplate) -> None:
+def test_demographic_attr(api_request: APIRequest) -> None:
     """Test getting demographic attributes."""
-    assert get_demographic_attr(AUTH_TOKEN) == response_template(
+    assert get_demographic_attr(AUTH_TOKEN) == api_request(
         id=SubjectsID.DEMO_ATTR, method='getDemographicAttributes', params={'cortexToken': AUTH_TOKEN}
     )

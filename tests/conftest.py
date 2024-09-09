@@ -12,15 +12,15 @@ SAMPLE_TIME: Final[float] = 1234567890.123
 
 # pylint: disable=redefined-builtin
 @pytest.fixture
-def response_template() -> Callable[[int, str, dict[str, Any] | None], dict[str, Any]]:
-    """Template structure for the API."""
+def api_request() -> Callable[[int, str, dict[str, Any] | None], dict[str, Any]]:
+    """Template structure for the API request."""
 
-    def _response_template(id: int, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    def _request_template(id: int, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         if params is None:
             return {'id': id, 'jsonrpc': '2.0', 'method': method}
         return {'id': id, 'jsonrpc': '2.0', 'method': method, 'params': params}
 
-    return _response_template
+    return _request_template
 
 
 @pytest.fixture
