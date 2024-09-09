@@ -39,6 +39,31 @@ them in the EMOTIV Launcher.
 [register here]: https://id.emotivcloud.com/eoidc/account/registration/
 [insight]: https://www.emotiv.com/insight/
 
+## Getting Started
+
+To get started, you will need to install the `cortex` package. You should check out
+some [examples] to get you started.
+
+```sh
+poetry install
+```
+
+For testing and development, you can install the package with the `test` and `dev`
+flags respectively.
+
+```sh
+poetry install --with test,dev
+```
+
+You'll also need to set your client id and client secret as environment variables.
+
+```sh
+export EMOTIV_CLIENT_ID="your-client-id"
+export EMOTIV_CLIENT_SECRET="your-client-secret"
+```
+
+[examples]: ./examples/
+
 ## Contribution
 
 You are very welcome to modify and use them in your own projects.

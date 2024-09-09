@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cortex"
-version = "0.2.7"
+version = "0.3.0"
 description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
