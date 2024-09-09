@@ -38,6 +38,7 @@ class CortexInfoObject(TypedDict):
     version: str
 
 
+
 class FlexMapping(TypedDict):
     """The mapping of the EEG channels of an EPOC Flex device."""
 
