@@ -26,13 +26,16 @@ def test_signature_type(response_template: ResponseTemplate) -> None:
     # Either profile_name or session_id must be provided, not both at the same time.
     with pytest.raises((AssertionError, ValueError)):
         # This should raise AssertionError: status must be either "set" or "get".
-        signature_type(AUTH_TOKEN, 'post', profile_name=PROFILE_NAME)
+        signature_type(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
+
+        # This should raise AssertionError: status must be either "set" or "get".
+        signature_type(AUTH_TOKEN, 'get')
 
         # This should raise AssertionError: profile_name & session_id are provided.
-        signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, session_id=SESSION_ID)
+        signature_type(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
         # This should raise AssertionError: signature must be either "set", "universal", or "trained".
-        signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, signature='invalid')
+        signature_type(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, signature='invalid')
 
     # status is 'set'.
     assert signature_type(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, signature='set') == response_template(

@@ -127,12 +127,14 @@ def trained_signature_actions(
     ], 'detection must be either "mentalCommand" or "facialExpression".'
 
     _params = {'cortexToken': auth, 'detection': detection}
-    if profile_name is not None:
+
+    # Either profile_name or session_id must be provided, not both at the same time.
+    if profile_name is not None and session_id is None:
         _params['profile'] = profile_name
-    elif session_id is not None:
+    elif session_id is not None and profile_name is None:
         _params['session'] = session_id
     else:
-        raise ValueError('Either profile_name or session_id must be provided.')
+        raise ValueError('Either profile_name or session_id must be provided, not both at the same time.')
 
     _trained = {
         'id': TrainingID.SIGNATURE_ACTIONS,

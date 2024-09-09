@@ -38,7 +38,7 @@ def test_get_active_action(response_template: ResponseTemplate) -> None:
         active_action(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         active_action(AUTH_TOKEN, 'get')
         active_action(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, session_id=SESSION_ID)
@@ -70,7 +70,7 @@ def test_set_active_action(response_template: ResponseTemplate) -> None:
         active_action(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         active_action(AUTH_TOKEN, 'set')
         active_action(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, session_id=SESSION_ID)
