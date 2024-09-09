@@ -24,20 +24,16 @@ def response_template() -> Callable[[int, str, dict[str, Any] | None], dict[str,
 
 
 @pytest.fixture
-def sample_data() -> Callable[[], dict[str, Any]]:
+def sample_data() -> dict[str, Any]:
     """Fixture to provide sample data for testing."""
-
-    def _sample_data() -> dict[str, Any]:
-        return {
-            'time': SAMPLE_TIME,
-            'com': ['action1', 100],
-            'fac': [1, 2, 3, 4, 5],
-            'eeg': [1.0, 2.0, 3.0, 4.0],
-            'mot': [0.1, 0.2, 0.3],
-            'dev': [1, 'good', 'device1', 75],
-            'met': [0.5, 0.6, 0.7],
-            'pow': [10, 20, 30],
-            'sys': {'version': '1.0', 'status': 'ok'},
-        }
-
-    return _sample_data
+    return {
+        'time': SAMPLE_TIME,
+        'com': ['action1', 100],
+        'fac': [1, 2, 3, 4, 5],
+        'eeg': [1.0, 2.0, 3.0, 4.0],
+        'mot': [0.1, 0.2, 0.3],
+        'dev': [1, 'good', 'device1', 75],
+        'met': [0.5, 0.6, 0.7],
+        'pow': [10, 20, 30],
+        'sys': {'version': '1.0', 'status': 'ok'},
+    }
