@@ -234,6 +234,9 @@ def test_query_records(response_template: ResponseTemplate) -> None:
         },
     )
 
+    with pytest.raises(ValueError, match='offset must be less than the limit.'):
+        query_records(AUTH_TOKEN, query, order_by, limit=2, offset=3)
+
 
 def test_record_infos(response_template: ResponseTemplate) -> None:
     """Test getting record information."""

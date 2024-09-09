@@ -296,6 +296,8 @@ def query_records(
         _params['limit'] = limit
 
     if offset is not None and limit is not None:
+        if limit < offset:
+            raise ValueError('The offset must be less than the limit.')
         _params['offset'] = offset
 
     if include_markers:
