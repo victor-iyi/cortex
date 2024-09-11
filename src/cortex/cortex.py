@@ -4,7 +4,7 @@ This module provides a Python interface to the Emotiv Cortex API.
 
 """
 
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument,too-many-lines
 import datetime
 import json
 import logging
@@ -23,20 +23,21 @@ from pydispatch import Dispatcher
 from cortex.api.auth import (
     access,
     authorize,
+    generate_new_token,
     get_info,
     get_license_info,
     get_user_info,
     get_user_login,
-    generate_new_token,
 )
-from cortex.api.facial_expression import signature_type as fe_signature_type, threshold as fe_threshold
+from cortex.api.facial_expression import signature_type as fe_signature_type
+from cortex.api.facial_expression import threshold as fe_threshold
 from cortex.api.headset import (
     make_connection,
     query_headset,
-    update_headset,
-    update_custom_info,
     subscription,
     sync_with_clock,
+    update_custom_info,
+    update_headset,
 )
 from cortex.api.markers import inject_marker, update_marker
 from cortex.api.mental_command import action_sensitivity, active_action, brain_map, get_skill_rating, training_threshold
@@ -278,7 +279,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Authorizing application ---')
 
-        _authorize = authorize(self.client_id, self.client_secret, self.license, self.debit)
+        _authorize = authorize(self.client_id, self.client_secret, license=self.license, debit=self.debit)
 
         logger.debug(_authorize)
 
@@ -1076,32 +1077,34 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         self.ws.send(json.dumps(_signature, indent=4))
 
-    def get_fe_threshold(self, profile_name: str) -> None:
+    def get_fe_threshold(self, profile_name: str, action: str) -> None:
         """Get the facial expression threshold.
 
         Args:
             profile_name (str): The profile name.
+            action (str): The action to get threshold value.
 
         """
         logger.info('--- Getting facial expression threshold ---')
 
-        _threshold = fe_threshold(self.auth, profile_name=profile_name)
+        _threshold = fe_threshold(self.auth, 'get', action, profile_name=profile_name)
 
         logger.debug(_threshold)
 
         self.ws.send(json.dumps(_threshold, indent=4))
 
-    def set_fe_threshold(self, profile_name: str, value: int) -> None:
+    def set_fe_threshold(self, profile_name: str, action: str, value: int) -> None:
         """Set the facial expression threshold.
 
         Args:
             profile_name (str): The profile name.
+            action (str): The action to set threshold value.
             value (int): The value of the threshold.
 
         """
         logger.info('--- Setting facial expression threshold ---')
 
-        _threshold = fe_threshold(self.auth, profile_name=profile_name, value=value)
+        _threshold = fe_threshold(self.auth, 'set', action=action, profile_name=profile_name, value=value)
 
         logger.debug(_threshold)
 
