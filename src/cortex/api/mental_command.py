@@ -130,10 +130,6 @@ def get_skill_rating(
         BaseRequest: The skill rating of the mental command action.
 
     """
-    assert (
-        profile_name is not None and session_id is None or profile_name is None and session_id is not None
-    ), 'Either profile_name or session_id must be provided, not both at the same time.'
-
     _params = {'cortexToken': auth}
 
     # Either profile_name or session_id must be provided, not both at the same time.
@@ -175,10 +171,6 @@ def training_threshold(auth: str, *, profile_name: str | None = None, session_id
             The training threshold for mental commands.
 
     """
-    assert (
-        profile_name is not None and session_id is None or profile_name is None and session_id is not None
-    ), 'Either profile_name or session_id must be provided, not both at the same time.'
-
     _params = {'cortexToken': auth}
 
     # Either profile_name or session_id must be provided, not both at the same time.
@@ -233,11 +225,6 @@ def action_sensitivity(
     """
     if status not in ('set', 'get'):
         raise ValueError('status must be either "set" or "get".')
-
-    # Either profile_name or session_id must be provided, not both at the same time.
-    assert (
-        profile_name is not None and session_id is None or profile_name is None and session_id is not None
-    ), 'Either profile_name or session_id must be provided, not both at the same time.'
 
     _params = {'cortexToken': auth, 'status': status}
 
