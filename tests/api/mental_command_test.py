@@ -34,11 +34,11 @@ def test_get_active_action(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'session': SESSION_ID},
     )
 
-    with pytest.raises(AssertionError, match='status must be either "set" or "get".'):
+    with pytest.raises(ValueError, match='status must be either "set" or "get".'):
         active_action(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
 
     with pytest.raises(
-        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        AttributeError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         active_action(AUTH_TOKEN, 'get')
         active_action(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, session_id=SESSION_ID)
@@ -66,11 +66,11 @@ def test_set_active_action(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'session': SESSION_ID},
     )
 
-    with pytest.raises(AssertionError, match='status must be either "set" or "get".'):
+    with pytest.raises(ValueError, match='status must be either "set" or "get".'):
         active_action(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
 
     with pytest.raises(
-        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        AttributeError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         active_action(AUTH_TOKEN, 'set')
         active_action(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, session_id=SESSION_ID)
@@ -105,10 +105,9 @@ def test_brain_map(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        AttributeError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         brain_map(AUTH_TOKEN)
-
         brain_map(AUTH_TOKEN, profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
 
@@ -127,10 +126,9 @@ def test_getting_skill_rating(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        AttributeError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         get_skill_rating(AUTH_TOKEN)
-
         get_skill_rating(AUTH_TOKEN, profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
     assert get_skill_rating(AUTH_TOKEN, session_id=SESSION_ID, action='push') == api_request(
@@ -160,10 +158,9 @@ def test_training_threshold(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        AttributeError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         training_threshold(AUTH_TOKEN)
-
         training_threshold(AUTH_TOKEN, profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
 
@@ -184,13 +181,12 @@ def test_get_action_sensitivity(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        AttributeError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         action_sensitivity(AUTH_TOKEN, 'get')
-
         action_sensitivity(AUTH_TOKEN, 'get', profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
-    with pytest.raises(AssertionError, match='status must be either "set" or "get".'):
+    with pytest.raises(ValueError, match='status must be either "set" or "get".'):
         action_sensitivity(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
         action_sensitivity(AUTH_TOKEN, 'invalid', session_id=SESSION_ID)
 
@@ -223,13 +219,12 @@ def test_set_action_sensitivity(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        AttributeError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         action_sensitivity(AUTH_TOKEN, 'set')
-
         action_sensitivity(AUTH_TOKEN, 'set', profile_name=PROFILE_NAME, session_id=SESSION_ID)
 
-    with pytest.raises(AssertionError, match='status must be either "set" or "get".'):
+    with pytest.raises(ValueError, match='status must be either "set" or "get".'):
         action_sensitivity(AUTH_TOKEN, 'invalid', profile_name=PROFILE_NAME)
         action_sensitivity(AUTH_TOKEN, 'invalid', session_id=SESSION_ID)
 

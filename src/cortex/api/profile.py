@@ -84,14 +84,8 @@ def setup_profile(
         BaseRequest: The profile setup status.
 
     """
-    assert status in [
-        'create',
-        'load',
-        'unload',
-        'save',
-        'rename',
-        'delete',
-    ], 'status must be one of create, load, unload, save, rename, delete.'
+    if status not in ('create', 'load', 'unload', 'save', 'rename', 'delete'):
+        raise ValueError('status must be one of create, load, unload, save, rename, delete.')
 
     if status == 'rename' and new_profile_name is None:
         raise ValueError('new_profile_name must be provided when status is "rename".')
@@ -149,10 +143,8 @@ def detection_info(detection: Literal['mentalCommand', 'facialExpression']) -> B
         BaseRequest: The detection information.
 
     """
-    assert detection in [
-        'mentalCommand',
-        'facialExpression',
-    ], 'detection must be either "mentalCommand" or "facialExpression".'
+    if detection not in ('mentalCommand', 'facialExpression'):
+        raise ValueError('detection must be either "mentalCommand" or "facialExpression".')
 
     _detection = {
         'id': ProfileID.DETECTION_INFO,

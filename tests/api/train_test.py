@@ -57,10 +57,10 @@ def test_training(api_request: APIRequest) -> None:
                 'action': 'push',
             },
         )
-    with pytest.raises(AssertionError):
-        # AssertionError: detection must be either "facialExpression" or "mentalCommand".
+    with pytest.raises(ValueError):
+        # ValueError: detection must be either "facialExpression" or "mentalCommand".
         training(AUTH_TOKEN, SESSION_ID, 'invalid', 'start', 'smile')
-        # AssertionError: status must be one of "start", "accept", "reject", "reset", "erase".
+        # ValueError: status must be one of "start", "accept", "reject", "reset", "erase".
         training(AUTH_TOKEN, SESSION_ID, 'facialExpression', 'invalid', 'smile')
 
 
@@ -78,12 +78,12 @@ def test_trained_signature_actions(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'detection': 'facialExpression', 'session': SESSION_ID},
     )
 
-    with pytest.raises(AssertionError):
-        # AssertionError: detection must be either "facialExpression" or "mentalCommand".
+    with pytest.raises(ValueError):
+        # ValueError: detection must be either "facialExpression" or "mentalCommand".
         trained_signature_actions(AUTH_TOKEN, 'invalid')
 
     with pytest.raises(ValueError):
-        # AssertionError: Either profile_name or session_id must be provided, not both at the same time.
+        # ValueError: Either profile_name or session_id must be provided, not both at the same time.
         trained_signature_actions(AUTH_TOKEN, 'facialExpression')
         trained_signature_actions(AUTH_TOKEN, 'facialExpression', profile_name='profile', session_id=SESSION_ID)
 
@@ -102,6 +102,6 @@ def test_training_time(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'detection': 'mentalCommand', 'session': SESSION_ID},
     )
 
-    with pytest.raises(AssertionError):
-        # AssertionError: detection must be either "facialExpression" or "mentalCommand".
+    with pytest.raises(ValueError):
+        # ValueError: detection must be either "facialExpression" or "mentalCommand".
         training_time(AUTH_TOKEN, 'invalid', SESSION_ID)

@@ -43,7 +43,8 @@ def create_session(auth: str, headset_id: str, status: Literal['open', 'active']
         BaseRequest: The session status.
 
     """
-    assert status in ['open', 'active'], 'status must be either "open" or "active".'
+    if status not in ('open', 'active'):
+        raise ValueError('status must be either "open" or "active".')
 
     _session = {
         'id': SessionID.CREATE,
@@ -72,7 +73,8 @@ def update_session(auth: str, session_id: str, status: Literal['active', 'close'
         BaseRequest: The session status.
 
     """
-    assert status in ['active', 'close'], 'status must be either "active" or "close".'
+    if status not in ('active', 'close'):
+        raise ValueError('status must be either "active" or "close".')
 
     _session = {
         'id': SessionID.UPDATE,

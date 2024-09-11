@@ -20,10 +20,26 @@ from typing import Any, ClassVar, Literal
 import websocket
 from pydispatch import Dispatcher
 
-from cortex.api.auth import access, authorize, get_info
-from cortex.api.headset import make_connection, query_headset, subscription
+from cortex.api.auth import (
+    access,
+    authorize,
+    get_info,
+    get_license_info,
+    get_user_info,
+    get_user_login,
+    generate_new_token,
+)
+from cortex.api.facial_expression import signature_type as fe_signature_type, threshold as fe_threshold
+from cortex.api.headset import (
+    make_connection,
+    query_headset,
+    update_headset,
+    update_custom_info,
+    subscription,
+    sync_with_clock,
+)
 from cortex.api.markers import inject_marker, update_marker
-from cortex.api.mental_command import action_sensitivity, active_action, brain_map, training_threshold
+from cortex.api.mental_command import action_sensitivity, active_action, brain_map, get_skill_rating, training_threshold
 from cortex.api.profile import current_profile, query_profile, setup_profile
 from cortex.api.record import (
     config_opt_out,
@@ -36,9 +52,10 @@ from cortex.api.record import (
     stop_record,
     update_record,
 )
-from cortex.api.session import create_session, update_session
+from cortex.api.session import create_session, query_session, update_session
+from cortex.api.subject import create_subject, delete_subject, get_demographic_attr, query_subject, update_subject
 from cortex.api.train import trained_signature_actions, training, training_time
-from cortex.api.types import RecordQuery
+from cortex.api.types import Attribute, RecordQuery, Setting, SubjectQuery
 from cortex.consts import CA_CERTS
 from cortex.logging import logger
 
@@ -172,6 +189,39 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
     def on_error(self, *args: Any, **kwargs: Any) -> None:
         """Handle the error."""
 
+    # +-----------------------------------------------------------------------
+    # |                     Authentication
+    # +-----------------------------------------------------------------------
+    def get_cortex_info(self) -> None:
+        """Return info about the Cortex service, like it's version and build number.
+
+        Read More:
+            [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)
+
+        """
+        logger.info('--- Getting Cortex info ---')
+
+        _info = get_info()
+
+        logger.debug(_info)
+
+        self.ws.send(json.dumps(_info, indent=4))
+
+    def get_user_login(self) -> None:
+        """Get the current logged in user.
+
+        Read More:
+            [getUserLogin](https://emotiv.gitbook.io/cortex-api/authentication/getuserlogin)
+
+        """
+        logger.info('--- Getting user login ---')
+
+        _login = get_user_login()
+
+        logger.debug(_login)
+
+        self.ws.send(json.dumps(_login, indent=4))
+
     def request_access(self) -> None:
         """Request user approval for the current application through [EMOTIV Launcher].
 
@@ -187,7 +237,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access ---')
 
-        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='requestAccess')
+        _access = access(self.client_id, self.client_secret, method='requestAccess')
 
         logger.debug(_access)
 
@@ -208,7 +258,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access right ---')
 
-        _access = access(client_id=self.client_id, client_secret=self.client_secret, method='hasAccessRight')
+        _access = access(self.client_id, self.client_secret, method='hasAccessRight')
 
         logger.debug(_access)
 
@@ -228,69 +278,60 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Authorizing application ---')
 
-        _authorize = authorize(
-            client_id=self.client_id, client_secret=self.client_secret, license=self.license, debit=self.debit
-        )
+        _authorize = authorize(self.client_id, self.client_secret, self.license, self.debit)
 
         logger.debug(_authorize)
 
         self.ws.send(json.dumps(_authorize, indent=4))
 
-    def create_session(self) -> None:
-        """Open a session with an Emotiv headset.
-
-        Notes:
-            To open a session with a headset, the status of the headset must be
-            "connected". If the status is "discovered", then you must call
-            `controlDevice` to connect the headset.
-            You cannot open a session with a headset connected by a USB cable.
-            You can use `queryHeadsets` to check the status and connection type
-            of the headset.
+    def generate_new_token(self) -> None:
+        """Generate a new token. Use it to extend the expiration date of a token.
 
         Read More:
-            [createSession](https://emotiv.gitbook.io/cortex-api/session/createsession)
+            [generateNewToken](https://emotiv.gitbook.io/cortex-api/authentication/generatenewtoken)
 
         """
-        logger.info('--- Creating session ---')
+        logger.info('--- Generating a new token ---')
 
-        if self.session_id is not None:
-            logger.warning(f'Session already exists. {self.session_id}')
-            return
+        _token = generate_new_token(self.auth, self.client_id, self.client_secret)
 
-        _session = create_session(auth=self.auth, headset_id=self.headset_id, status='active')
+        logger.debug(_token)
 
-        logger.debug(_session)
+        self.ws.send(json.dumps(_token, indent=4))
 
-        self.ws.send(json.dumps(_session, indent=4))
-
-    def close_session(self) -> None:
-        """Close a session with an Emotiv headset.
+    def get_user_info(self) -> None:
+        """Get the current user information.
 
         Read More:
-            [updateSession](https://emotiv.gitbook.io/cortex-api/session/updateSession)
+            [getUserInformation](https://emotiv.gitbook.io/cortex-api/authentication/getuserinfo)
 
         """
-        logger.info('--- Closing session ---')
-        _session = update_session(auth=self.auth, session_id=self.session_id, status='close')
+        logger.info('--- Getting user information ---')
 
-        logger.debug(_session)
-
-        self.ws.send(json.dumps(_session, indent=4))
-
-    def get_cortex_info(self) -> None:
-        """Return info about the Cortex service, like it's version and build number.
-
-        Read More:
-            [getCortexInfo](https://emotiv.gitbook.io/cortex-api/authentication/getcortexinfo)
-
-        """
-        logger.info('--- Getting Cortex info ---')
-
-        _info = get_info()
+        _info = get_user_info(self.auth)
 
         logger.debug(_info)
 
         self.ws.send(json.dumps(_info, indent=4))
+
+    def get_license_info(self) -> None:
+        """Get the license information.
+
+        Read More:
+            [getLicenseInformation](https://emotiv.gitbook.io/cortex-api/authentication/getlicenseinfo)
+
+        """
+        logger.info('--- Getting license information ---')
+
+        _license = get_license_info(self.auth)
+
+        logger.debug(_license)
+
+        self.ws.send(json.dumps(_license, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     Headset
+    # +-----------------------------------------------------------------------
 
     def connect(self, mappings: dict[str, str] | None = None, connection_type: str | None = None) -> None:
         """Connect to the headset.
@@ -328,15 +369,142 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         self.ws.send(json.dumps(_connection, indent=4))
 
-    def query_headset(self) -> None:
-        """Query the headset."""
+    def refresh(self) -> None:
+        """Refresh the headset connection.
+
+        Read More:
+            [controlDevice](https://emotiv.gitbook.io/cortex-api/headset/controldevice)
+
+        """
+        logger.info('--- Refreshing the headset connection ---')
+
+        _connection = make_connection(command='refresh')
+
+        logger.debug(_connection)
+
+        self.ws.send(json.dumps(_connection, indent=4))
+
+    def query_headset(self, *, include_flex_mappings: bool = False) -> None:
+        """Query the headset.
+
+        Keyword Args:
+            include_flex_mappings (bool, optional): Whether to include the flex mappings.
+
+        """
         logger.info('--- Querying the headset ---')
 
-        _query = query_headset(headset_id=self.headset_id)
+        _query = query_headset(self.headset_id, include_flex_mappings=include_flex_mappings)
 
         logger.debug(_query)
 
         self.ws.send(json.dumps(_query, indent=4))
+
+    def update_headset(self, settings: Setting) -> None:  # noqa: D417
+        """Update the headset.
+
+        Keyword Args:
+            settings (Setting): The settings to update.
+
+        """
+        logger.info('--- Updating the headset ---')
+
+        _update = update_headset(self.auth, self.headset_id, settings)
+
+        logger.debug(_update)
+
+        self.ws.send(json.dumps(_update, indent=4))
+
+    def update_custom_info(self, headband_position: Literal['back', 'top']) -> None:
+        """Update the custom info.
+
+        Args:
+            headband_position (Literal['back', 'top']): The headband position.
+
+        """
+        logger.info('--- Updating the custom info ---')
+
+        _update = update_custom_info(self.auth, self.headset_id, headband_position)
+
+        logger.debug(_update)
+
+        self.ws.send(json.dumps(_update, indent=4))
+
+    def sync_with_clock(self, monotonic_time: float, system_time: float) -> None:
+        """Synchronize the monotonic clock of your application with the monotonic clock of Cortex.
+
+        Args:
+            monotonic_time (float): The monotonic time of your application. The unit is in seconds.
+                The origin can be anything.
+            system_time (float): The system time of your application.
+                It must be the number of seconds that have elapsed since 00:00:00 Thursday, 1 January 1970 UTC.
+
+        """
+        logger.info('--- Syncing the headset with the system clock ---')
+
+        _sync = sync_with_clock(self.headset_id, monotonic_time, system_time)
+
+        logger.debug(_sync)
+
+        self.ws.send(json.dumps(_sync, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     Sessions
+    # +-----------------------------------------------------------------------
+
+    def create_session(self) -> None:
+        """Open a session with an Emotiv headset.
+
+        Notes:
+            To open a session with a headset, the status of the headset must be
+            "connected". If the status is "discovered", then you must call
+            `controlDevice` to connect the headset.
+            You cannot open a session with a headset connected by a USB cable.
+            You can use `queryHeadsets` to check the status and connection type
+            of the headset.
+
+        Read More:
+            [createSession](https://emotiv.gitbook.io/cortex-api/session/createsession)
+
+        """
+        logger.info('--- Creating session ---')
+
+        if self.session_id is not None:
+            logger.warning(f'Session already exists. {self.session_id}')
+            return
+
+        _session = create_session(self.auth, self.headset_id, status='active')
+
+        logger.debug(_session)
+
+        self.ws.send(json.dumps(_session, indent=4))
+
+    def close_session(self) -> None:
+        """Close a session with an Emotiv headset.
+
+        Read More:
+            [updateSession](https://emotiv.gitbook.io/cortex-api/session/updateSession)
+
+        """
+        logger.info('--- Closing session ---')
+        _session = update_session(self.auth, self.session_id, status='close')
+
+        logger.debug(_session)
+
+        self.ws.send(json.dumps(_session, indent=4))
+
+    def query_session(self) -> None:
+        """Get the list of current sessions created by this application."""
+        logger.info('--- Querying session ---')
+
+        _session = query_session(self.auth)
+
+        logger.debug(_session)
+
+        self.ws.send(json.dumps(_session, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     Data Subscription
+    # +-----------------------------------------------------------------------
 
     def subscribe(self, streams: list[str]) -> None:
         """Subscribe to one or more data stream.
@@ -353,7 +521,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='subscribe')
+        _request = subscription(self.auth, self.session_id, streams, method='subscribe')
 
         logger.debug(_request)
 
@@ -374,72 +542,15 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _request = subscription(auth=self.auth, session_id=self.session_id, streams=streams, method='unsubscribe')
+        _request = subscription(self.auth, self.session_id, streams, method='unsubscribe')
 
         logger.debug(_request)
 
         self.ws.send(json.dumps(_request, indent=4))
 
-    def query_profile(self) -> None:
-        """Query the profile."""
-        logger.info('--- Querying the profile ---')
-
-        _query = query_profile(auth=self.auth)
-
-        logger.debug(_query)
-
-        self.ws.send(json.dumps(_query, indent=4))
-
-    def get_current_profile(self) -> None:
-        """Get the current profile."""
-        logger.info('--- Getting the current profile ---')
-
-        if not self.headset_id:
-            raise ValueError('No headset ID. Please connect to the headset first.')
-
-        _profile = current_profile(auth=self.auth, headset_id=self.headset_id)
-
-        logger.debug(_profile)
-
-        self.ws.send(json.dumps(_profile, indent=4))
-
-    def setup_profile(
-        self,
-        status: Literal['create', 'load', 'unload', 'save', 'rename', 'delete'],
-        profile_name: str,
-        *,
-        new_profile_name: str | None = None,
-    ) -> None:
-        """Setup a profile.
-
-        Args:
-            status (Literal['create', 'load', 'unload', 'save', 'rename', 'delete']): The status of the profile.
-            profile_name (str): The profile name.
-
-        Keyword Args:
-            new_profile_name (str, optional): The new profile name.
-                Only if the status is "rename".
-
-        """
-        logger.info(f'--- {status.title()} the profile: {profile_name} ---')
-
-        # Update self.profile_name if the status is 'create' or 'rename'.
-        if status == 'create':
-            self.profile_name = profile_name
-        elif status == 'rename' and new_profile_name is not None:
-            self.profile_name = new_profile_name
-
-        _profile = setup_profile(
-            auth=self.auth,
-            status=status,
-            profile_name=profile_name,
-            headset_id=self.headset_id,
-            new_profile_name=new_profile_name,
-        )
-
-        logger.debug(_profile)
-
-        self.ws.send(json.dumps(_profile, indent=4))
+    # +-----------------------------------------------------------------------
+    # |                     Records
+    # +-----------------------------------------------------------------------
 
     def create_record(self, title: str, **kwargs: str | list[str] | int) -> None:  # noqa: D417
         """Create a record.
@@ -465,7 +576,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _record = create_record(auth=self.auth, session_id=self.session_id, title=title, **kwargs)
+        _record = create_record(self.auth, self.session_id, title, **kwargs)
 
         logger.debug(_record)
 
@@ -478,7 +589,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _record = stop_record(auth=self.auth, session_id=self.session_id)
+        _record = stop_record(self.auth, self.session_id)
 
         logger.debug(_record)
 
@@ -501,7 +612,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _record = update_record(auth=self.auth, record_id=record_id, **kwargs)
+        _record = update_record(self.auth, record_id, **kwargs)
 
         logger.debug(_record)
 
@@ -516,7 +627,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Deleting records ---')
 
-        _record = delete_record(auth=self.auth, records=records)
+        _record = delete_record(self.auth, records)
 
         logger.debug(_record)
 
@@ -563,14 +674,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         logger.info('--- Exporting records ---')
 
-        _export = export_record(
-            auth=self.auth,
-            record_ids=record_ids,
-            folder=str(folder),
-            stream_types=stream_types,
-            format=format,
-            **kwargs,
-        )
+        _export = export_record(self.auth, record_ids, str(folder), stream_types, format, **kwargs)
 
         logger.debug(_export)
 
@@ -594,7 +698,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Querying records ---')
 
-        _query = query_records(auth=self.auth, query=query, order_by=order_by, **kwargs)
+        _query = query_records(self.auth, query, order_by, **kwargs)
 
         logger.debug(_query)
 
@@ -609,7 +713,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Getting record information ---')
 
-        record = record_infos(auth=self.auth, record_ids=record_ids)
+        record = record_infos(self.auth, record_ids)
 
         # If debug mode is enabled, print the record.
         logger.debug('Getting record information.')
@@ -626,7 +730,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Setting the config opt out ---')
 
-        _config = config_opt_out(auth=self.auth, status='set', new_opt_out=opt_out)
+        _config = config_opt_out(self.auth, status='set', new_opt_out=opt_out)
 
         logger.debug(_config)
 
@@ -636,7 +740,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """Get the config opt out."""
         logger.info('--- Getting the config opt out ---')
 
-        _config = config_opt_out(auth=self.auth, status='get')
+        _config = config_opt_out(self.auth, status='get')
 
         logger.debug(_config)
 
@@ -651,11 +755,15 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Downloading record data ---')
 
-        _download = download_record_data(auth=self.auth, record_ids=record_ids)
+        _download = download_record_data(self.auth, record_ids)
 
         logger.debug(_download)
 
         self.ws.send(json.dumps(_download, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     Markers
+    # +-----------------------------------------------------------------------
 
     def inject_marker(self, time: int, value: str | int, label: str, **kwargs: str | Any) -> None:  # noqa: D417
         """Inject a marker.
@@ -675,9 +783,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _marker = inject_marker(
-            auth=self.auth, session_id=self.session_id, time=time, value=value, label=label, **kwargs
-        )
+        _marker = inject_marker(self.auth, self.session_id, time, value, label, **kwargs)
 
         logger.debug(_marker)
 
@@ -702,11 +808,175 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _marker = update_marker(auth=self.auth, session_id=self.session_id, marker_id=marker_id, time=time, **kwargs)
+        _marker = update_marker(self.auth, self.session_id, marker_id, time, **kwargs)
 
         logger.debug(_marker)
 
         self.ws.send(json.dumps(_marker, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     Subjects
+    # +-----------------------------------------------------------------------
+    def create_subject(self, subject_name: str, **kwargs: str | list[Attribute]) -> None:
+        """Create a new subject.
+
+        Args:
+            subject_name (str): The name of the subject.
+            **kwargs: Additional parameters.
+
+        Keyword Args:
+            date_of_birth (str, optional): The subject date of birth.
+            sex (Literal['M', 'F', 'U'], optional): Subject's gender.
+            country_code (str, optional): The subject country code.
+            state (str, optional): The subject state.
+            city (str, optional): The subject city.
+            attributes (list[Attribute], optional): The subject attributes.
+
+        """
+        logger.info('--- Creating a subject ---')
+
+        _subject = create_subject(self.auth, subject_name, **kwargs)
+
+        logger.debug(_subject)
+
+        self.ws.send(json.dumps(_subject, indent=4))
+
+    def update_subject(self, subject_name: str, **kwargs: str | list[Attribute]) -> None:
+        """Update a subject.
+
+        Args:
+            subject_name (str): The name of the subject.
+            **kwargs: Additional parameters.
+
+        Keyword Args:
+            date_of_birth (str, optional): The subject date of birth.
+            sex (Literal['M', 'F', 'U'], optional): The gender of the subject.
+            country_code (str, optional): The subject country code.
+            state (str, optional): The subject state.
+            city (str, optional): The subject city.
+            attributes (list[Attribute], optional): The subject attributes.
+
+        """
+        logger.info('--- Updating a subject ---')
+
+        _subject = update_subject(self.auth, subject_name, **kwargs)
+
+        logger.debug(_subject)
+
+        self.ws.send(json.dumps(_subject, indent=4))
+
+    def delete_subject(self, subject_name: str) -> None:
+        """Delete a subject.
+
+        Args:
+            subject_name (str): The name of the subject.
+
+        """
+        logger.info('--- Deleting a subject ---')
+
+        _subject = delete_subject(self.auth, subject_name)
+
+        logger.debug(_subject)
+
+        self.ws.send(json.dumps(_subject, indent=4))
+
+    def query_subject(
+        self, query: SubjectQuery, order_by: list[dict[str, Literal['ASC', 'DESC']]], **kwargs: int
+    ) -> None:
+        """Query subjects.
+
+        Args:
+            query (SubjectQuery): The query parameters.
+            order_by (list[dict[str, Literal['ASC', 'DESC']]]): The order by parameters.
+            **kwargs: Additional parameters.
+
+        Keyword Args:
+            limit (int, optional): The maximum number of subjects to return.
+            offset (int, optional): The number of subjects to skip.
+
+        """
+        logger.info('--- Querying subjects ---')
+
+        _subject = query_subject(self.auth, query, order_by, **kwargs)
+
+        logger.debug(_subject)
+
+        self.ws.send(json.dumps(_subject, indent=4))
+
+    def get_demographic_attr(self) -> None:
+        """Get the demographic attributes."""
+        logger.info('--- Getting demographic attributes ---')
+
+        _demographic = get_demographic_attr(self.auth)
+
+        logger.debug(_demographic)
+
+        self.ws.send(json.dumps(_demographic, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     BCI (Profile)
+    # +-----------------------------------------------------------------------
+
+    def query_profile(self) -> None:
+        """Query the profile."""
+        logger.info('--- Querying the profile ---')
+
+        _query = query_profile(self.auth)
+
+        logger.debug(_query)
+
+        self.ws.send(json.dumps(_query, indent=4))
+
+    def get_current_profile(self) -> None:
+        """Get the current profile."""
+        logger.info('--- Getting the current profile ---')
+
+        if not self.headset_id:
+            raise ValueError('No headset ID. Please connect to the headset first.')
+
+        _profile = current_profile(self.auth, self.headset_id)
+
+        logger.debug(_profile)
+
+        self.ws.send(json.dumps(_profile, indent=4))
+
+    def setup_profile(
+        self,
+        status: Literal['create', 'load', 'unload', 'save', 'rename', 'delete'],
+        profile_name: str,
+        *,
+        new_profile_name: str | None = None,
+    ) -> None:
+        """Setup a profile.
+
+        Args:
+            status (Literal['create', 'load', 'unload', 'save', 'rename', 'delete']): The status of the profile.
+            profile_name (str): The profile name.
+
+        Keyword Args:
+            new_profile_name (str, optional): The new profile name.
+                Only if the status is "rename".
+
+        """
+        logger.info(f'--- {status.title()} the profile: {profile_name} ---')
+
+        # Update self.profile_name if the status is 'create' or 'rename'.
+        if status == 'create':
+            self.profile_name = profile_name
+        elif status == 'rename' and new_profile_name is not None:
+            self.profile_name = new_profile_name
+
+        _profile = setup_profile(
+            self.auth, status, profile_name, headset_id=self.headset_id, new_profile_name=new_profile_name
+        )
+
+        logger.debug(_profile)
+
+        self.ws.send(json.dumps(_profile, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     Advanced BCI (Training)
+    # +-----------------------------------------------------------------------
 
     def train_request(
         self,
@@ -727,28 +997,27 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _training = training(
-            auth=self.auth, session_id=self.session_id, detection=detection, status=status, action=action
-        )
+        _training = training(self.auth, self.session_id, detection, status, action)
 
         logger.debug(_training)
 
         self.ws.send(json.dumps(_training, indent=4))
 
-    def training_signature_action(self, detection: Literal['mentalCommand', 'facialExpression'], **kwargs: str) -> None:  # noqa: D417
+    def training_signature_action(self, detection: Literal['mentalCommand', 'facialExpression']) -> None:  # noqa: D417
         """Get the list of trained actions of a profile.
 
         Args:
             detection (Literal['mentalCommand', 'facialExpression']): The detection type.
 
-        Keyword Args:
-            profile_name (str): The profile name.
-            session_id (str): The session ID.
-
         """
         logger.info('--- Getting the list of trained actions ---')
 
-        _training = trained_signature_actions(auth=self.auth, detection=detection, **kwargs)
+        if self.profile_name:
+            _training = trained_signature_actions(self.auth, detection, profile_name=self.profile_name)
+        elif self.session_id:
+            _training = trained_signature_actions(self.auth, detection, session_id=self.session_id)
+        else:
+            raise ValueError('No profile name or session ID. Please set a profile name or create a session first.')
 
         logger.debug(_training)
 
@@ -766,49 +1035,83 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _training = training_time(auth=self.auth, session_id=self.session_id, detection=detection)
+        _training = training_time(self.auth, self.session_id, detection)
 
         logger.debug(_training)
 
         self.ws.send(json.dumps(_training, indent=4))
 
-    def get_mental_command_action_sensitive(self, profile_name: str) -> None:
-        """Get the mental command action sensitivity.
+    # +-----------------------------------------------------------------------
+    # |                     Advanced BCI (Facial Expression)
+    # +-----------------------------------------------------------------------
+
+    def get_fe_signature_type(self, profile_name: str) -> None:
+        """Get the facial expression signature type.
 
         Args:
             profile_name (str): The profile name.
 
         """
-        logger.info('--- Getting mental command action sensitivity ---')
+        logger.info('--- Setting facial expression signature type ---')
 
-        _sensitivity = action_sensitivity(auth=self.auth, profile_name=profile_name, status='get')
+        _signature = fe_signature_type(self.auth, status='get', profile_name=profile_name)
 
-        logger.debug(_sensitivity)
+        logger.debug(_signature)
 
-        self.ws.send(json.dumps(_sensitivity, indent=4))
+        self.ws.send(json.dumps(_signature, indent=4))
 
-    def set_mental_command_action_sensitive(self, profile_name: str, values: list[int]) -> None:
-        """Set the mental command action sensitivity.
+    def set_fe_signature_type(self, profile_name: str, signature: Literal['universal', 'trained']) -> None:
+        """Set the facial expression signature type.
 
         Args:
             profile_name (str): The profile name.
-            values (list[int]): The sensitivity values.
+            signature (Literal['universal', 'trained']): The signature type.
 
         """
-        logger.info('--- Setting mental command action sensitivity ---')
+        logger.info('--- Setting facial expression signature type ---')
 
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
+        _signature = fe_signature_type(self.auth, status='set', profile_name=profile_name, signature=signature)
 
-        _sensitivity = action_sensitivity(
-            auth=self.auth, profile_name=profile_name, session_id=self.session_id, values=values, status='set'
-        )
+        logger.debug(_signature)
 
-        logger.debug(_sensitivity)
+        self.ws.send(json.dumps(_signature, indent=4))
 
-        self.ws.send(json.dumps(_sensitivity, indent=4))
+    def get_fe_threshold(self, profile_name: str) -> None:
+        """Get the facial expression threshold.
 
-    def get_mental_command_active_action(self, profile_name: str) -> None:
+        Args:
+            profile_name (str): The profile name.
+
+        """
+        logger.info('--- Getting facial expression threshold ---')
+
+        _threshold = fe_threshold(self.auth, profile_name=profile_name)
+
+        logger.debug(_threshold)
+
+        self.ws.send(json.dumps(_threshold, indent=4))
+
+    def set_fe_threshold(self, profile_name: str, value: int) -> None:
+        """Set the facial expression threshold.
+
+        Args:
+            profile_name (str): The profile name.
+            value (int): The value of the threshold.
+
+        """
+        logger.info('--- Setting facial expression threshold ---')
+
+        _threshold = fe_threshold(self.auth, profile_name=profile_name, value=value)
+
+        logger.debug(_threshold)
+
+        self.ws.send(json.dumps(_threshold, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     Advanced BCI (Mental Command)
+    # +-----------------------------------------------------------------------
+
+    def get_mc_active_action(self, profile_name: str) -> None:
         """Get the active mental command action.
 
         Args:
@@ -817,13 +1120,13 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Getting mental command active action ---')
 
-        _action = active_action(auth=self.auth, status='get', profile_name=profile_name)
+        _action = active_action(self.auth, status='get', profile_name=profile_name)
 
         logger.debug(_action)
 
         self.ws.send(json.dumps(_action, indent=4))
 
-    def set_mental_command_active_action(self, actions: list[str]) -> None:
+    def set_mc_active_action(self, actions: list[str]) -> None:
         """Set the active mental command action.
 
         Args:
@@ -835,13 +1138,13 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _action = active_action(auth=self.auth, status='set', session_id=self.session_id, actions=actions)
+        _action = active_action(self.auth, status='set', session_id=self.session_id, actions=actions)
 
         logger.debug(_action)
 
         self.ws.send(json.dumps(_action, indent=4))
 
-    def get_mental_command_brain_map(self, profile_name: str) -> None:
+    def get_mc_brain_map(self, profile_name: str) -> None:
         """Get the mental command brain map.
 
         Args:
@@ -850,16 +1153,33 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Getting mental command brain map ---')
 
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
-
-        _brain_map = brain_map(auth=self.auth, session_id=self.session_id, profile_name=profile_name)
+        _brain_map = brain_map(self.auth, profile_name=profile_name)
 
         logger.debug(_brain_map)
 
         self.ws.send(json.dumps(_brain_map, indent=4))
 
-    def get_mental_command_training_threshold(self, profile_name: str) -> None:
+    def get_mc_command_skill_rating(self, action: str | None = None) -> None:
+        """Get the mental command skill rating.
+
+        Args:
+            action (str, optional): The action.
+
+        """
+        logger.info('--- Getting mental command skill rating ---')
+
+        if self.profile_name:
+            _rating = get_skill_rating(self.auth, profile_name=self.profile_name, action=action)
+        elif self.session_id:
+            _rating = get_skill_rating(self.auth, session_id=self.session_id, action=action)
+        else:
+            raise ValueError('No profile name or session ID. Please set a profile name or create a session first.')
+
+        logger.debug(_rating)
+
+        self.ws.send(json.dumps(_rating, indent=4))
+
+    def get_mc_training_threshold(self, profile_name: str) -> None:
         """Get the mental command training threshold.
 
         Args:
@@ -868,14 +1188,46 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Getting mental command training threshold ---')
 
-        if not self.session_id:
-            raise ValueError('No session ID. Please create a session first.')
-
-        _threshold = training_threshold(auth=self.auth, profile_name=profile_name, session_id=self.session_id)
+        _threshold = training_threshold(auth=self.auth, profile_name=profile_name)
 
         logger.debug(_threshold)
 
         self.ws.send(json.dumps(_threshold, indent=4))
+
+    def get_mc_action_sensitive(self, profile_name: str) -> None:
+        """Get the mental command action sensitivity.
+
+        Args:
+            profile_name (str): The profile name.
+
+        """
+        logger.info('--- Getting mental command action sensitivity ---')
+
+        _sensitivity = action_sensitivity(self.auth, status='get', profile_name=profile_name)
+
+        logger.debug(_sensitivity)
+
+        self.ws.send(json.dumps(_sensitivity, indent=4))
+
+    def set_mc_action_sensitive(self, profile_name: str, values: list[int]) -> None:
+        """Set the mental command action sensitivity.
+
+        Args:
+            profile_name (str): The profile name.
+            values (list[int]): The sensitivity values.
+
+        """
+        logger.info('--- Setting mental command action sensitivity ---')
+
+        _sensitivity = action_sensitivity(self.auth, status='set', profile_name=profile_name, values=values)
+
+        logger.debug(_sensitivity)
+
+        self.ws.send(json.dumps(_sensitivity, indent=4))
+
+    # +-----------------------------------------------------------------------
+    # |                     Setters
+    # +-----------------------------------------------------------------------
 
     def set_headset(self, headset_id: str) -> None:
         """Set the headset ID.
@@ -894,6 +1246,10 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         self.profile_name = profile_name
+
+    # +-----------------------------------------------------------------------
+    # |                     Properties
+    # +-----------------------------------------------------------------------
 
     @property
     def ws(self) -> websocket.WebSocketApp:
