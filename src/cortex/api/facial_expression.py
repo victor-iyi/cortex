@@ -99,6 +99,11 @@ def threshold(
     if status not in ('set', 'get'):
         raise ValueError('status must be either "set" or "get".')
 
+    # Either profile_name or session_id must be provided, not both at the same time.
+    assert (
+        profile_name is not None and session_id is None or profile_name is None and session_id is not None
+    ), 'Either profile_name or session_id must be provided, not both at the same time.'
+
     _params = {'cortexToken': auth, 'status': status, 'action': action}
 
     # Either profile_name or session_id must be provided, not both at the same time.

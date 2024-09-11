@@ -34,7 +34,6 @@ def test_create_session(api_request: APIRequest) -> None:
     with pytest.raises(ValueError, match='status must be either "open" or "active".'):
         create_session(AUTH_TOKEN, HEADSET_ID, 'invalid')
 
-
 def test_update_session(api_request: APIRequest) -> None:
     """Test updating a session."""
     assert update_session(AUTH_TOKEN, SESSION_ID, 'active') == api_request(
