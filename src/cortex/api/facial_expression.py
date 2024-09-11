@@ -32,7 +32,8 @@ def signature_type(
         FacialExpressionRequest: The facial expression signature type.
 
     """
-    assert status in {'set', 'get'}, 'status must be either "set" or "get".'
+    if status not in ('set', 'get'):
+        raise ValueError('status must be either "set" or "get".')
 
     _params = {'cortexToken': auth, 'status': status}
 
@@ -95,7 +96,8 @@ def threshold(
         FacialExpressionRequest: The facial expression threshold.
 
     """
-    assert status in {'set', 'get'}, 'status must be either "set" or "get".'
+    if status not in ('set', 'get'):
+        raise ValueError('status must be either "set" or "get".')
 
     _params = {'cortexToken': auth, 'status': status, 'action': action}
 

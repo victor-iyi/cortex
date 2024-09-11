@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
+import pytest
+
 from cortex.api.auth import (
     AuthID,
     access,
@@ -44,6 +46,9 @@ def test_access(api_request: APIRequest) -> None:
         params={'clientId': CLIENT_ID, 'clientSecret': CLIENT_SECRET},
     )
 
+    with pytest.raises(ValueError, match='method must be either "requestAccess" or "hasAccessRight".'):
+        access(CLIENT_ID, CLIENT_SECRET, method='invalid')
+
 
 def test_authorize(api_request: APIRequest) -> None:
     """Test authorization."""
@@ -60,6 +65,9 @@ def test_authorize(api_request: APIRequest) -> None:
         method='authorize',
         params={'clientId': CLIENT_ID, 'clientSecret': CLIENT_SECRET, 'debit': 1},
     )
+
+    with pytest.raises(ValueError, match='method must be either "requestAccess" or "hasAccessRight".'):
+        access(CLIENT_ID, CLIENT_SECRET, method='invalid')
 
 
 def test_generate_new_token(api_request: APIRequest) -> None:

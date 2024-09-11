@@ -70,7 +70,8 @@ def access(client_id: str, client_secret: str, *, method: Literal['requestAccess
         BaseRequest: The access status.
 
     """
-    assert method in ['requestAccess', 'hasAccessRight'], 'method must be either "requestAccess" or "hasAccessRight".'
+    if method not in ('requestAccess', 'hasAccessRight'):
+        raise ValueError('method must be either "requestAccess" or "hasAccessRight".')
 
     if method == 'requestAccess':
         _id = AuthID.REQUEST_ACCESS

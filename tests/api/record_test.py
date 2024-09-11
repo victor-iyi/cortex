@@ -154,7 +154,7 @@ def test_export_record(api_request: APIRequest) -> None:
         },
     )
 
-    with pytest.raises(AssertionError, match='format must be either "EDF", "EDFPLUS", "BDFPLUS", or "CSV".'):
+    with pytest.raises(ValueError, match='format must be either "EDF", "EDFPLUS", "BDFPLUS", or "CSV".'):
         export_record(AUTH_TOKEN, records, folder, stream_types, 'invalid')
 
     assert export_record(
@@ -265,7 +265,7 @@ def test_config_opt_out(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'newOptOut': False},
     )
 
-    with pytest.raises(AssertionError, match='status must be either "get" or "set".'):
+    with pytest.raises(ValueError, match='status must be either "get" or "set".'):
         config_opt_out(AUTH_TOKEN, 'invalid')
 
 

@@ -226,7 +226,8 @@ def subscription(
         SubscriptionRequest: The subscription status request.
 
     """
-    assert method in ['subscribe', 'unsubscribe'], 'method must be either "subscribe" or "unsubscribe".'
+    if method not in ('subscribe', 'unsubscribe'):
+        raise ValueError('method must be either "subscribe" or "unsubscribe".')
 
     _request = {
         'id': HeadsetID.SUBSCRIBE if method == 'subscribe' else HeadsetID.UNSUBSCRIBE,

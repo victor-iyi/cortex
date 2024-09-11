@@ -31,7 +31,7 @@ def test_get_signature_type(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'status': 'get', 'session': SESSION_ID},
     )
 
-    with pytest.raises(AssertionError, match='status must be either "set" or "get".'):
+    with pytest.raises(ValueError, match='status must be either "set" or "get".'):
         signature_type(AUTH_TOKEN, 'invalid')
 
     with pytest.raises(
@@ -61,7 +61,7 @@ def test_set_signature_type(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'session': SESSION_ID, 'signature': 'trained'},
     )
 
-    with pytest.raises(AssertionError, match='status must be either "set" or "get".'):
+    with pytest.raises(ValueError, match='status must be either "set" or "get".'):
         signature_type(AUTH_TOKEN, 'invalid')
 
     with pytest.raises(
@@ -112,7 +112,7 @@ def test_set_threshold(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'action': 'smile', 'session': SESSION_ID, 'value': 10},
     )
 
-    with pytest.raises(AssertionError, match='status must be either "set" or "get".'):
+    with pytest.raises(ValueError, match='status must be either "set" or "get".'):
         threshold(AUTH_TOKEN, status='invalid', action='frown')
 
     with pytest.raises(

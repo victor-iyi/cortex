@@ -69,6 +69,9 @@ def test_connect_headset(api_request: APIRequest) -> None:
         params={'command': 'connect', 'headset': HEADSET_ID, 'connectionType': 'usb cable'},
     )
 
+    with pytest.raises(ValueError, match='command must be either "connect", "disconnect", or "refresh".'):
+        make_connection('invalid')
+
 
 def test_refresh_headset(api_request: APIRequest) -> None:
     """Test refreshing a headset."""
@@ -98,6 +101,9 @@ def test_refresh_headset(api_request: APIRequest) -> None:
     assert make_connection(
         'refresh', headset_id=EPOC_FLEX_ID, mappings=MAPPINGS, connection_type='dongle'
     ) == api_request(id=HeadsetID.CONNECT, method='controlDevice', params={'command': 'refresh'})
+
+    with pytest.raises(ValueError, match='command must be either "connect", "disconnect", or "refresh".'):
+        make_connection('invalid')
 
 
 def test_disconnect_headset(api_request: APIRequest) -> None:
@@ -138,6 +144,9 @@ def test_disconnect_headset(api_request: APIRequest) -> None:
         method='controlDevice',
         params={'command': 'disconnect', 'headset': HEADSET_ID, 'connectionType': 'usb cable'},
     )
+
+    with pytest.raises(ValueError, match='command must be either "connect", "disconnect", or "refresh".'):
+        make_connection('invalid')
 
 
 def test_query_headsets(api_request: APIRequest) -> None:
@@ -215,7 +224,7 @@ def test_update_custom_info(api_request: APIRequest) -> None:
     )
 
     # headband_position must be either "back" or "top".
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='headband_position must be either "back" or "top".'):
         update_custom_info(AUTH_TOKEN, HEADSET_ID, 'front')
 
 
@@ -248,3 +257,6 @@ def test_subscription(api_request: APIRequest) -> None:
         method='unsubscribe',
         params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID, 'streams': streams},
     )
+
+    with pytest.raises(ValueError, match='method must be either "subscribe" or "unsubscribe".'):
+        subscription(AUTH_TOKEN, SESSION_ID, streams, 'invalid')

@@ -46,7 +46,8 @@ def active_action(
         MentalCommandActionRequest: The active mental command action.
 
     """
-    assert status in ['set', 'get'], 'status must be either "set" or "get".'
+    if status not in ('set', 'get'):
+        raise ValueError('status must be either "set" or "get".')
 
     _params = {'cortexToken': auth, 'status': status}
 
@@ -56,7 +57,7 @@ def active_action(
     elif session_id is not None and profile_name is None:
         _params['session'] = session_id
     else:
-        raise ValueError('Either profile_name or session_id must be provided, not both at the same time.')
+        raise AttributeError('Either profile_name or session_id must be provided, not both at the same time.')
 
     if actions is not None and status == 'set':
         if len(actions) > 4:
@@ -98,7 +99,7 @@ def brain_map(auth: str, *, session_id: str | None = None, profile_name: str | N
     elif session_id is not None and profile_name is None:
         _params['session'] = session_id
     else:
-        raise ValueError('Either profile_name or session_id must be provided, not both at the same time.')
+        raise AttributeError('Either profile_name or session_id must be provided, not both at the same time.')
 
     _brain_map = {
         'id': MentalCommandID.BRAIN_MAP,
@@ -137,7 +138,7 @@ def get_skill_rating(
     elif session_id is not None and profile_name is None:
         _params['session'] = session_id
     else:
-        raise ValueError('Either profile_name or session_id must be provided, not both at the same time.')
+        raise AttributeError('Either profile_name or session_id must be provided, not both at the same time.')
 
     if action is not None:
         _params['action'] = action
@@ -178,7 +179,7 @@ def training_threshold(auth: str, *, profile_name: str | None = None, session_id
     elif session_id is not None and profile_name is None:
         _params['session'] = session_id
     else:
-        raise ValueError('Either profile_name or session_id must be provided, not both at the same time.')
+        raise AttributeError('Either profile_name or session_id must be provided, not both at the same time.')
 
     threshold = {
         'id': MentalCommandID.TRAINING_THRESHOLD,
@@ -222,7 +223,8 @@ def action_sensitivity(
         MentalCommandActionRequest: The mental command action sensitivity.
 
     """
-    assert status in ['set', 'get'], 'status must be either "set" or "get".'
+    if status not in ('set', 'get'):
+        raise ValueError('status must be either "set" or "get".')
 
     _params = {'cortexToken': auth, 'status': status}
 
@@ -232,7 +234,7 @@ def action_sensitivity(
     elif session_id is not None and profile_name is None:
         _params['session'] = session_id
     else:
-        raise ValueError('Either profile_name or session_id must be provided, not both at the same time.')
+        raise AttributeError('Either profile_name or session_id must be provided, not both at the same time.')
 
     if values is not None and status == 'set':
         if all(1 <= value <= 10 for value in values):

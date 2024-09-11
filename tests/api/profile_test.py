@@ -61,7 +61,7 @@ def test_setup_profile(api_request: APIRequest) -> None:
         params={'cortexToken': AUTH_TOKEN, 'status': 'delete', 'profile': PROFILE_NAME},
     )
 
-    with pytest.raises(AssertionError, match='status must be one of create, load, unload, save, rename, delete.'):
+    with pytest.raises(ValueError, match='status must be one of create, load, unload, save, rename, delete.'):
         setup_profile(AUTH_TOKEN, 'invalid', PROFILE_NAME)
 
     with pytest.raises(ValueError, match='new_profile_name must be provided when status is "rename".'):
@@ -121,5 +121,5 @@ def test_detection_info(api_request: APIRequest) -> None:
         id=ProfileID.DETECTION_INFO, method='getDetectionInfo', params={'detection': 'facialExpression'}
     )
 
-    with pytest.raises(AssertionError, match='detection must be either "mentalCommand" or "facialExpression".'):
+    with pytest.raises(ValueError, match='detection must be either "mentalCommand" or "facialExpression".'):
         detection_info('invalid')
