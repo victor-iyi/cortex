@@ -105,7 +105,7 @@ def test_brain_map(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         brain_map(AUTH_TOKEN)
 
@@ -127,7 +127,7 @@ def test_getting_skill_rating(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         get_skill_rating(AUTH_TOKEN)
 
@@ -160,7 +160,7 @@ def test_training_threshold(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         training_threshold(AUTH_TOKEN)
 
@@ -184,7 +184,7 @@ def test_get_action_sensitivity(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         action_sensitivity(AUTH_TOKEN, 'get')
 
@@ -223,7 +223,7 @@ def test_set_action_sensitivity(api_request: APIRequest) -> None:
     )
 
     with pytest.raises(
-        AssertionError, match='Either profile_name or session_id must be provided, not both at the same time.'
+        ValueError, match='Either profile_name or session_id must be provided, not both at the same time.'
     ):
         action_sensitivity(AUTH_TOKEN, 'set')
 
