@@ -45,8 +45,29 @@ class Headset(Cortex):
         *WarningEvent.get_events(),
     ]
 
-    def __init__(self, *args: str, **kwargs: bool | str | int) -> None:
-        """Initialize the Headset class."""
+    def __init__(self, *args: str, **kwargs: bool | str | int) -> None:  # noqa: D417
+        """Initialize the Headset class.
+
+        Args:
+            client_id (str): The client ID of your Cortex application.
+            client_secret (str): The client secret of your Cortex application.
+
+        Keyword Args:
+            debug_mode (bool, optional): Whether to enable debug mode.
+            session_id(str, optional): The session id.
+            headset_id(str, optional): The headset id.
+            profile_name(str, optional): The profile name.
+            record_id(str, optional): The record id.
+            debit (int, optional): The number of sessions to debit from the license,
+                so that it can be spent locally without having to authorize again.
+                You need to debit the license only if you want to *activate a session*.
+                The default is 0.
+            license (str, optional): A licnese id. In most cases, you don't need to
+                specify the license id. Cortex will find the appropriate
+                license based on the client id.
+                Default is None.
+
+        """
         super().__init__(*args, **kwargs)
         self._headset_list: list[dict[str, Any]] | None = None
 
