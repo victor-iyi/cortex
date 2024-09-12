@@ -1,6 +1,7 @@
 """Tests for the headset module."""
 
 import pytest
+import time
 
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
@@ -230,8 +231,8 @@ def test_update_custom_info(api_request: APIRequest) -> None:
 
 def test_sync_with_clock(api_request: APIRequest) -> None:
     """Update syncing with the headset clock."""
-    monotonic_time: float = 1234567890.123
-    system_time: float = 1234567890.456
+    monotonic_time: float = time.monotonic()
+    system_time: float = time.time()
 
     assert sync_with_clock(HEADSET_ID, monotonic_time, system_time) == api_request(
         id=HeadsetID.SYNC_WITH_CLOCK,
