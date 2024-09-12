@@ -20,14 +20,14 @@ from cortex.api.id import RecordsID
 from cortex.api.types import RecordQuery
 
 # Constants.
-AUTH_TOKEN: Final[str] = '<AUTH-TOKEN>'
-SESSION_ID: Final[str] = '<SESSION-ID>'
+AUTH_TOKEN: Final[str] = 'xxx'
+SESSION_ID: Final[str] = 'f3a35fd0-9163-4cc4-ab30-4ed224369f91'
 
 # Type aliases.
-ResponseTemplate: TypeAlias = Callable[..., dict[str, Any]]
+APIRequest: TypeAlias = Callable[..., dict[str, Any]]
 
 
-def test_create_record(response_template: ResponseTemplate) -> None:
+def test_create_record(api_request: APIRequest) -> None:
     """Test creating a record."""
     title = 'Record title'
     description = 'Record description'
@@ -35,7 +35,7 @@ def test_create_record(response_template: ResponseTemplate) -> None:
     tags = ['tag1', 'tag2']
     experiment_id = 2
 
-    assert create_record(AUTH_TOKEN, SESSION_ID, title) == response_template(
+    assert create_record(AUTH_TOKEN, SESSION_ID, title) == api_request(
         id=RecordsID.CREATE,
         method='createRecord',
         params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID, 'title': title},
@@ -49,7 +49,7 @@ def test_create_record(response_template: ResponseTemplate) -> None:
         subject_name=subject_name,
         tags=tags,
         experiment_id=experiment_id,
-    ) == response_template(
+    ) == api_request(
         id=RecordsID.CREATE,
         method='createRecord',
         params={
@@ -64,31 +64,31 @@ def test_create_record(response_template: ResponseTemplate) -> None:
     )
 
 
-def test_stop_record(response_template: ResponseTemplate) -> None:
+def test_stop_record(api_request: APIRequest) -> None:
     """Test stopping a record."""
-    assert stop_record(AUTH_TOKEN, SESSION_ID) == response_template(
+    assert stop_record(AUTH_TOKEN, SESSION_ID) == api_request(
         id=RecordsID.STOP, method='stopRecord', params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID}
     )
 
 
-def test_update_record(response_template: ResponseTemplate) -> None:
+def test_update_record(api_request: APIRequest) -> None:
     """Test updating a record."""
     record_id = 'd8fe7658-71f1-4cd6-bb5d-f6775b03438f'
     title = 'Record title'
     description = 'Record description'
     tags = ['tag1', 'tag2']
 
-    assert update_record(AUTH_TOKEN, record_id) == response_template(
+    assert update_record(AUTH_TOKEN, record_id) == api_request(
         id=RecordsID.UPDATE, method='updateRecord', params={'cortexToken': AUTH_TOKEN, 'record': record_id}
     )
 
-    assert update_record(AUTH_TOKEN, record_id, title=title) == response_template(
+    assert update_record(AUTH_TOKEN, record_id, title=title) == api_request(
         id=RecordsID.UPDATE,
         method='updateRecord',
         params={'cortexToken': AUTH_TOKEN, 'record': record_id, 'title': title},
     )
 
-    assert update_record(AUTH_TOKEN, record_id, title=title, description=description, tags=tags) == response_template(
+    assert update_record(AUTH_TOKEN, record_id, title=title, description=description, tags=tags) == api_request(
         id=RecordsID.UPDATE,
         method='updateRecord',
         params={
@@ -101,23 +101,23 @@ def test_update_record(response_template: ResponseTemplate) -> None:
     )
 
 
-def test_delete_record(response_template: ResponseTemplate) -> None:
+def test_delete_record(api_request: APIRequest) -> None:
     """Test deleting a record."""
     records = ['d8fe7658-71f1-4cd6-bb5d-f6775b03438f', 'invalid-id']
 
-    assert delete_record(AUTH_TOKEN, records) == response_template(
+    assert delete_record(AUTH_TOKEN, records) == api_request(
         id=RecordsID.DELETE, method='deleteRecord', params={'cortexToken': AUTH_TOKEN, 'records': records}
     )
 
 
-def test_export_record(response_template: ResponseTemplate) -> None:
+def test_export_record(api_request: APIRequest) -> None:
     """Test exporting a record."""
     records = ['d8fe7658-71f1-4cd6-bb5d-f6775b03438f', 'ec0ac33f-ad4e-48b1-bbc3-8502f5c49b62']
     folder = '/tmp/cortex'
     stream_types = ['EEG', 'MOTION']
     license_ids = ['license1']
 
-    assert export_record(AUTH_TOKEN, records, folder, stream_types, 'CSV') == response_template(
+    assert export_record(AUTH_TOKEN, records, folder, stream_types, 'CSV') == api_request(
         id=RecordsID.EXPORT,
         method='exportRecord',
         params={
@@ -129,7 +129,7 @@ def test_export_record(response_template: ResponseTemplate) -> None:
         },
     )
 
-    assert export_record(AUTH_TOKEN, records, folder, stream_types, 'CSV', version='V1') == response_template(
+    assert export_record(AUTH_TOKEN, records, folder, stream_types, 'CSV', version='V2') == api_request(
         id=RecordsID.EXPORT,
         method='exportRecord',
         params={
@@ -138,11 +138,11 @@ def test_export_record(response_template: ResponseTemplate) -> None:
             'folder': folder,
             'streamTypes': stream_types,
             'format': 'CSV',
-            'version': 'V1',
+            'version': 'V2',
         },
     )
 
-    assert export_record(AUTH_TOKEN, records, folder, stream_types, 'EDFPLUS', version='V1') == response_template(
+    assert export_record(AUTH_TOKEN, records, folder, stream_types, 'EDFPLUS', version='V2') == api_request(
         id=RecordsID.EXPORT,
         method='exportRecord',
         params={
@@ -154,7 +154,7 @@ def test_export_record(response_template: ResponseTemplate) -> None:
         },
     )
 
-    with pytest.raises(AssertionError, match='format must be either "EDF", "EDFPLUS", "BDFPLUS", or "CSV".'):
+    with pytest.raises(ValueError, match='format must be either "EDF", "EDFPLUS", "BDFPLUS", or "CSV".'):
         export_record(AUTH_TOKEN, records, folder, stream_types, 'invalid')
 
     assert export_record(
@@ -163,13 +163,13 @@ def test_export_record(response_template: ResponseTemplate) -> None:
         folder,
         stream_types,
         'CSV',
-        version='V1',
+        version='V2',
         license_ids=license_ids,
         include_survey=True,
         include_demographics=True,
         include_deprecated_pm=True,
         include_marker_extra_infos=True,
-    ) == response_template(
+    ) == api_request(
         id=RecordsID.EXPORT,
         method='exportRecord',
         params={
@@ -178,7 +178,7 @@ def test_export_record(response_template: ResponseTemplate) -> None:
             'folder': folder,
             'streamTypes': stream_types,
             'format': 'CSV',
-            'version': 'V1',
+            'version': 'V2',
             'licenseIds': license_ids,
             'includeDemographics': True,
             'includeSurvey': True,
@@ -188,7 +188,7 @@ def test_export_record(response_template: ResponseTemplate) -> None:
     )
 
 
-def test_query_records(response_template: ResponseTemplate) -> None:
+def test_query_records(api_request: APIRequest) -> None:
     """Test querying records."""
     query = RecordQuery(
         licenseId='license1',
@@ -200,19 +200,19 @@ def test_query_records(response_template: ResponseTemplate) -> None:
     )
     order_by = [{'startDatetime': 'DESC'}, {'title': 'ASC'}]
 
-    assert query_records(AUTH_TOKEN, query, order_by) == response_template(
+    assert query_records(AUTH_TOKEN, query, order_by) == api_request(
         id=RecordsID.QUERY,
         method='queryRecords',
         params={'cortexToken': AUTH_TOKEN, 'query': query, 'orderBy': order_by},
     )
 
-    assert query_records(AUTH_TOKEN, query, order_by, offset=2) == response_template(
+    assert query_records(AUTH_TOKEN, query, order_by, offset=2) == api_request(
         id=RecordsID.QUERY,
         method='queryRecords',
         params={'cortexToken': AUTH_TOKEN, 'query': query, 'orderBy': order_by},
     )
 
-    assert query_records(AUTH_TOKEN, RecordQuery(licenseId='license1'), order_by) == response_template(
+    assert query_records(AUTH_TOKEN, RecordQuery(licenseId='license1'), order_by) == api_request(
         id=RecordsID.QUERY,
         method='queryRecords',
         params={'cortexToken': AUTH_TOKEN, 'query': {'licenseId': 'license1'}, 'orderBy': order_by},
@@ -220,7 +220,7 @@ def test_query_records(response_template: ResponseTemplate) -> None:
 
     assert query_records(
         AUTH_TOKEN, query, order_by, limit=100, offset=2, include_markers=True, include_sync_status_info=True
-    ) == response_template(
+    ) == api_request(
         id=RecordsID.QUERY,
         method='queryRecords',
         params={
@@ -234,43 +234,46 @@ def test_query_records(response_template: ResponseTemplate) -> None:
         },
     )
 
+    with pytest.raises(ValueError, match='offset must be less than the limit.'):
+        query_records(AUTH_TOKEN, query, order_by, limit=2, offset=3)
 
-def test_record_infos(response_template: ResponseTemplate) -> None:
+
+def test_record_infos(api_request: APIRequest) -> None:
     """Test getting record information."""
     records = ['d8fe7658-71f1-4cd6-bb5d-f6775b03438f', 'ec0ac33f-ad4e-48b1-bbc3-8502f5c49b62']
 
-    assert record_infos(AUTH_TOKEN, records) == response_template(
+    assert record_infos(AUTH_TOKEN, records) == api_request(
         id=RecordsID.INFO, method='getRecordInfos', params={'cortexToken': AUTH_TOKEN, 'recordIds': records}
     )
 
 
-def test_config_opt_out(response_template: ResponseTemplate) -> None:
+def test_config_opt_out(api_request: APIRequest) -> None:
     """Test configuring opt-out."""
-    assert config_opt_out(AUTH_TOKEN, 'get') == response_template(
+    assert config_opt_out(AUTH_TOKEN, 'get') == api_request(
         id=RecordsID.CONFIG_OPT_OUT, method='configOptOut', params={'cortexToken': AUTH_TOKEN, 'status': 'get'}
     )
 
-    assert config_opt_out(AUTH_TOKEN, 'set', new_opt_out=True) == response_template(
+    assert config_opt_out(AUTH_TOKEN, 'set', new_opt_out=True) == api_request(
         id=RecordsID.CONFIG_OPT_OUT,
         method='configOptOut',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'newOptOut': True},
     )
 
-    assert config_opt_out(AUTH_TOKEN, 'set') == response_template(
+    assert config_opt_out(AUTH_TOKEN, 'set') == api_request(
         id=RecordsID.CONFIG_OPT_OUT,
         method='configOptOut',
         params={'cortexToken': AUTH_TOKEN, 'status': 'set', 'newOptOut': False},
     )
 
-    with pytest.raises(AssertionError, match='status must be either "get" or "set".'):
+    with pytest.raises(ValueError, match='status must be either "get" or "set".'):
         config_opt_out(AUTH_TOKEN, 'invalid')
 
 
-def test_download_record(response_template: ResponseTemplate) -> None:
+def test_download_record(api_request: APIRequest) -> None:
     """Test downloading a record."""
     records = ['d8fe7658-71f1-4cd6-bb5d-f6775b03438f', 'ec0ac33f-ad4e-48b1-bbc3-8502f5c49b62']
 
-    assert download_record_data(AUTH_TOKEN, records) == response_template(
+    assert download_record_data(AUTH_TOKEN, records) == api_request(
         id=RecordsID.DOWNLOAD_DATA,
         method='requestToDownloadRecordData',
         params={'cortexToken': AUTH_TOKEN, 'recordIds': records},

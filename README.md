@@ -1,6 +1,7 @@
 # Cortex
 
 [![CI](https://github.com/victor-iyi/cortex/actions/workflows/ci.yaml/badge.svg)](https://github.com/victor-iyi/cortex/actions/workflows/ci.yaml)
+[![pytest](https://github.com/victor-iyi/cortex/actions/workflows/tests.yml/badge.svg)](https://github.com/victor-iyi/cortex/actions/workflows/tests.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/victor-iyi/cortex/main.svg)](https://results.pre-commit.ci/latest/github/victor-iyi/cortex/main)
 [![formatter | docformatter](https://img.shields.io/badge/%20formatter-docformatter-fedcba.svg)](https://github.com/PyCQA/docformatter)
 [![style | google](https://img.shields.io/badge/%20style-google-3666d6.svg)](https://google.github.io/styleguide/pyguide.html#s3.8-comments-and-docstrings)
@@ -38,6 +39,31 @@ them in the EMOTIV Launcher.
 [emotiv-account]: https://www.emotiv.com/my-account/cortex-apps/
 [register here]: https://id.emotivcloud.com/eoidc/account/registration/
 [insight]: https://www.emotiv.com/insight/
+
+## Getting Started
+
+To get started, you will need to install the `cortex` package. You should check out
+some [examples] to get you started.
+
+```sh
+poetry install
+```
+
+For testing and development, you can install the package with the `test` and `dev`
+flags respectively.
+
+```sh
+poetry install --with test,dev
+```
+
+You'll also need to set your client id and client secret as environment variables.
+
+```sh
+export EMOTIV_CLIENT_ID="your-client-id"
+export EMOTIV_CLIENT_SECRET="your-client-secret"
+```
+
+[examples]: ./examples/
 
 ## Contribution
 

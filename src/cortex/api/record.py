@@ -219,12 +219,8 @@ def export_record(
         ExportRecordRequest: The record export status.
 
     """
-    assert format in [
-        'EDF',
-        'EDFPLUS',
-        'BDFPLUS',
-        'CSV',
-    ], 'format must be either "EDF", "EDFPLUS", "BDFPLUS", or "CSV".'
+    if format not in {'EDF', 'EDFPLUS', 'BDFPLUS', 'CSV'}:
+        raise ValueError('format must be either "EDF", "EDFPLUS", "BDFPLUS", or "CSV".')
 
     _params = {
         'cortexToken': auth,
@@ -296,6 +292,8 @@ def query_records(
         _params['limit'] = limit
 
     if offset is not None and limit is not None:
+        if limit < offset:
+            raise ValueError('The offset must be less than the limit.')
         _params['offset'] = offset
 
     if include_markers:
@@ -350,7 +348,8 @@ def config_opt_out(auth: str, status: Literal['get', 'set'], *, new_opt_out: boo
         ConfigOptOutRequest: The opt-out status.
 
     """
-    assert status in ['get', 'set'], 'status must be either "get" or "set".'
+    if status not in {'get', 'set'}:
+        raise ValueError('status must be either "get" or "set".')
 
     _params = {'cortexToken': auth, 'status': status}
     if status == 'set':

@@ -12,7 +12,7 @@ def signature_type(
     *,
     profile_name: str | None = None,
     session_id: str | None = None,
-    signature: Literal['set', 'universal', 'trained'] | None = None,
+    signature: Literal['universal', 'trained'] | None = None,
 ) -> FacialExpressionRequest:
     """Set or get the facial expression signature type.
 
@@ -23,7 +23,7 @@ def signature_type(
     Keyword Args:
         profile_name (str, optional): The profile name.
         session_id (str, optional): The session ID.
-        signature (Literal['set', 'universal', 'trained'], optional): The signature type.
+        signature (Literal['universal', 'trained'], optional): The signature type.
 
     Read More:
         [facialExpressionSignatureType](https://emotiv.gitbook.io/cortex-api/advanced-bci/facialexpressionsignaturetype)
@@ -32,27 +32,26 @@ def signature_type(
         FacialExpressionRequest: The facial expression signature type.
 
     """
-    assert status in {'set', 'get'}, 'status must be either "set" or "get".'
-
-    # Either profile_name or session_id must be provided, not both at the same time.
-    assert (
-        profile_name is not None and session_id is None or profile_name is None and session_id is not None
-    ), 'Either profile_name or session_id must be provided, not both at the same time.'
+    if status not in ('set', 'get'):
+        raise ValueError('status must be either "set" or "get".')
 
     _params = {'cortexToken': auth, 'status': status}
 
-    if profile_name is not None:
+    # Either profile_name or session_id must be provided, not both at the same time.
+    if profile_name is not None and session_id is None:
         _params['profile'] = profile_name
-    elif session_id is not None:
+    elif session_id is not None and profile_name is None:
         _params['session'] = session_id
+    else:
+        raise AttributeError('Either profile_name or session_id must be provided, not both at the same time.')
 
-    if signature is not None:
-        assert signature in {
-            'set',
-            'universal',
-            'trained',
-        }, 'signature must be either "set", "universal", or "trained".'
+    if signature is not None and status == 'set':
+        if signature not in {'universal', 'trained'}:
+            raise ValueError('signature must be either "universal" or "trained".')
         _params['signature'] = signature
+    else:
+        if status == 'set':
+            raise AttributeError('signature must be provided when status is "set".')
 
     _signature = {
         'id': FacialExpressionID.SIGNATURE_TYPE,
@@ -97,24 +96,26 @@ def threshold(
         FacialExpressionRequest: The facial expression threshold.
 
     """
-    assert status in ['set', 'get'], 'status must be either "set" or "get".'
-
-    # Either profile_name or session_id must be provided, not both at the same time.
-    assert (
-        profile_name is not None and session_id is None or profile_name is None and session_id is not None
-    ), 'Either profile_name or session_id must be provided, not both at the same time.'
+    if status not in ('set', 'get'):
+        raise ValueError('status must be either "set" or "get".')
 
     _params = {'cortexToken': auth, 'status': status, 'action': action}
 
-    if profile_name is not None:
+    # Either profile_name or session_id must be provided, not both at the same time.
+    if profile_name is not None and session_id is None:
         _params['profile'] = profile_name
-    elif session_id is not None:
+    elif session_id is not None and profile_name is None:
         _params['session'] = session_id
+    else:
+        raise AttributeError('Either profile_name or session_id must be provided, not both at the same time.')
 
     if value is not None and status == 'set':
         if not 0 <= value <= 1000:
             raise ValueError('value must be between 0 and 1000.')
         _params['value'] = value  # type: ignore[assignment]
+    else:
+        if status == 'set':
+            raise AttributeError('value must be provided when status is "set".')
 
     _threshold = {
         'id': FacialExpressionID.THRESHOLD,

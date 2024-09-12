@@ -68,18 +68,11 @@ def training(
         TrainingRequest: The training status.
 
     """
-    assert detection in [
-        'mentalCommand',
-        'facialExpression',
-    ], 'detection must be either "mentalCommand" or "facialExpression".'
+    if detection not in ('mentalCommand', 'facialExpression'):
+        raise ValueError('detection must be either "mentalCommand" or "facialExpression".')
 
-    assert status in [
-        'start',
-        'accept',
-        'reject',
-        'reset',
-        'erase',
-    ], 'status must be either "start", "accept", "reject", "reset", or "erase".'
+    if status not in ('start', 'accept', 'reject', 'reset', 'erase'):
+        raise ValueError('status must be either "start", "accept", "reject", "reset", or "erase".')
 
     _training = {
         'id': TrainingID.TRAINING,
@@ -121,18 +114,18 @@ def trained_signature_actions(
         TrainingRequest: The trained signature actions.
 
     """
-    assert detection in [
-        'mentalCommand',
-        'facialExpression',
-    ], 'detection must be either "mentalCommand" or "facialExpression".'
+    if detection not in ('mentalCommand', 'facialExpression'):
+        raise ValueError('detection must be either "mentalCommand" or "facialExpression".')
 
     _params = {'cortexToken': auth, 'detection': detection}
-    if profile_name is not None:
+
+    # Either profile_name or session_id must be provided, not both at the same time.
+    if profile_name is not None and session_id is None:
         _params['profile'] = profile_name
-    elif session_id is not None:
+    elif session_id is not None and profile_name is None:
         _params['session'] = session_id
     else:
-        raise ValueError('Either profile_name or session_id must be provided.')
+        raise ValueError('Either profile_name or session_id must be provided, not both at the same time.')
 
     _trained = {
         'id': TrainingID.SIGNATURE_ACTIONS,
@@ -161,10 +154,8 @@ def training_time(
         TrainingRequest: The training time.
 
     """
-    assert detection in [
-        'mentalCommand',
-        'facialExpression',
-    ], 'detection must be either "mentalCommand" or "facialExpression".'
+    if detection not in ('mentalCommand', 'facialExpression'):
+        raise ValueError('detection must be either "mentalCommand" or "facialExpression".')
 
     _training_time = {
         'id': TrainingID.TRAINING_TIME,

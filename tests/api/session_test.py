@@ -3,50 +3,58 @@
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
+import pytest
+
 from cortex.api.session import create_session, update_session, query_session
 from cortex.api.id import SessionID
 
 # Constants.
-AUTH_TOKEN: Final[str] = '<AUTH-TOKEN>'
-SESSION_ID: Final[str] = '<SESSION-ID>'
-HEADSET_ID: Final[str] = '<HEADSET-ID>'
+AUTH_TOKEN: Final[str] = 'xxx'
+SESSION_ID: Final[str] = 'f3a35fd0-9163-4cc4-ab30-4ed224369f91'
+HEADSET_ID: Final[str] = 'EPOCX-12345678'
 
 # Type aliases.
-ResponseTemplate: TypeAlias = Callable[..., dict[str, Any]]
+APIRequest: TypeAlias = Callable[..., dict[str, Any]]
 
 
-def test_create_session(response_template: ResponseTemplate) -> None:
+def test_create_session(api_request: APIRequest) -> None:
     """Test creating a session."""
-    assert create_session(AUTH_TOKEN, HEADSET_ID, 'open') == response_template(
+    assert create_session(AUTH_TOKEN, HEADSET_ID, 'open') == api_request(
         id=SessionID.CREATE,
         method='createSession',
         params={'cortexToken': AUTH_TOKEN, 'headset': HEADSET_ID, 'status': 'open'},
     )
 
-    assert create_session(AUTH_TOKEN, HEADSET_ID, 'active') == response_template(
+    assert create_session(AUTH_TOKEN, HEADSET_ID, 'active') == api_request(
         id=SessionID.CREATE,
         method='createSession',
         params={'cortexToken': AUTH_TOKEN, 'headset': HEADSET_ID, 'status': 'active'},
     )
 
+    with pytest.raises(ValueError, match='status must be either "open" or "active".'):
+        create_session(AUTH_TOKEN, HEADSET_ID, 'invalid')
 
-def test_update_session(response_template: ResponseTemplate) -> None:
+
+def test_update_session(api_request: APIRequest) -> None:
     """Test updating a session."""
-    assert update_session(AUTH_TOKEN, SESSION_ID, 'active') == response_template(
+    assert update_session(AUTH_TOKEN, SESSION_ID, 'active') == api_request(
         id=SessionID.UPDATE,
         method='updateSession',
         params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID, 'status': 'active'},
     )
 
-    assert update_session(AUTH_TOKEN, SESSION_ID, 'close') == response_template(
+    assert update_session(AUTH_TOKEN, SESSION_ID, 'close') == api_request(
         id=SessionID.UPDATE,
         method='updateSession',
         params={'cortexToken': AUTH_TOKEN, 'session': SESSION_ID, 'status': 'close'},
     )
 
+    with pytest.raises(ValueError, match='status must be either "active" or "close".'):
+        update_session(AUTH_TOKEN, SESSION_ID, 'invalid')
 
-def test_query_session(response_template: ResponseTemplate) -> None:
+
+def test_query_session(api_request: APIRequest) -> None:
     """Test querying a session."""
-    assert query_session(AUTH_TOKEN) == response_template(
+    assert query_session(AUTH_TOKEN) == api_request(
         id=SessionID.QUERY, method='querySession', params={'cortexToken': AUTH_TOKEN}
     )
