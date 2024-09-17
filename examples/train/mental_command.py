@@ -298,6 +298,10 @@ def main() -> None:
     """Main function to start the training."""
     import os
 
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
     # TODO: Please fill your application client ID and client secret.
     client_id = os.getenv('EMOTIV_CLIENT_ID') or '<your-client-id>'
     client_secret = os.getenv('EMOTIV_CLIENT_SECRET') or '<your-client-secret>'

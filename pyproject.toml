@@ -39,6 +39,8 @@ websocket-client = "^1.8.0"
 python-dispatch = "^0.2.2"
 # Render rich text, progress bars, syntax highlighting and more to the terminal
 rich = "^13.8.1"
+# Read key-value pair from a .env files and set them as environment variables.
+python-dotenv = "^1.0.1"
 
 [tool.poetry.group.dev]
 optional = true

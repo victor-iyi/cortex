@@ -225,6 +225,9 @@ class Subscribe:
 def main() -> None:
     """Start subscribing to the data streams."""
     import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
 
     # TODO: Please fill your application client ID and client secret.
     client_id = os.getenv('EMOTIV_CLIENT_ID') or '<your-client-id>'

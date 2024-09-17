@@ -109,10 +109,10 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         Keyword Args:
             debug_mode (bool, optional): Whether to enable debug mode.
-            session_id(str, optional): The session id.
-            headset_id(str, optional): The headset id.
-            profile_name(str, optional): The profile name.
-            record_id(str, optional): The record id.
+            session_id (str, optional): The session id.
+            headset_id (str, optional): The headset id.
+            profile_name (str, optional): The profile name.
+            record_id (str, optional): The record id.
             debit (int, optional): The number of sessions to debit from the license,
                 so that it can be spent locally without having to authorize again.
                 You need to debit the license only if you want to *activate a session*.
