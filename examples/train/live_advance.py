@@ -158,7 +158,7 @@ class LiveAdvance:
             profile_name (str): The profile name to get the active action.
 
         """
-        self._headset.get_mental_command_active_action(profile_name=profile_name)
+        self._headset.get_mental_command_active_action(profile_name)
 
     def get_sensitivity(self, profile_name: str) -> None:
         """Get the sensitivity of the mental command actions.
@@ -167,7 +167,7 @@ class LiveAdvance:
             profile_name (str): The profile name to get the sensitivity.
 
         """
-        self._headset.get_mental_command_action_sensitive(profile_name=profile_name)
+        self._headset.get_mental_command_action_sensitive(profile_name)
 
     def set_sensitivity(self, profile_name: str, values: list[str]) -> None:
         """Set the sensitivity of the mental command actions.
@@ -187,7 +187,7 @@ class LiveAdvance:
             values (list[str]): The list of sensitivity values to set.
 
         """
-        self._headset.set_mental_command_action_sensitive(profile_name=profile_name, values=values)
+        self._headset.set_mental_command_action_sensitive(profile_name, values)
 
     # +-----------------------------------------------------------------------+
     # |                           Callback Methods                            |

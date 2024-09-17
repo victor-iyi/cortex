@@ -160,7 +160,7 @@ class MentalCommandTrainer:
             profile_name (str): The profile name to get the active action.
 
         """
-        self._headset.get_mental_command_active_action(profile_name=profile_name)
+        self._headset.get_mental_command_active_action(profile_name)
 
     def get_brain_map(self, profile_name: str) -> None:
         """Get the brain map of the profile.
@@ -169,7 +169,7 @@ class MentalCommandTrainer:
             profile_name (str): The profile name to get the brain map.
 
         """
-        self._headset.get_mental_command_brain_map(profile_name=profile_name)
+        self._headset.get_mental_command_brain_map(profile_name)
 
     def get_training_threshold(self, profile_name: str) -> None:
         """Get the training threshold of the profile.
@@ -178,7 +178,7 @@ class MentalCommandTrainer:
             profile_name (str): The profile name to get the training threshold.
 
         """
-        self._headset.get_mental_command_training_threshold(profile_name=profile_name)
+        self._headset.get_mental_command_training_threshold(profile_name)
 
     def train_mc_action(self, status: Literal['accept', 'reject', 'start', 'erase', 'reset']) -> None:
         """Train the mental command action.

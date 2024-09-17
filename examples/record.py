@@ -118,7 +118,7 @@ class Record:
             **kwargs (Any): Additional arguments to pass to the create_record method.
 
         """
-        self._headset.create_record(title=record_title, **kwargs)
+        self._headset.create_record(record_title, **kwargs)
 
     def stop_record(self) -> None:
         """Stop recording data."""
@@ -164,7 +164,7 @@ class Record:
         logger.debug('------------- create session done -------------')
 
         # Create a record.
-        self._headset.create_record(title=self.record_title, descritption=self.record_description)
+        self._headset.create_record(self.record_title, descritption=self.record_description)
 
     def on_create_record_done(self, *args: Any, **kwargs: Any) -> None:
         """Handle the creation of a record."""

@@ -128,7 +128,7 @@ class Marker:
         """
         self.record_title = record_title
 
-        self._headset.create_record(title=record_title, **kwargs)
+        self._headset.create_record(record_title, **kwargs)
 
     def stop_record(self) -> None:
         """Stop the record."""
