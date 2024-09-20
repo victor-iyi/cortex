@@ -53,7 +53,7 @@ pre-commit = "^3.8.0"
 # Formats docstring to follow PEP 257.
 docformatter = { version = "^1.7.5", extras = ["tomli"] }
 # Fast Python linter and code formatter.
-ruff = "^0.6.3"
+ruff = "^0.6.6"
 
 
 [tool.poetry.group.test.dependencies]
