@@ -73,20 +73,24 @@ class Headset(Cortex):
 
     def on_open(self, *args: Any, **kwargs: Any) -> None:
         """Handle the open event."""
+        logger.debug(f'on_open: {args: = } {kwargs: = }')
         logger.info('Websocket opened.')
         self._start()
 
     def on_close(self, *args: Any, **kwargs: Any) -> None:
         """Handle the close event."""
+        logger.debug(f'on_close: {args: = } {kwargs: = }')
         logger.info(f'on_close: {args[1]}')
 
     def on_error(self, *args: Any, **kwargs: Any) -> None:
         """Handle the error."""
+        logger.debug(f'on_error: {args: = } {kwargs: = }')
         if len(args) == 2:
             logger.error(f'on_error: {args[1]}')
 
     def on_message(self, *args: Any, **kwargs: Any) -> None:
         """Handle the message."""
+        logger.debug(f'on_message: {args: = } {kwargs: = }')
         recv_dict = json.loads(args[1])
         if 'sid' in recv_dict:
             self.handle_stream_data(recv_dict)
@@ -365,7 +369,8 @@ class Headset(Cortex):
             else:
                 self.setup_profile('unload', profile_name=self.profile_name)
 
-    def _handle_disconnect_headset(self, _result: dict[str, Any]) -> None:
+    def _handle_disconnect_headset(self, result: dict[str, Any]) -> None:
+        logger.debug(f'Disconnect headset: {result}')
         logger.info(f'Headset {self.headset_id} disconnected.')
         self.headset_id = ''
 
