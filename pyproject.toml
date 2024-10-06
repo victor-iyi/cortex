@@ -49,7 +49,7 @@ optional = true
 # Optional static typing for Python.
 mypy = "^1.11.2"
 # Managing and maintaining pre-commit hooks.
-pre-commit = "^3.8.0"
+pre-commit = "^4.0.0"
 # Formats docstring to follow PEP 257.
 docformatter = { version = "^1.7.5", extras = ["tomli"] }
 # Fast Python linter and code formatter.

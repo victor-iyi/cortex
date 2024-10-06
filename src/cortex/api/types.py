@@ -10,6 +10,7 @@ from typing import Any, Literal, TypeAlias, TypedDict
 # A dict with fields "from" and "to".
 Interval = TypedDict('Interval', {'from': str, 'to': str})
 ConnectionType: TypeAlias = Literal['bluetooth', 'usb cable', 'dongle']
+ExportFormat: TypeAlias = Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV']
 
 
 class Attribute(TypedDict):

@@ -56,7 +56,7 @@ from cortex.api.record import (
 from cortex.api.session import create_session, query_session, update_session
 from cortex.api.subject import create_subject, delete_subject, get_demographic_attr, query_subject, update_subject
 from cortex.api.train import trained_signature_actions, training, training_time
-from cortex.api.types import Attribute, RecordQuery, Setting, SubjectQuery
+from cortex.api.types import Attribute, ConnectionType, ExportFormat, RecordQuery, Setting, SubjectQuery
 from cortex.consts import CA_CERTS
 from cortex.logging import logger
 
@@ -238,6 +238,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access ---')
 
+        if not self.client_id or not self.client_secret:
+            raise ValueError('No client ID or client secret. Please provide the client ID and client secret.')
+
         _access = access(self.client_id, self.client_secret, method='requestAccess')
 
         logger.debug(_access)
@@ -259,6 +262,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Requesting access right ---')
 
+        if not self.client_id or not self.client_secret:
+            raise ValueError('No client ID or client secret. Please provide the client ID and client secret.')
+
         _access = access(self.client_id, self.client_secret, method='hasAccessRight')
 
         logger.debug(_access)
@@ -279,6 +285,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Authorizing application ---')
 
+        if not self.client_id or not self.client_secret:
+            raise ValueError('No client ID or client secret. Please provide the client ID and client secret.')
+
         _authorize = authorize(self.client_id, self.client_secret, license=self.license, debit=self.debit)
 
         logger.debug(_authorize)
@@ -293,6 +302,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         logger.info('--- Generating a new token ---')
+
+        if not self.client_id or not self.client_secret:
+            raise ValueError('No client ID or client secret. Please provide the client ID and client secret.')
 
         _token = generate_new_token(self.auth, self.client_id, self.client_secret)
 
@@ -334,12 +346,12 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
     # |                     Headset
     # +-----------------------------------------------------------------------
 
-    def connect(self, mappings: dict[str, str] | None = None, connection_type: str | None = None) -> None:
+    def connect(self, mappings: Mapping[str, str] | None = None, connection_type: ConnectionType | None = None) -> None:
         """Connect to the headset.
 
         Args:
             mappings (Mapping[str, str], optional): The mappings.
-            connection_type (str, optional): The connection type.
+            connection_type (ConnectionType, optional): The connection type.
 
         """
         logger.info('--- Connecting to the headset ---')
@@ -352,7 +364,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         self.ws.send(json.dumps(_connection, indent=4))
 
-    def disconnect(self, mappings: Mapping[str, str] | None = None, connection_type: str | None = None) -> None:
+    def disconnect(
+        self, mappings: Mapping[str, str] | None = None, connection_type: ConnectionType | None = None
+    ) -> None:
         """Disconnect from the headset.
 
         Args:
@@ -409,6 +423,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         """
         logger.info('--- Updating the headset ---')
 
+        if not self.headset_id:
+            raise ValueError('No headset ID. Please connect to a headset first.')
+
         _update = update_headset(self.auth, self.headset_id, settings)
 
         logger.debug(_update)
@@ -423,6 +440,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         logger.info('--- Updating the custom info ---')
+
+        if not self.headset_id:
+            raise ValueError('No headset ID. Please connect to a headset first.')
 
         _update = update_custom_info(self.auth, self.headset_id, headband_position)
 
@@ -441,6 +461,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         logger.info('--- Syncing the headset with the system clock ---')
+
+        if not self.headset_id:
+            raise ValueError('No headset ID. Please connect to a headset first.')
 
         _sync = sync_with_clock(self.headset_id, monotonic_time, system_time)
 
@@ -473,6 +496,9 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             logger.warning(f'Session already exists. {self.session_id}')
             return
 
+        if not self.headset_id:
+            raise ValueError('No headset ID. Please connect to a headset first.')
+
         _session = create_session(self.auth, self.headset_id, status='active')
 
         logger.debug(_session)
@@ -487,6 +513,10 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         """
         logger.info('--- Closing session ---')
+
+        if not self.session_id:
+            raise ValueError('No session ID. Please create a session first.')
+
         _session = update_session(self.auth, self.session_id, status='close')
 
         logger.debug(_session)
@@ -640,7 +670,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         folder: str | Path,
         stream_types: list[str],
         # pylint: disable-next=redefined-builtin,implicit-str-concat
-        format: Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV'],
+        format: ExportFormat,
         **kwargs: str | list[str] | bool,
     ) -> None:
         """Export one or more records.
@@ -649,7 +679,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
             record_ids (list[str]): The record IDs.
             folder (str | Path): The folder to save the records.
             stream_types (list[str]): The stream types.
-            format (Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV']): The format.
+            format (ExportFormat): The format.
 
         Keyword Args:
             version (Literal['V1', 'V2']): The version of the CSV format.
