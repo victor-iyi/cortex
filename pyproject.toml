@@ -1,14 +1,13 @@
-[tool.poetry]
+[project]
 name = "cortex"
 version = "0.3.2"
 description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
-authors = ["Victor I. Afolabi <javafolabi@gmail.com>"]
-maintainers = ["Victor I. Afolabi <javafolabi@gmail.com>"]
+authors = [{name="Victor I. Afolabi", email="javafolabi@gmail.com"}]
+maintainers = [{name="Victor I. Afolabi", email="javafolabi@gmail.com"}]
 
 readme = "README.md"
-repository = "https://github.com/victor-iyi/cortex"
 keywords = ["bci", "emotiv", "eeg", "neuroscience"]
 
 classifiers = [
@@ -28,45 +27,43 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-packages = [{ include = "cortex", from = "src" }]
+requires-python = ">=3.11"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-
-# WebSocket client for Python with low level API options.
-websocket-client = "^1.8.0"
+dependencies = [
 # Lightweight Event Handling.
-python-dispatch = "^0.2.2"
-# Render rich text, progress bars, syntax highlighting and more to the terminal
-rich = "^13.8.1"
+  "python-dispatch>=0.2.2",
 # Read key-value pair from a .env files and set them as environment variables.
-python-dotenv = "^1.0.1"
+  "python-dotenv>=1.0.1",
+# Render rich text, progress bars, syntax highlighting and more to the terminal
+  "rich>=13.9.2",
+# WebSocket client for Python with low level API options.
+  "websocket-client>=1.8.0",
+]
 
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-# Optional static typing for Python.
-mypy = "^1.11.2"
-# Managing and maintaining pre-commit hooks.
-pre-commit = "^3.8.0"
-# Formats docstring to follow PEP 257.
-docformatter = { version = "^1.7.5", extras = ["tomli"] }
-# Fast Python linter and code formatter.
-ruff = "^0.6.6"
-
-
-[tool.poetry.group.test.dependencies]
-# Simple powerful testing with Python.
-pytest = "^8.3.3"
-# Plugin for generating Markdown reports for pytest results.
-pytest-md = "^0.2.0"
-# A pytest plugin that adds emojis to your test result report.
-pytest-emoji = "^0.2.0"
+[project.urls]
+repository = "https://github.com/victor-iyi/cortex"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+# Simple powerful testing with Python.
+  "pytest>=8.3.3",
+# A pytest plugin that adds emojis to your test result report.
+  "pytest-emoji>=0.2.0",
+# Plugin for generating Markdown reports for pytest results.
+  "pytest-md>=0.2.0",
+# Formats docstring to follow PEP 257.
+  "docformatter[tomli]>=1.7.5",
+# Optional static typing for Python.
+  "mypy>=1.11.2",
+# Managing and maintaining pre-commit hooks.
+  "pre-commit>=4.0.0",
+# Fast Python linter and code formatter.
+  "ruff>=0.6.9",
+]
 
 # Docformatter.
 [tool.docformatter]
