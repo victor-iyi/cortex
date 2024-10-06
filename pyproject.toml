@@ -1,6 +1,6 @@
 [project]
 name = "cortex"
-version = "0.3.2"
+version = "0.4.0"
 description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
