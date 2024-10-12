@@ -12,7 +12,6 @@ import os
 import ssl
 import threading
 from abc import abstractmethod
-from collections.abc import Mapping
 from datetime import datetime as dt
 from pathlib import Path
 from typing import Any, ClassVar, Literal
@@ -346,11 +345,11 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
     # |                     Headset
     # +-----------------------------------------------------------------------
 
-    def connect(self, mappings: Mapping[str, str] | None = None, connection_type: ConnectionType | None = None) -> None:
+    def connect(self, mappings: dict[str, str] | None = None, connection_type: ConnectionType | None = None) -> None:
         """Connect to the headset.
 
         Args:
-            mappings (Mapping[str, str], optional): The mappings.
+            mappings (dict[str, str], optional): The mappings.
             connection_type (ConnectionType, optional): The connection type.
 
         """
@@ -364,9 +363,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
         self.ws.send(json.dumps(_connection, indent=4))
 
-    def disconnect(
-        self, mappings: Mapping[str, str] | None = None, connection_type: ConnectionType | None = None
-    ) -> None:
+    def disconnect(self, mappings: dict[str, str] | None = None, connection_type: ConnectionType | None = None) -> None:
         """Disconnect from the headset.
 
         Args:
@@ -1066,7 +1063,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         if not self.session_id:
             raise ValueError('No session ID. Please create a session first.')
 
-        _training = training_time(self.auth, self.session_id, detection)
+        _training = training_time(self.auth, detection, self.session_id)
 
         logger.debug(_training)
 
