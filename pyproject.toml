@@ -47,23 +47,29 @@ repository = "https://github.com/victor-iyi/cortex"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = [
-# Simple powerful testing with Python.
-  "pytest>=8.3.3",
-# A pytest plugin that adds emojis to your test result report.
-  "pytest-emoji>=0.2.0",
-# Plugin for generating Markdown reports for pytest results.
-  "pytest-md>=0.2.0",
-# Formats docstring to follow PEP 257.
+[dependency-groups]
+dev = [
+  # Formats docstring to follow PEP 257.
   "docformatter[tomli]>=1.7.5",
-# Optional static typing for Python.
+  # Optional static typing for Python.
   "mypy>=1.11.2",
-# Managing and maintaining pre-commit hooks.
+  # Managing and maintaining pre-commit hooks.
   "pre-commit>=4.0.0",
-# Fast Python linter and code formatter.
+  # Fast Python linter and code formatter.
   "ruff>=0.6.9",
 ]
+test = [
+  # Simple powerful testing with Python.
+  "pytest>=8.3.3",
+  # A pytest plugin that adds emojis to your test result report.
+  "pytest-emoji>=0.2.0",
+  # Plugin for generating Markdown reports for pytest results.
+  "pytest-md>=0.2.0",
+]
+
+# UV
+[tool.uv]
+default-groups = ["dev", "test"]
 
 # Docformatter.
 [tool.docformatter]

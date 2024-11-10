@@ -58,8 +58,8 @@ def inject_marker(
         MarkerRequest: The marker injection status.
 
     """
-    if not isinstance(value, (str, int)):
-        raise TypeError('value must be either a string or an integer.')
+    # if not isinstance(value, (str, int)):
+    #     raise TypeError('value must be either a string or an integer.')
 
     if isinstance(value, str) and not value.isdigit():
         raise ValueError('value must be an integer if it is a string.')
