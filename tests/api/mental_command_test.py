@@ -1,13 +1,13 @@
 """Test for the mental_command module."""
 
+# mypy: disable-error-code=arg-type
 from collections.abc import Callable
-
 from typing import Any, Final, TypeAlias
 
-from cortex.api.mental_command import active_action, brain_map, get_skill_rating, training_threshold, action_sensitivity
-from cortex.api.id import MentalCommandID
-
 import pytest
+
+from cortex.api.id import MentalCommandID
+from cortex.api.mental_command import action_sensitivity, active_action, brain_map, get_skill_rating, training_threshold
 
 # Constants.
 AUTH_TOKEN: Final[str] = 'xxx'

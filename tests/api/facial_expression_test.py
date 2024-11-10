@@ -1,5 +1,6 @@
 """Test for facial expression."""
 
+# mypy: disable-error-code=arg-type
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
@@ -7,7 +8,6 @@ import pytest
 
 from cortex.api.facial_expression import signature_type, threshold
 from cortex.api.id import FacialExpressionID
-
 
 # Constants.
 AUTH_TOKEN: Final[str] = 'xxx'

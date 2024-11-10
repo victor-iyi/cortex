@@ -1,12 +1,13 @@
 """Test for session module."""
 
+# mypy: disable-error-code=arg-type
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
 import pytest
 
-from cortex.api.session import create_session, update_session, query_session
 from cortex.api.id import SessionID
+from cortex.api.session import create_session, query_session, update_session
 
 # Constants.
 AUTH_TOKEN: Final[str] = 'xxx'

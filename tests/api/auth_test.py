@@ -1,12 +1,12 @@
 """Tests for the auth module."""
 
+# mypy: disable-error-code=arg-type
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
 import pytest
 
 from cortex.api.auth import (
-    AuthID,
     access,
     authorize,
     generate_new_token,
@@ -15,6 +15,7 @@ from cortex.api.auth import (
     get_user_info,
     get_user_login,
 )
+from cortex.api.id import AuthID
 
 # Constants.
 AUTH_TOKEN: Final[str] = 'xxx'

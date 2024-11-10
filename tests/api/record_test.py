@@ -1,22 +1,23 @@
 """Test for the record module."""
 
+# mypy: disable-error-code=arg-type
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
 import pytest
 
+from cortex.api.id import RecordsID
 from cortex.api.record import (
+    config_opt_out,
     create_record,
-    stop_record,
-    update_record,
     delete_record,
+    download_record_data,
     export_record,
     query_records,
     record_infos,
-    config_opt_out,
-    download_record_data,
+    stop_record,
+    update_record,
 )
-from cortex.api.id import RecordsID
 from cortex.api.types import RecordQuery
 
 # Constants.

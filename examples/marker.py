@@ -12,14 +12,14 @@ Result:
     - Export data file should contain the added markers.
 
 """
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument,redefined-builtin,redefined-outer-name
 
 import threading
 import time
-
 from typing import Any
 
 from cortex import Headset, logger
+from cortex.api.types import ExportFormat
 
 
 class Marker:
@@ -88,6 +88,7 @@ class Marker:
 
         self.record_title: str = ''
         self.record_description: str = ''
+        self.record_id: str = ''
         self.marker_idx = 0
         self.marker_value: str = ''
         self.marker_label: str = ''
@@ -95,7 +96,7 @@ class Marker:
         self.export_folder: str = ''
         self.export_stream_types: list[str] = []
         self.export_record_ids: list[str] = []
-        self.export_format: str = 'CSV'
+        self.export_format: ExportFormat = 'CSV'
         self.export_version: str = 'V2'
 
     def start(self, number_markers: int = 10, headset_id: str = '') -> None:
@@ -135,14 +136,20 @@ class Marker:
         self._headset.stop_record()
 
     def export_record(
-        self, folder: str, stream_types: list[str], format: str, record_ids: list[str], version: str, **kwargs: Any
+        self,
+        folder: str,
+        stream_types: list[str],
+        format: ExportFormat,
+        record_ids: list[str],
+        version: str,
+        **kwargs: Any,
     ) -> None:
         """Export the recording data.
 
         Args:
             folder (str): The folder to save the exported data.
             stream_types (list[str]): The types of data streams to export.
-            format (str): The format of the exported data.
+            format (ExportFormat): The format of the exported data.
             record_ids (str): The ids of the records to export.
             version (str): The version of the data to export.
             **kwargs (Any): Additional arguments to pass to the export_record method.

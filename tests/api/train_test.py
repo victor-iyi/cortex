@@ -1,13 +1,13 @@
 """Test for train module."""
 
+# mypy: disable-error-code=arg-type
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
 import pytest
 
-from cortex.api.train import training, trained_signature_actions, training_time
 from cortex.api.id import TrainingID
-
+from cortex.api.train import trained_signature_actions, training, training_time
 
 # Constants.
 AUTH_TOKEN: Final[str] = 'xxx'

@@ -1,13 +1,13 @@
 """Test for marker module."""
 
-import pytest
 import time
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
-from cortex.api.markers import inject_marker, update_marker
-from cortex.api.id import MarkersID
+import pytest
 
+from cortex.api.id import MarkersID
+from cortex.api.markers import inject_marker, update_marker
 
 # Constants
 AUTH_TOKEN: Final[str] = 'xxx'

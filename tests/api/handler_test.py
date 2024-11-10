@@ -1,7 +1,10 @@
 """Tests for the handler module."""
 
+# mypy: disable-error-code=arg-type
 from typing import Any, Final, TypeAlias
+
 import pytest
+
 from cortex.api.handler import stream_data
 
 # Constants

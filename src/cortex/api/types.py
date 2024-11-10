@@ -8,9 +8,9 @@ from typing import Any, Literal, TypeAlias, TypedDict
 # +---------------------------------------------------------------------------+
 
 # A dict with fields "from" and "to".
-Interval = TypedDict('Interval', {'from': str, 'to': str})
+Interval = TypedDict('Interval', {'from': str | int, 'to': str | int})
 ConnectionType: TypeAlias = Literal['bluetooth', 'usb cable', 'dongle']
-ExportFormat: TypeAlias = Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV']
+ExportFormat: TypeAlias = Literal['EDF', 'EDFPLUS', 'BDFPLUS', 'CSV']
 
 
 class Attribute(TypedDict):
@@ -89,7 +89,7 @@ class SubjectQuery(TypedDict, total=False):
     # search and values are the list of fields to search.
     # The list of fields to search can contain
     # "subjectName", "lastName", "email".
-    keyword: Mapping[str, str]
+    keyword: Mapping[str, str | list[str]]
 
 
 # Request type aliases.

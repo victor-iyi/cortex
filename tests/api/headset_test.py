@@ -1,22 +1,22 @@
 """Tests for the headset module."""
 
-import pytest
+# mypy: disable-error-code="arg-type,typeddict-item"
 import time
-
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
+
+import pytest
 
 from cortex.api.headset import (
     make_connection,
     query_headset,
-    update_headset,
-    update_custom_info,
-    sync_with_clock,
     subscription,
+    sync_with_clock,
+    update_custom_info,
+    update_headset,
 )
-from cortex.api.types import Setting
 from cortex.api.id import HeadsetID
-
+from cortex.api.types import Setting
 
 # Constants
 AUTH_TOKEN: Final[str] = 'xxx'

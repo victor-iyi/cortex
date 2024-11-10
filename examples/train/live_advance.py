@@ -20,7 +20,8 @@ Result:
 # pylint: disable=unused-argument
 
 from typing import Any
-from cortex import Headset, ErrorCode, logger
+
+from cortex import ErrorCode, Headset, logger
 
 
 class LiveAdvance:
@@ -83,6 +84,7 @@ class LiveAdvance:
         self._headset.bind(inform_error=self.on_inform_error)
 
         self.profile_name: str = ''
+        self.profile_lists: list[str] = []
         self.export_folder: str = '.'
 
     def start(self, profile_name: str, headset_id: str = '') -> None:
@@ -158,7 +160,7 @@ class LiveAdvance:
             profile_name (str): The profile name to get the active action.
 
         """
-        self._headset.get_mental_command_active_action(profile_name)
+        self._headset.get_mc_active_action(profile_name)
 
     def get_sensitivity(self, profile_name: str) -> None:
         """Get the sensitivity of the mental command actions.
@@ -167,9 +169,9 @@ class LiveAdvance:
             profile_name (str): The profile name to get the sensitivity.
 
         """
-        self._headset.get_mental_command_action_sensitive(profile_name)
+        self._headset.get_mc_action_sensitive(profile_name)
 
-    def set_sensitivity(self, profile_name: str, values: list[str]) -> None:
+    def set_sensitivity(self, profile_name: str, values: list[int]) -> None:
         """Set the sensitivity of the mental command actions.
 
         Note:
@@ -184,10 +186,10 @@ class LiveAdvance:
 
         Args:
             profile_name (str): The profile name to set the sensitivity.
-            values (list[str]): The list of sensitivity values to set.
+            values (list[int]): The list of sensitivity values to set.
 
         """
-        self._headset.set_mental_command_action_sensitive(profile_name, values)
+        self._headset.set_mc_action_sensitive(profile_name, values)
 
     # +-----------------------------------------------------------------------+
     # |                           Callback Methods                            |
@@ -248,7 +250,7 @@ class LiveAdvance:
 
         if isinstance(data, list):
             # Set new sensitivity.
-            self.set_sensitivity(self.profile_name, values=['7', '8', '3', '6'])
+            self.set_sensitivity(self.profile_name, values=[7, 8, 3, 6])
         else:
             # Set sensitivity done -> save profile.
             self.save_profile(self.profile_name)

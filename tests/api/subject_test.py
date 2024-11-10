@@ -1,12 +1,13 @@
 """Test for subject module."""
 
-import pytest
-
+# mypy: disable-error-code=arg-type
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
-from cortex.api.subject import create_subject, update_subject, query_subject, delete_subject, get_demographic_attr
+import pytest
+
 from cortex.api.id import SubjectsID
+from cortex.api.subject import create_subject, delete_subject, get_demographic_attr, query_subject, update_subject
 from cortex.api.types import Attribute, SubjectQuery
 
 # Constants.
@@ -127,9 +128,9 @@ def test_delete_subject(api_request: APIRequest) -> None:
 def test_query_subject(api_request: APIRequest) -> None:
     """Test querying a subject."""
     query = SubjectQuery(
-        date_of_birth={'from': '1990-12-25', 'to': '1995-12-25'},
+        dateOfBirth={'from': '1990-12-25', 'to': '1995-12-25'},
         sex='F',
-        country_code='us',
+        countryCode='us',
         keyword={'yyy': ['subjectName', 'email']},
     )
     order_by = [{'subjectName': 'ASC'}]

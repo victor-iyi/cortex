@@ -142,7 +142,7 @@ def update_record(
         _params['description'] = description
 
     if tags is not None:
-        _params['tags'] = tags  # pyright: reportGeneralTypeIssues=false
+        _params['tags'] = tags
 
     _record = {'id': RecordsID.UPDATE, 'jsonrpc': '2.0', 'method': 'updateRecord', 'params': _params}
 

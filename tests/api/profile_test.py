@@ -1,12 +1,13 @@
 """Test for the profile module."""
 
+# mypy: disable-error-code=arg-type
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias
 
 import pytest
 
-from cortex.api.profile import query_profile, current_profile, setup_profile, load_guest, detection_info
 from cortex.api.id import ProfileID
+from cortex.api.profile import current_profile, detection_info, load_guest, query_profile, setup_profile
 
 # Constants.
 AUTH_TOKEN: Final[str] = 'xxx'
