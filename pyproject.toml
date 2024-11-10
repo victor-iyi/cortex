@@ -4,8 +4,8 @@ version = "0.4.1"
 description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
-authors = [{name="Victor I. Afolabi", email="javafolabi@gmail.com"}]
-maintainers = [{name="Victor I. Afolabi", email="javafolabi@gmail.com"}]
+authors = [{ name = "Victor I. Afolabi", email = "javafolabi@gmail.com" }]
+maintainers = [{ name = "Victor I. Afolabi", email = "javafolabi@gmail.com" }]
 
 readme = "README.md"
 keywords = ["bci", "emotiv", "eeg", "neuroscience"]
@@ -30,13 +30,13 @@ classifiers = [
 requires-python = ">=3.11"
 
 dependencies = [
-# Lightweight Event Handling.
+  # Lightweight Event Handling.
   "python-dispatch>=0.2.2",
-# Read key-value pair from a .env files and set them as environment variables.
+  # Read key-value pair from a .env files and set them as environment variables.
   "python-dotenv>=1.0.1",
-# Render rich text, progress bars, syntax highlighting and more to the terminal
-  "rich>=13.9.2",
-# WebSocket client for Python with low level API options.
+  # Render rich text, progress bars, syntax highlighting and more to the terminal
+  "rich>=13.9.4",
+  # WebSocket client for Python with low level API options.
   "websocket-client>=1.8.0",
 ]
 
@@ -53,11 +53,11 @@ dev = [
   # Formats docstring to follow PEP 257.
   "docformatter[tomli]>=1.7.5",
   # Optional static typing for Python.
-  "mypy>=1.11.2",
+  "mypy>=1.13.0",
   # Managing and maintaining pre-commit hooks.
-  "pre-commit>=4.0.0",
+  "pre-commit>=4.0.1",
   # Fast Python linter and code formatter.
-  "ruff>=0.6.9",
+  "ruff>=0.7.3",
 ]
 test = [
   # Simple powerful testing with Python.
