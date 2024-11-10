@@ -25,6 +25,7 @@ from cortex.api.types import (
     CreateRecordRequest,
     DeleteRecordRequest,
     DownloadRecordDataRequest,
+    ExportFormat,
     ExportRecordRequest,
     QueryRecordRequest,
     RecordInfoRequest,
@@ -141,7 +142,7 @@ def update_record(
         _params['description'] = description
 
     if tags is not None:
-        _params['tags'] = tags
+        _params['tags'] = tags  # pyright: reportGeneralTypeIssues=false
 
     _record = {'id': RecordsID.UPDATE, 'jsonrpc': '2.0', 'method': 'updateRecord', 'params': _params}
 
@@ -178,7 +179,7 @@ def export_record(
     folder: str,
     stream_types: list[str],
     # pylint: disable-next=redefined-builtin
-    format: Literal['EDF', 'EDFPLUS', 'BDFPLUS', 'CSV'],
+    format: ExportFormat,
     *,
     version: Literal['V1', 'V2'] | None = None,
     license_ids: list[str] | None = None,
@@ -194,7 +195,7 @@ def export_record(
         record_ids (list[str]): The record IDs.
         folder (str): The path of a local folder.
         stream_types (list[str]): List of the data streams you want to export.
-        format (Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV']): The format of the
+        format (ExportFormat): The format of the
              exported files.
 
     Keyword Args:
