@@ -42,18 +42,23 @@ them in the EMOTIV Launcher.
 
 ## Getting Started
 
+> Note: Make sure you have the latest version of Python installed on your system.
+> Also, you will need to install the [`uv`] package manager.
+
+[`uv`]: https://docs.astral.sh/uv/getting-started/installation/
+
 To get started, you will need to install the `cortex` package. You should check out
 some [examples] to get you started.
 
 ```sh
-poetry install
+uv sync
 ```
 
 For testing and development, you can install the package with the `test` and `dev`
 flags respectively.
 
 ```sh
-poetry install --with test,dev
+uv sync --all-extras --dev
 ```
 
 You'll also need to set your client id and client secret as environment variables.
