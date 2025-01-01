@@ -58,7 +58,7 @@ For testing and development, you can install the package with the `test` and `de
 flags respectively.
 
 ```sh
-uv sync --all-extras --dev
+uv sync --all-extras
 ```
 
 You'll also need to set your client id and client secret as environment variables.
