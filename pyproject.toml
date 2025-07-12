@@ -1,6 +1,6 @@
 [project]
 name = "cortex"
-version = "0.4.1"
+version = "0.5.0"
 description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
@@ -33,9 +33,9 @@ dependencies = [
   # Lightweight Event Handling.
   "python-dispatch>=0.2.2",
   # Read key-value pair from a .env files and set them as environment variables.
-  "python-dotenv>=1.0.1",
+  "python-dotenv>=1.1.1",
   # Render rich text, progress bars, syntax highlighting and more to the terminal
-  "rich>=13.9.4",
+  "rich>=14.0.0",
   # WebSocket client for Python with low level API options.
   "websocket-client>=1.8.0",
 ]
@@ -51,17 +51,17 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
   # Formats docstring to follow PEP 257.
-  "docformatter[tomli]>=1.7.5",
+  "docformatter[tomli]>=1.7.7",
   # Optional static typing for Python.
-  "mypy>=1.13.0",
+  "mypy>=1.16.1",
   # Managing and maintaining pre-commit hooks.
-  "pre-commit>=4.0.1",
+  "pre-commit>=4.2.0",
   # Fast Python linter and code formatter.
-  "ruff>=0.7.3",
+  "ruff>=0.12.3",
 ]
 test = [
   # Simple powerful testing with Python.
-  "pytest>=8.3.3",
+  "pytest>=8.4.1",
   # A pytest plugin that adds emojis to your test result report.
   "pytest-emoji>=0.2.0",
   # Plugin for generating Markdown reports for pytest results.
@@ -128,6 +128,8 @@ select = [
   "D",
   # pyupgrade
   "UP",
+  # Isort
+  "I",
 ]
 
 extend-select = [
