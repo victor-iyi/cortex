@@ -1,6 +1,6 @@
 [project]
 name = "cortex"
-version = "0.5.0"
+version = "0.5.1"
 description = "Cortex is an API for communicating with your Emotiv EEG device."
 license = "MIT"
 
@@ -27,7 +27,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 dependencies = [
   # Lightweight Event Handling.

@@ -1,6 +1,7 @@
 """Events for the Cortex API."""
 
 from __future__ import annotations
+
 from enum import StrEnum
 
 

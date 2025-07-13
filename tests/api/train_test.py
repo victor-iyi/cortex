@@ -2,7 +2,7 @@
 
 # mypy: disable-error-code=arg-type
 from collections.abc import Callable
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 import pytest
 
@@ -15,7 +15,7 @@ SESSION_ID: Final[str] = 'f3a35fd0-9163-4cc4-ab30-4ed224369f91'
 PROFILE_NAME: Final[str] = 'cortex-v2-example'
 
 # Type aliases.
-APIRequest: TypeAlias = Callable[..., dict[str, Any]]
+type APIRequest = Callable[..., dict[str, Any]]
 
 
 def test_training(api_request: APIRequest) -> None:

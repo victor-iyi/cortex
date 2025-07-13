@@ -3,7 +3,7 @@
 # mypy: disable-error-code="arg-type,typeddict-item"
 import time
 from collections.abc import Callable
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 import pytest
 
@@ -26,7 +26,7 @@ EPOC_FLEX_ID: Final[str] = 'EPOCFLEX-1234123'
 MAPPINGS: dict[str, str] = {'CMS': 'F3', 'DRL': 'F5', 'LA': 'AF3', 'LB': 'AF7', 'RA': 'P8'}
 
 # Type aliases
-APIRequest: TypeAlias = Callable[..., dict[str, Any]]
+type APIRequest = Callable[..., dict[str, Any]]
 
 
 def test_connect_headset(api_request: APIRequest) -> None:

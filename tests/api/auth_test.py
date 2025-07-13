@@ -2,7 +2,7 @@
 
 # mypy: disable-error-code=arg-type
 from collections.abc import Callable
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 import pytest
 
@@ -23,7 +23,7 @@ CLIENT_ID: Final[str] = 'xxx'
 CLIENT_SECRET: Final[str] = 'xxx'
 
 # Type aliases.
-APIRequest: TypeAlias = Callable[..., dict[str, Any]]
+type APIRequest = Callable[..., dict[str, Any]]
 
 
 def test_get_info(api_request: APIRequest) -> None:

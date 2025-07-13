@@ -273,6 +273,7 @@ class LiveAdvance:
         return self._headset
 
 
+# pylint: disable="import-outside-toplevel,fixme"
 def main() -> None:
     """Start training the mental command training."""
     import os

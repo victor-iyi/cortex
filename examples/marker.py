@@ -289,6 +289,7 @@ class Marker:
         return self._headset
 
 
+# pylint: disable="import-outside-toplevel,fixme"
 def main() -> None:
     """Inject marker during a recording."""
     import os

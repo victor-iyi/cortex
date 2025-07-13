@@ -2,7 +2,7 @@
 
 # mypy: disable-error-code=arg-type
 from collections.abc import Callable
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 import pytest
 
@@ -15,7 +15,7 @@ SESSION_ID: Final[str] = 'f3a35fd0-9163-4cc4-ab30-4ed224369f91'
 HEADSET_ID: Final[str] = 'EPOCX-12345678'
 
 # Type aliases.
-APIRequest: TypeAlias = Callable[..., dict[str, Any]]
+type APIRequest = Callable[..., dict[str, Any]]
 
 
 def test_create_session(api_request: APIRequest) -> None:

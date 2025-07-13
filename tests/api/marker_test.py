@@ -2,7 +2,7 @@
 
 import time
 from collections.abc import Callable
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 import pytest
 
@@ -19,7 +19,7 @@ marker_value: int = 42
 marker_label: str = 'test label'
 
 # Type aliases
-APIRequest: TypeAlias = Callable[..., dict[str, Any]]
+type APIRequest = Callable[..., dict[str, Any]]
 
 
 def test_inject_marker(api_request: APIRequest) -> None:

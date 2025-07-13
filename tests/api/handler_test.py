@@ -1,7 +1,7 @@
 """Tests for the handler module."""
 
 # mypy: disable-error-code=arg-type
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 import pytest
 
@@ -10,7 +10,7 @@ from cortex.api.handler import stream_data
 # Constants
 SAMPLE_TIME: Final[float] = 1234567890.123
 # Type aliases.
-SampleData: TypeAlias = dict[str, Any]
+type SampleData = dict[str, Any]
 
 
 def test_stream_data_com(sample_data: SampleData) -> None:

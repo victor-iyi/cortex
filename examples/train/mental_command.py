@@ -294,6 +294,7 @@ class MentalCommandTrainer:
         return self._headset
 
 
+# pylint: disable="import-outside-toplevel,fixme"
 def main() -> None:
     """Main function to start the training."""
     import os

@@ -1,4 +1,4 @@
-from cortex.api.auth import access, authorize, get_info, get_license_info, get_user_info, generate_new_token
+from cortex.api.auth import access, authorize, generate_new_token, get_info, get_license_info, get_user_info
 from cortex.api.events import (
     ErrorEvent,
     MarkerEvent,
@@ -14,10 +14,10 @@ from cortex.api.handler import stream_data
 from cortex.api.headset import (
     make_connection,
     query_headset,
-    update_headset,
-    update_custom_info,
-    sync_with_clock,
     subscription,
+    sync_with_clock,
+    update_custom_info,
+    update_headset,
 )
 from cortex.api.id import (
     AuthID,
@@ -31,11 +31,11 @@ from cortex.api.id import (
     TrainingID,
 )
 from cortex.api.markers import inject_marker, update_marker
-from cortex.api.mental_command import action_sensitivity, brain_map, active_action, get_skill_rating, training_threshold
-from cortex.api.profile import current_profile, query_profile, setup_profile, load_guest, detection_info
+from cortex.api.mental_command import action_sensitivity, active_action, brain_map, get_skill_rating, training_threshold
+from cortex.api.profile import current_profile, detection_info, load_guest, query_profile, setup_profile
 from cortex.api.record import (
-    create_record,
     config_opt_out,
+    create_record,
     delete_record,
     download_record_data,
     export_record,
@@ -52,36 +52,29 @@ from cortex.api.response import (
     SettingsObject,
     SubjectObject,
 )
-from cortex.api.session import create_session, update_session, query_session
-from cortex.api.subject import create_subject, delete_subject, query_subject, update_subject, get_demographic_attr
-from cortex.api.train import training, trained_signature_actions, training_time
+from cortex.api.session import create_session, query_session, update_session
+from cortex.api.subject import create_subject, delete_subject, get_demographic_attr, query_subject, update_subject
+from cortex.api.train import trained_signature_actions, training, training_time
 from cortex.api.types import (
     Attribute,
     AuthorizeRequest,
     BaseRequest,
-    CreateRecordRequest,
     ConfigOptOutRequest,
     ConnectHeadsetRequest,
+    CreateRecordRequest,
     DeleteRecordRequest,
-    DemographicAttribute,
     DownloadRecordDataRequest,
     ExportRecordRequest,
     FacialExpressionRequest,
-    FlexMapping,
-    HeadsetObject,
     Interval,
-    MarkerObject,
     MarkerRequest,
     MentalCommandActionRequest,
     QueryRecordRequest,
     QuerySubjectRequest,
     RecordInfoRequest,
-    RecordsObject,
     RecordQuery,
-    SessionObject,
+    RecordsObject,
     Setting,
-    SettingsObject,
-    SubjectObject,
     SubjectQuery,
     SubjectRequest,
     SubscriptionRequest,
@@ -89,9 +82,7 @@ from cortex.api.types import (
     TrainingRequest,
     UpdateHeadsetRequest,
     UpdateRecordRequest,
-    UpdateHeadsetRequest,
 )
-
 
 __all__ = [
     # Auth.
@@ -186,14 +177,10 @@ __all__ = [
     'ConfigOptOutRequest',
     'ConnectHeadsetRequest',
     'DeleteRecordRequest',
-    'DemographicAttribute',
     'DownloadRecordDataRequest',
     'ExportRecordRequest',
     'FacialExpressionRequest',
-    'FlexMapping',
-    'HeadsetObject',
     'Interval',
-    'MarkerObject',
     'MarkerRequest',
     'MentalCommandActionRequest',
     'QueryRecordRequest',
@@ -201,10 +188,7 @@ __all__ = [
     'RecordInfoRequest',
     'RecordsObject',
     'RecordQuery',
-    'SessionObject',
     'Setting',
-    'SettingsObject',
-    'SubjectObject',
     'SubjectQuery',
     'SubjectRequest',
     'SubscriptionRequest',

@@ -5,7 +5,6 @@ from typing import Any, Final
 
 import pytest
 
-
 # Constants.
 SAMPLE_TIME: Final[float] = 1234567890.123
 

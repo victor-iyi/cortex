@@ -222,9 +222,11 @@ class Subscribe:
         return self._headset
 
 
+# pylint: disable="import-outside-toplevel,fixme"
 def main() -> None:
     """Start subscribing to the data streams."""
     import os
+
     from dotenv import load_dotenv
 
     load_dotenv()
