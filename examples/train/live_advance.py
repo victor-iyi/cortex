@@ -17,6 +17,7 @@ Result:
         ```
 
 """
+
 # pylint: disable=unused-argument
 
 from typing import Any
