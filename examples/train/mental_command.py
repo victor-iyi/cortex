@@ -14,6 +14,7 @@ Result:
     - Train mental command action.
 
 """
+
 # pylint: disable=unused-argument
 
 from enum import StrEnum
