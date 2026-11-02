@@ -14,6 +14,7 @@ Result:
     - Train facial expression action.
 
 """
+
 # pylint: disable=unused-argument
 
 from enum import StrEnum
