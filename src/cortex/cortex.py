@@ -285,10 +285,11 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         self.ws.send(json.dumps(_authorize, indent=4))
 
     def generate_new_token(self) -> None:
-        """Generate a new token. Use it to extend the expiration date of a token.
+        """Generate a new token.
 
-        Read More:
-            [generateNewToken](https://emotiv.gitbook.io/cortex-api/authentication/generatenewtoken)
+        Use it to extend the expiration date of a token.
+                Read More:
+                    [generateNewToken](https://emotiv.gitbook.io/cortex-api/authentication/generatenewtoken)
 
         """
         logger.info('--- Generating a new token ---')
@@ -639,7 +640,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
         folder: str | Path,
         stream_types: list[str],
         # pylint: disable-next=redefined-builtin,implicit-str-concat
-        format: Literal['EDF' 'EDFPLUS', 'BDFPLUS', 'CSV'],
+        format: Literal['EDFEDFPLUS', 'BDFPLUS', 'CSV'],
         **kwargs: str | list[str] | bool,
     ) -> None:
         """Export one or more records.
@@ -1260,7 +1261,7 @@ class Cortex(Dispatcher, metaclass=InheritEventsMeta):
 
     @property
     def auth(self) -> str:
-        """str: The authorization token."""
+        """Str: The authorization token."""
         if self._auth is None:
             raise ValueError('No authorization token. Call `authorize()` to generate it.')
         return self._auth
